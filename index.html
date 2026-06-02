@@ -86,8 +86,6 @@
             text-align: center;
         }
     </style>
-    <!-- Sourcing the requested version 0.21.2 library file -->
-    <script src="https://unpkg.com/@niivue/niivue@0.21.2/dist/niivue.umd.js"></script>
 </head>
 <body>
 
@@ -114,53 +112,37 @@
         </div>
     </div>
 
-    <script>
-        // Configuration initialization options for older 0.21.2 engine versions
-        var niivueOptions = {
-            loadingText: 'Loading 3D Volume...',
-            backColor: [0, 0, 0, 1], 
-            isColorbar: false,
-        };
+    <!-- Official ESM Sourcing Pipeline matching your documentation structure -->
+    <script type="module" async>
+        import { Niivue } from "https://unpkg.com/@niivue/niivue@0.57.0/dist/index.js"
 
-        // 1. Initialize and attach Left Viewer (ManifoldCache)
-        var nvManifold = new niivue.Niivue(niivueOptions);
-        nvManifold.attachTo('canvas-manifold');
+        // Build absolute safe paths to resolve GitHub Pages subfolders automatically
+        const currentPath = window.location.pathname.substring(0, window.location.pathname.lastIndexOf('/'));
+        const rootUrl = `${window.location.origin}${currentPath}`;
 
-        // FIXED: Added missing volume header and image structure bindings mapping specs
-        var volumeManifold = [{
-            url: "./manifoldcache_flair.nii.gz",
-            volume: {hdr: null, img: null},
-            name: "manifoldcache_flair",
-            colorMap: "gray",
-            opacity: 1,
-            visible: true
-        }];
+        const volumeManifold = [
+            { url: `${rootUrl}/manifoldcache_flair.nii.gz` }
+        ];
 
-        // Load the Left dataset and force full 3D layout rendering configuration mode
-        nvManifold.loadVolumes(volumeManifold);
-        nvManifold.setSliceType(nvManifold.sliceTypeRender); 
+        const volumeDeepcache = [
+            { url: `${rootUrl}/deepcache_flair.nii.gz` }
+        ];
 
-        // 2. Initialize and attach Right Viewer (DeepCache)
-        var nvDeepcache = new niivue.Niivue(niivueOptions);
-        nvDeepcache.attachTo('canvas-deepcache');
+        // 1. Setup Left Viewer (ManifoldCache)
+        const nvManifold = new Niivue({ isResizeCanvas: true });
+        nvManifold.setSliceType(nvManifold.sliceTypeRender); // Force 3D Render View
+        await nvManifold.attachTo("canvas-manifold");
+        await nvManifold.loadVolumes(volumeManifold);
 
-        // FIXED: Added missing volume header and image structure bindings mapping specs
-        var volumeDeepcache = [{
-            url: "./deepcache_flair.nii.gz",
-            volume: {hdr: null, img: null},
-            name: "deepcache_flair",
-            colorMap: "gray",
-            opacity: 1,
-            visible: true
-        }];
+        // 2. Setup Right Viewer (DeepCache)
+        const nvDeepcache = new Niivue({ isResizeCanvas: true });
+        nvDeepcache.setSliceType(nvDeepcache.sliceTypeRender); // Force 3D Render View
+        await nvDeepcache.attachTo("canvas-deepcache");
+        await nvDeepcache.loadVolumes(volumeDeepcache);
 
-        // Load the Right dataset and force full 3D layout rendering configuration mode
-        nvDeepcache.loadVolumes(volumeDeepcache);
-        nvDeepcache.setSliceType(nvDeepcache.sliceTypeRender); 
-
-        // Synchronize manual mouse rotation controls symmetrically between the views
-        nvManifold.broadcastTo(nvDeepcache);
-        nvDeepcache.broadcastTo(nvManifold);
+        // Sync views so they rotate together
+        nvManifold.broadcastTo([nvDeepcache], { "2d": false, "3d": true });
+        nvDeepcache.broadcastTo([nvManifold], { "2d": false, "3d": true });
     </script>
 </body>
 </html>
