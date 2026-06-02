@@ -641,7 +641,7 @@ loop_
 })();
 </script>
 
- <!-- ============================================================ -->
+<!-- ============================================================ -->
 <!-- ROW: UniMoMo Peptide Generation (PDB: 2hwl)                 -->
 <!-- Place this block anywhere inside <body>, before </body>      -->
 <!-- Requires 3Dmol already loaded:                               -->
@@ -823,25 +823,30 @@ loop_
 
     /* ── style a loaded PDB model ───────────────────────────── */
     function styleAndRender(viewer, entry) {
-        /* cartoon coloured by spectrum across the chain */
-        viewer.setStyle({}, { cartoon: { color: 'spectrum', thickness: 0.5, opacity: 0.92 } });
-        /* highlight ligand chain A (peptide) with per-residue type colours */
+        /* receptor chain B: dim cartoon drawn first as background */
+        viewer.setStyle(
+            { chain: 'B' },
+            { cartoon: { color: '#334155', thickness: 0.3, opacity: 0.45 } }
+        );
+
+        /* peptide chain A:
+           Use cartoon + stick + sphere together so the viewer works whether
+           the chain is connected (cartoon draws ribbon) or fragmented into
+           single-residue segments (spheres+sticks always render).           */
         for (var i = 0; i < entry.seq.length; i++) {
             var col = AA_COLOR[entry.seq[i]] || '#9ca3af';
             viewer.setStyle(
                 { chain: 'A', resi: i + 1 },
                 {
                     cartoon: { color: col, thickness: 0.55, opacity: 0.95 },
-                    stick:   { radius: 0.10, color: col }
+                    stick:   { radius: 0.12, color: col },
+                    sphere:  { radius: 0.28, color: col, opacity: 0.85 }
                 }
             );
         }
-        /* receptor chain B — subtle grey cartoon */
-        viewer.setStyle(
-            { chain: 'B' },
-            { cartoon: { color: '#475569', thickness: 0.35, opacity: 0.6 } }
-        );
-        viewer.zoomTo();
+
+        /* zoom into the peptide so it fills the canvas */
+        viewer.zoomTo({ chain: 'A' });
         viewer.spin('y', 0.7);
         viewer.render();
     }
@@ -886,6 +891,5 @@ loop_
     });
 })();
 </script>
-
 </body>
 </html>
