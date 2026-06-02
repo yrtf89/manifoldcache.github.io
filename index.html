@@ -197,5 +197,88 @@
         nvManifold.broadcastTo([nvDeepcache], { "2d": false, "3d": true });
         nvDeepcache.broadcastTo([nvManifold], { "2d": false, "3d": true });
     </script>
+    <!-- ROW 3: 3D Molecular Visualization -->
+<div class="section-title">3D Molecular Structure Comparison</div>
+<div class="demo-container" style="grid-template-columns: repeat(4, 1fr);">
+
+    <div class="viewer-card">
+        <div class="canvas-wrapper" id="mol-viewer-1" style="min-height: 300px;"></div>
+        <div class="caption">Method A</div>
+        <div class="sub-caption">OCC(O)C(S)c1cccc(O)c1 | Drag to rotate, scroll to zoom</div>
+    </div>
+
+    <div class="viewer-card">
+        <div class="canvas-wrapper" id="mol-viewer-2" style="min-height: 300px;"></div>
+        <div class="caption">Method B</div>
+        <div class="sub-caption">OCC(O)C(S)c1cccc(O)c1 | Drag to rotate, scroll to zoom</div>
+    </div>
+
+    <div class="viewer-card">
+        <div class="canvas-wrapper" id="mol-viewer-3" style="min-height: 300px;"></div>
+        <div class="caption">Method C</div>
+        <div class="sub-caption">OCC(O)C(S)c1cccc(O)c1 | Drag to rotate, scroll to zoom</div>
+    </div>
+
+    <div class="viewer-card">
+        <div class="canvas-wrapper" id="mol-viewer-4" style="min-height: 300px;"></div>
+        <div class="caption">Method D</div>
+        <div class="sub-caption">OCC(O)C(S)c1cccc(O)c1 | Drag to rotate, scroll to zoom</div>
+    </div>
+
+</div>
+
+<!-- 3Dmol.js for molecular visualization -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/3Dmol/2.1.0/3Dmol-min.js"></script>
+<script>
+(async function() {
+    const SMILES = "OCC(O)C(S)c1cccc(O)c1";
+
+    // Fetch SDF from PubChem to get 3D coordinates from SMILES
+    async function fetchSDF(smiles) {
+        const encoded = encodeURIComponent(smiles);
+        const url = `https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/smiles/${encoded}/SDF?record_type=3d`;
+        const res = await fetch(url);
+        if (!res.ok) throw new Error("PubChem fetch failed");
+        return await res.text();
+    }
+
+    const styles = [
+        { label: "stick",   style: { stick: { radius: 0.15 } } },
+        { label: "sphere",  style: { sphere: { scale: 0.3 } } },
+        { label: "surface", style: { stick: { radius: 0.12 } }, surface: true },
+        { label: "line",    style: { line: {} } },
+    ];
+
+    let sdfData;
+    try {
+        sdfData = await fetchSDF(SMILES);
+    } catch(e) {
+        console.error("Could not load molecule:", e);
+        return;
+    }
+
+    const viewerIds = ["mol-viewer-1", "mol-viewer-2", "mol-viewer-3", "mol-viewer-4"];
+
+    viewerIds.forEach((id, i) => {
+        const el = document.getElementById(id);
+        const config = { backgroundColor: "black" };
+        const viewer = $3Dmol.createViewer(el, config);
+
+        viewer.addModel(sdfData, "sdf");
+        viewer.setStyle({}, styles[i].style);
+
+        if (styles[i].surface) {
+            viewer.addSurface($3Dmol.SurfaceType.VDW, {
+                opacity: 0.5,
+                colorscheme: "whiteCarbon"
+            });
+        }
+
+        viewer.zoomTo();
+        viewer.spin("y", 0.5);
+        viewer.render();
+    });
+})();
+</script>
 </body>
 </html>
