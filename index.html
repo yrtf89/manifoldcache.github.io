@@ -196,6 +196,16 @@
         // Sync views so they rotate together
         nvManifold.broadcastTo([nvDeepcache], { "2d": false, "3d": true });
         nvDeepcache.broadcastTo([nvManifold], { "2d": false, "3d": true });
+
+        // Auto-rotate both volumes
+        let angle = 0;
+        function rotateVolumes() {
+            angle += 0.3;
+            nvManifold.scene.renderAzimuth = angle;
+            nvManifold.drawScene();
+            requestAnimationFrame(rotateVolumes);
+        }
+        rotateVolumes();
     </script>
 
     <!-- ROW 3: 3D Molecular Visualization -->
@@ -299,20 +309,20 @@ window.addEventListener('load', function() {
             bg: "#0a0a1a"
         },
         {
-            id: "mol-viewer-2",
-            style: { sphere: { scale: 0.35, colorscheme: "Jmol" } },
+            id: "mol-viewer-1",
+            style: { stick: { radius: 0.15, colorscheme: "Jmol" } },
             surface: false,
             bg: "#0a0a1a"
         },
         {
-            id: "mol-viewer-3",
-            style: { stick: { radius: 0.12, colorscheme: "Jmol" } },
-            surface: true,
+            id: "mol-viewer-1",
+            style: { stick: { radius: 0.15, colorscheme: "Jmol" } },
+            surface: false,
             bg: "#0a0a1a"
         },
         {
-            id: "mol-viewer-4",
-            style: { line: { colorscheme: "Jmol", linewidth: 2 } },
+            id: "mol-viewer-1",
+            style: { stick: { radius: 0.15, colorscheme: "Jmol" } },
             surface: false,
             bg: "#0a0a1a"
         }
