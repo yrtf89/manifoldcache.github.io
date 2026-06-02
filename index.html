@@ -35,11 +35,10 @@
             text-align: center;
         }
 
-        /* Group container for distinct rows */
         .section-title {
             font-size: 1.4rem;
             font-weight: 600;
-            margin: 25px 0 15px 0;
+            margin: 30px 0 15px 0;
             color: #38bdf8;
             width: 100%;
             max-width: 1400px;
@@ -54,7 +53,6 @@
             gap: 25px;
             width: 100%;
             max-width: 1400px;
-            margin-bottom: 20px;
         }
 
         .viewer-card {
@@ -67,8 +65,8 @@
             flex-direction: column;
         }
 
-        /* 3D viewports row explicit constraint height */
-        .viewer-card.3d-height {
+        /* 3D Volumes specific rendering context constraint height */
+        .viewer-card.volume-height {
             height: 65vh;
         }
 
@@ -124,10 +122,10 @@
     <div class="subtitle">Training-Free Diffusion Acceleration via Constraint Manifold Caching</div>
 
     <!-- ROW 1: 3D NIfTI Volumes -->
-    <div class="section-title">3D Volume Reconstruction Comparisons</div>
+    <div class="section-title">3D Volume Reconstruction Comparison</div>
     <div class="demo-container">
         <!-- Left Viewer: ManifoldCache -->
-        <div class="viewer-card 3d-height">
+        <div class="viewer-card volume-height">
             <div class="canvas-wrapper">
                 <canvas id="canvas-manifold"></canvas>
             </div>
@@ -136,7 +134,7 @@
         </div>
 
         <!-- Right Viewer: DeepCache -->
-        <div class="viewer-card 3d-height">
+        <div class="viewer-card volume-height">
             <div class="canvas-wrapper">
                 <canvas id="canvas-deepcache"></canvas>
             </div>
@@ -145,10 +143,10 @@
         </div>
     </div>
 
-    <!-- ROW 2: Diffusion Generation Video Showcase -->
-    <div class="section-title">Lyra Trajectory Generation Videos</div>
+    <!-- ROW 2: Trajectory Generation Videos -->
+    <div class="section-title">Lyra Trajectory Generation Comparison</div>
     <div class="demo-container">
-        <!-- Left Video: ManifoldCache Lyra -->
+        <!-- Left Video Viewport -->
         <div class="viewer-card">
             <div class="video-wrapper">
                 <video src="./manifoldcache_lyra.mp4" autoplay loop muted playsinline controls></video>
@@ -157,7 +155,7 @@
             <div class="sub-caption">File: manifoldcache_lyra.mp4</div>
         </div>
 
-        <!-- Right Video: PAB Lyra -->
+        <!-- Right Video Viewport -->
         <div class="viewer-card">
             <div class="video-wrapper">
                 <video src="./PAB_lyra.mp4" autoplay loop muted playsinline controls></video>
@@ -167,9 +165,9 @@
         </div>
     </div>
 
-    <!-- Official ESM Sourcing Pipeline -->
+    <!-- Official ESM Sourcing Pipeline matching your documentation structure -->
     <script type="module" async>
-        import { Niivue } from "https://unpkg.com"
+        import { Niivue } from "https://unpkg.com/@niivue/niivue@0.57.0/dist/index.js"
 
         // Build absolute safe paths to resolve GitHub Pages subfolders automatically
         const currentPath = window.location.pathname.substring(0, window.location.pathname.lastIndexOf('/'));
@@ -185,13 +183,13 @@
 
         // 1. Setup Left Viewer (ManifoldCache)
         const nvManifold = new Niivue({ isResizeCanvas: true });
-        nvManifold.setSliceType(nvManifold.sliceTypeRender); 
+        nvManifold.setSliceType(nvManifold.sliceTypeRender); // Force 3D Render View
         await nvManifold.attachTo("canvas-manifold");
         await nvManifold.loadVolumes(volumeManifold);
 
         // 2. Setup Right Viewer (DeepCache)
         const nvDeepcache = new Niivue({ isResizeCanvas: true });
-        nvDeepcache.setSliceType(nvDeepcache.sliceTypeRender); 
+        nvDeepcache.setSliceType(nvDeepcache.sliceTypeRender); // Force 3D Render View
         await nvDeepcache.attachTo("canvas-deepcache");
         await nvDeepcache.loadVolumes(volumeDeepcache);
 
