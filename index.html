@@ -86,7 +86,7 @@
             text-align: center;
         }
     </style>
-    <!-- ALTERNATIVE WORKING SCRIPT PIPELINE SOURCE LINK -->
+    <!-- Kept your preferred unpkg script tag -->
     <script src="https://unpkg.com/@niivue/niivue@0.21.2/dist/niivue.umd.js"></script>
 </head>
 <body>
@@ -122,14 +122,14 @@
                 isColorbar: false,
             };
 
-            // 1. Initialize and attach Left Viewer
+            // 1. Initialize and attach Left Viewer using version 0.21.2 syntax
             const nvManifold = new niivue.Niivue(niivueOptions);
-            await nvManifold.attachToCanvas(document.getElementById('canvas-manifold'));
+            nvManifold.attachTo('canvas-manifold');
             nvManifold.setSliceType(nvManifold.sliceTypeRender);
 
-            // 2. Initialize and attach Right Viewer
+            // 2. Initialize and attach Right Viewer using version 0.21.2 syntax
             const nvDeepcache = new niivue.Niivue(niivueOptions);
-            await nvDeepcache.attachToCanvas(document.getElementById('canvas-deepcache'));
+            nvDeepcache.attachTo('canvas-deepcache');
             nvDeepcache.setSliceType(nvDeepcache.sliceTypeRender);
 
             // Paths directly pointing to the root folder of your repository
@@ -153,17 +153,13 @@
                     nvManifold.loadVolumes(volumeManifold),
                     nvDeepcache.loadVolumes(volumeDeepcache)
                 ]);
-                
-                // Redraw canvases
-                nvManifold.updateGLVolume();
-                nvDeepcache.updateGLVolume();
             } catch (error) {
                 console.error("Failed loading local neuroimaging volumes:", error);
             }
 
             // Sync camera controls dynamically across viewports
-            nvManifold.broadcastTo([nvDeepcache], { "2d": false, "3d": true });
-            nvDeepcache.broadcastTo([nvManifold], { "2d": false, "3d": true });
+            nvManifold.broadcastTo(nvDeepcache);
+            nvDeepcache.broadcastTo(nvManifold);
         }
 
         window.addEventListener('DOMContentLoaded', setupDemo);
