@@ -65,7 +65,6 @@
             flex-direction: column;
         }
 
-        /* 3D Volumes specific rendering context constraint height */
         .viewer-card.volume-height {
             height: 65vh;
         }
@@ -124,7 +123,6 @@
     <!-- ROW 1: 3D NIfTI Volumes -->
     <div class="section-title">3D Brain MRI Synthesis Comparison (Med-DDPM)</div>
     <div class="demo-container">
-        <!-- Left Viewer: ManifoldCache -->
         <div class="viewer-card volume-height">
             <div class="canvas-wrapper">
                 <canvas id="canvas-manifold"></canvas>
@@ -133,7 +131,6 @@
             <div class="sub-caption">File: manifoldcache_flair.nii.gz | Drag to rotate, scroll to zoom</div>
         </div>
 
-        <!-- Right Viewer: DeepCache -->
         <div class="viewer-card volume-height">
             <div class="canvas-wrapper">
                 <canvas id="canvas-deepcache"></canvas>
@@ -146,7 +143,6 @@
     <!-- ROW 2: Trajectory Generation Videos -->
     <div class="section-title">Lyra Multi-View Synthesis Comparison</div>
     <div class="demo-container">
-        <!-- Left Video Viewport -->
         <div class="viewer-card">
             <div class="video-wrapper">
                 <video src="./manifoldcache_lyra.mp4" autoplay loop muted playsinline controls></video>
@@ -155,7 +151,6 @@
             <div class="sub-caption">File: manifoldcache_lyra.mp4</div>
         </div>
 
-        <!-- Right Video Viewport -->
         <div class="viewer-card">
             <div class="video-wrapper">
                 <video src="./PAB_lyra.mp4" autoplay loop muted playsinline controls></video>
@@ -165,35 +160,25 @@
         </div>
     </div>
 
-    <!-- Official ESM Sourcing Pipeline matching your documentation structure -->
     <script type="module" async>
         import { Niivue } from "https://unpkg.com/@niivue/niivue@0.57.0/dist/index.js"
 
-        // Build absolute safe paths to resolve GitHub Pages subfolders automatically
         const currentPath = window.location.pathname.substring(0, window.location.pathname.lastIndexOf('/'));
         const rootUrl = `${window.location.origin}${currentPath}`;
 
-        const volumeManifold = [
-            { url: `${rootUrl}/manifoldcache_flair.nii.gz` }
-        ];
+        const volumeManifold = [{ url: `${rootUrl}/manifoldcache_flair.nii.gz` }];
+        const volumeDeepcache = [{ url: `${rootUrl}/deepcache_flair.nii.gz` }];
 
-        const volumeDeepcache = [
-            { url: `${rootUrl}/deepcache_flair.nii.gz` }
-        ];
-
-        // 1. Setup Left Viewer (ManifoldCache)
         const nvManifold = new Niivue({ isResizeCanvas: true });
-        nvManifold.setSliceType(nvManifold.sliceTypeRender); // Force 3D Render View
+        nvManifold.setSliceType(nvManifold.sliceTypeRender);
         await nvManifold.attachTo("canvas-manifold");
         await nvManifold.loadVolumes(volumeManifold);
 
-        // 2. Setup Right Viewer (DeepCache)
         const nvDeepcache = new Niivue({ isResizeCanvas: true });
-        nvDeepcache.setSliceType(nvDeepcache.sliceTypeRender); // Force 3D Render View
+        nvDeepcache.setSliceType(nvDeepcache.sliceTypeRender);
         await nvDeepcache.attachTo("canvas-deepcache");
         await nvDeepcache.loadVolumes(volumeDeepcache);
 
-        // Sync views so they rotate together
         nvManifold.broadcastTo([nvDeepcache], { "2d": false, "3d": true });
         nvDeepcache.broadcastTo([nvManifold], { "2d": false, "3d": true });
 
@@ -245,13 +230,13 @@
 
         <div class="viewer-card">
             <div class="canvas-wrapper" id="crystal-viewer-a" style="min-height: 380px;"></div>
-            <div class="caption">DeepCache</div>
+            <div class="caption">ManifoldCache (Ours)</div>
             <div class="sub-caption">Tm₂Te₃ — Tm32 Te48 | Drag to rotate, scroll to zoom</div>
         </div>
 
         <div class="viewer-card">
             <div class="canvas-wrapper" id="crystal-viewer-b" style="min-height: 380px;"></div>
-            <div class="caption">ManifoldCache (Ours)</div>
+            <div class="caption">DeepCache</div>
             <div class="sub-caption">Tm₂Te₃ — Tm32 Te48 | Drag to rotate, scroll to zoom</div>
         </div>
 
@@ -259,64 +244,65 @@
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/3Dmol/2.1.0/3Dmol-min.js"></script>
     <script>
-    // Hardcoded SDF for OCC(O)C(S)c1cccc(O)c1 — avoids CORS/PubChem fetch issues
+    // Fixed SDF for OCC(O)C(S)c1cccc(O)c1
+    // SDF for OCC(O)C(S)c1cccc(O)c1 — avoids CORS/PubChem fetch issues
     const SDF_DATA = `
-         RDKit          3D
+     RDKit          3D
 
-     20 21  0  0  0  0  0  0  0  0999 V2000
-        3.7523   -0.2200    0.4463 O   0  0  0  0  0  0  0  0  0  0  0  0
-        2.9167    0.7056   -0.2955 C   0  0  0  0  0  0  0  0  0  0  0  0
-        1.5025    0.2218   -0.0983 C   0  0  0  0  0  0  0  0  0  0  0  0
-        1.4035   -1.2512   -0.4883 O   0  0  0  0  0  0  0  0  0  0  0  0
-        0.5787    1.0537   -0.9912 C   0  0  0  0  0  0  0  0  0  0  0  0
-        0.6319    2.5239   -0.6147 S   0  0  0  0  0  0  0  0  0  0  0  0
-       -0.8541    0.6218   -0.8076 C   0  0  0  0  0  0  0  0  0  0  0  0
-       -1.8215    1.5989   -0.6011 C   0  0  0  0  0  0  0  0  0  0  0  0
-       -3.1289    1.2104   -0.3871 C   0  0  0  0  0  0  0  0  0  0  0  0
-       -3.4937   -0.1129   -0.3660 C   0  0  0  0  0  0  0  0  0  0  0  0
-       -4.7991   -0.5099   -0.1397 O   0  0  0  0  0  0  0  0  0  0  0  0
-       -2.5451   -1.0939   -0.5730 C   0  0  0  0  0  0  0  0  0  0  0  0
-       -1.2346   -0.6963   -0.8001 C   0  0  0  0  0  0  0  0  0  0  0  0
-        3.6803    0.7588   -1.2753 H   0  0  0  0  0  0  0  0  0  0  0  0
-        3.0583    1.7377    0.0388 H   0  0  0  0  0  0  0  0  0  0  0  0
-        4.6575   -0.0047    0.2296 H   0  0  0  0  0  0  0  0  0  0  0  0
-        1.2544    0.2897    1.0001 H   0  0  0  0  0  0  0  0  0  0  0  0
-        0.5162   -1.4983   -0.3258 H   0  0  0  0  0  0  0  0  0  0  0  0
-        0.8614    0.8829   -2.0477 H   0  0  0  0  0  0  0  0  0  0  0  0
-       -0.2375    2.9481   -0.4985 H   0  0  0  0  0  0  0  0  0  0  0  0
-       -1.5413    2.6449   -0.5941 H   0  0  0  0  0  0  0  0  0  0  0  0
-       -3.8761    1.9840   -0.2337 H   0  0  0  0  0  0  0  0  0  0  0  0
-       -5.3968    0.2393   -0.0777 H   0  0  0  0  0  0  0  0  0  0  0  0
-       -2.8174   -2.1396   -0.5614 H   0  0  0  0  0  0  0  0  0  0  0  0
-       -0.4876   -1.4737   -0.9662 H   0  0  0  0  0  0  0  0  0  0  0  0
-      1  2  1  0
-      2  3  1  0
-      3  4  1  0
-      3  5  1  0
-      5  6  1  0
-      5  7  1  0
-      7  8  2  0
-      8  9  1  0
-      9 10  2  0
-     10 11  1  0
-     10 12  1  0
-     12 13  2  0
-     13  7  1  0
-      2 14  1  0
-      2 15  1  0
-      1 16  1  0
-      3 17  1  0
-      4 18  1  0
-      5 19  1  0
-      6 20  1  0
-      8 21  1  0
-      9 22  1  0
-     11 23  1  0
-     12 24  1  0
-     13 25  1  0
-    M  END
-    $$$$
-    `;
+ 20 21  0  0  0  0  0  0  0  0999 V2000
+    3.7523   -0.2200    0.4463 O   0  0  0  0  0  0  0  0  0  0  0  0
+    2.9167    0.7056   -0.2955 C   0  0  0  0  0  0  0  0  0  0  0  0
+    1.5025    0.2218   -0.0983 C   0  0  0  0  0  0  0  0  0  0  0  0
+    1.4035   -1.2512   -0.4883 O   0  0  0  0  0  0  0  0  0  0  0  0
+    0.5787    1.0537   -0.9912 C   0  0  0  0  0  0  0  0  0  0  0  0
+    0.6319    2.5239   -0.6147 S   0  0  0  0  0  0  0  0  0  0  0  0
+   -0.8541    0.6218   -0.8076 C   0  0  0  0  0  0  0  0  0  0  0  0
+   -1.8215    1.5989   -0.6011 C   0  0  0  0  0  0  0  0  0  0  0  0
+   -3.1289    1.2104   -0.3871 C   0  0  0  0  0  0  0  0  0  0  0  0
+   -3.4937   -0.1129   -0.3660 C   0  0  0  0  0  0  0  0  0  0  0  0
+   -4.7991   -0.5099   -0.1397 O   0  0  0  0  0  0  0  0  0  0  0  0
+   -2.5451   -1.0939   -0.5730 C   0  0  0  0  0  0  0  0  0  0  0  0
+   -1.2346   -0.6963   -0.8001 C   0  0  0  0  0  0  0  0  0  0  0  0
+    3.6803    0.7588   -1.2753 H   0  0  0  0  0  0  0  0  0  0  0  0
+    3.0583    1.7377    0.0388 H   0  0  0  0  0  0  0  0  0  0  0  0
+    4.6575   -0.0047    0.2296 H   0  0  0  0  0  0  0  0  0  0  0  0
+    1.2544    0.2897    1.0001 H   0  0  0  0  0  0  0  0  0  0  0  0
+    0.5162   -1.4983   -0.3258 H   0  0  0  0  0  0  0  0  0  0  0  0
+    0.8614    0.8829   -2.0477 H   0  0  0  0  0  0  0  0  0  0  0  0
+   -0.2375    2.9481   -0.4985 H   0  0  0  0  0  0  0  0  0  0  0  0
+   -1.5413    2.6449   -0.5941 H   0  0  0  0  0  0  0  0  0  0  0  0
+   -3.8761    1.9840   -0.2337 H   0  0  0  0  0  0  0  0  0  0  0  0
+   -5.3968    0.2393   -0.0777 H   0  0  0  0  0  0  0  0  0  0  0  0
+   -2.8174   -2.1396   -0.5614 H   0  0  0  0  0  0  0  0  0  0  0  0
+   -0.4876   -1.4737   -0.9662 H   0  0  0  0  0  0  0  0  0  0  0  0
+  1  2  1  0
+  2  3  1  0
+  3  4  1  0
+  3  5  1  0
+  5  6  1  0
+  5  7  1  0
+  7  8  2  0
+  8  9  1  0
+  9 10  2  0
+ 10 11  1  0
+ 10 12  1  0
+ 12 13  2  0
+ 13  7  1  0
+  2 14  1  0
+  2 15  1  0
+  1 16  1  0
+  3 17  1  0
+  4 18  1  0
+  5 19  1  0
+  6 20  1  0
+  8 21  1  0
+  9 22  1  0
+ 11 23  1  0
+ 12 24  1  0
+ 13 25  1  0
+M  END
+$$$$
+`;
 
     window.addEventListener('load', function() {
         const configs = [
@@ -340,125 +326,8 @@
             viewer.render();
         });
 
-        // ----------------------------------------------------------------
-        // ROW 4 — Crystal structure viewers via CIF files loaded from disk
-        // or falling back to embedded CIF data when served locally.
-        //
-        // The viewers first attempt to fetch `./method_a.cif` / `./method_b.cif`
-        // relative to the page.  If the fetch fails (404 / CORS) they fall back
-        // to the hardcoded CIF strings below so the demo always renders.
-        // ----------------------------------------------------------------
-
-        // Method A: DeepCache — Tm2Te3 (a=8.281, b=12.189, c=26.234 Å, P1)
+        // CIF A = ManifoldCache (Ours) — swapped to left panel
         const CIF_A = `# generated using pymatgen
-data_Tm2Te3
-_symmetry_space_group_name_H-M   'P 1'
-_cell_length_a   8.28109646
-_cell_length_b   12.18861389
-_cell_length_c   26.23364067
-_cell_angle_alpha   90.00000000
-_cell_angle_beta   90.00000000
-_cell_angle_gamma   90.00000000
-_symmetry_Int_Tables_number   1
-_chemical_formula_structural   Tm2Te3
-_chemical_formula_sum   'Tm32 Te48'
-_cell_volume   2647.89481211
-_cell_formula_units_Z   16
-loop_
- _symmetry_equiv_pos_site_id
- _symmetry_equiv_pos_as_xyz
-  1  'x, y, z'
-loop_
- _atom_site_type_symbol
- _atom_site_label
- _atom_site_symmetry_multiplicity
- _atom_site_fract_x
- _atom_site_fract_y
- _atom_site_fract_z
- _atom_site_occupancy
-  Tm  Tm0  1  0.12500000  0.12500000  0.37364611  1
-  Tm  Tm1  1  0.62500000  0.12500000  0.37635389  1
-  Tm  Tm2  1  0.87500000  0.87500000  0.62635386  1
-  Tm  Tm3  1  0.37500000  0.87500000  0.62364614  1
-  Tm  Tm4  1  0.12500000  0.62500000  0.87364614  1
-  Tm  Tm5  1  0.62500000  0.62500000  0.87635386  1
-  Tm  Tm6  1  0.87500000  0.37500000  0.12635389  1
-  Tm  Tm7  1  0.37500000  0.37500000  0.12364614  1
-  Tm  Tm8  1  0.62500000  0.12500000  0.87364614  1
-  Tm  Tm9  1  0.12500000  0.12500000  0.87635386  1
-  Tm  Tm10  1  0.37500000  0.87500000  0.12635389  1
-  Tm  Tm11  1  0.87500000  0.87500000  0.12364614  1
-  Tm  Tm12  1  0.62500000  0.62500000  0.37364611  1
-  Tm  Tm13  1  0.12500000  0.62500000  0.37635389  1
-  Tm  Tm14  1  0.37500000  0.37500000  0.62635386  1
-  Tm  Tm15  1  0.87500000  0.37500000  0.62364614  1
-  Tm  Tm16  1  0.12500000  0.12500000  0.54121011  1
-  Tm  Tm17  1  0.62500000  0.12500000  0.20878989  1
-  Tm  Tm18  1  0.87500000  0.87500000  0.45878989  1
-  Tm  Tm19  1  0.37500000  0.87500000  0.79121011  1
-  Tm  Tm20  1  0.12500000  0.62500000  0.04121017  1
-  Tm  Tm21  1  0.62500000  0.62500000  0.70878989  1
-  Tm  Tm22  1  0.87500000  0.37500000  0.95878989  1
-  Tm  Tm23  1  0.37500000  0.37500000  0.29121017  1
-  Tm  Tm24  1  0.62500000  0.12500000  0.04121017  1
-  Tm  Tm25  1  0.12500000  0.12500000  0.70878989  1
-  Tm  Tm26  1  0.37500000  0.87500000  0.95878989  1
-  Tm  Tm27  1  0.87500000  0.87500000  0.29121017  1
-  Tm  Tm28  1  0.62500000  0.62500000  0.54121011  1
-  Tm  Tm29  1  0.12500000  0.62500000  0.20878989  1
-  Tm  Tm30  1  0.37500000  0.37500000  0.45878989  1
-  Tm  Tm31  1  0.87500000  0.37500000  0.79121011  1
-  Te  Te32  1  0.87705350  0.12500000  0.12500000  1
-  Te  Te33  1  0.87294650  0.62500000  0.12500000  1
-  Te  Te34  1  0.12294650  0.87500000  0.87500000  1
-  Te  Te35  1  0.12705350  0.37500000  0.87500000  1
-  Te  Te36  1  0.87705350  0.62500000  0.62500000  1
-  Te  Te37  1  0.87294650  0.12500000  0.62500000  1
-  Te  Te38  1  0.12294650  0.37500000  0.37500000  1
-  Te  Te39  1  0.12705350  0.87500000  0.37500000  1
-  Te  Te40  1  0.37705350  0.12500000  0.62500000  1
-  Te  Te41  1  0.37294650  0.62500000  0.62500000  1
-  Te  Te42  1  0.62294650  0.87500000  0.37500000  1
-  Te  Te43  1  0.62705350  0.37500000  0.37500000  1
-  Te  Te44  1  0.37705350  0.62500000  0.12500000  1
-  Te  Te45  1  0.37294650  0.12500000  0.12500000  1
-  Te  Te46  1  0.62294650  0.37500000  0.87500000  1
-  Te  Te47  1  0.62705350  0.87500000  0.87500000  1
-  Te  Te48  1  0.12661564  0.87508708  0.70755130  1
-  Te  Te49  1  0.62338436  0.87491292  0.70755130  1
-  Te  Te50  1  0.62338436  0.87508708  0.04244870  1
-  Te  Te51  1  0.12661564  0.87491292  0.04244870  1
-  Te  Te52  1  0.87338436  0.12491292  0.29244870  1
-  Te  Te53  1  0.37661564  0.12508702  0.29244870  1
-  Te  Te54  1  0.37661564  0.12491292  0.95755130  1
-  Te  Te55  1  0.87338436  0.12508702  0.95755130  1
-  Te  Te56  1  0.12661564  0.37508702  0.20755124  1
-  Te  Te57  1  0.62338436  0.37491292  0.20755124  1
-  Te  Te58  1  0.62338436  0.37508702  0.54244870  1
-  Te  Te59  1  0.12661564  0.37491292  0.54244870  1
-  Te  Te60  1  0.87338436  0.62491292  0.79244870  1
-  Te  Te61  1  0.37661564  0.62508702  0.79244870  1
-  Te  Te62  1  0.37661564  0.62491292  0.45755124  1
-  Te  Te63  1  0.87338436  0.62508702  0.45755124  1
-  Te  Te64  1  0.62661564  0.87508708  0.20755124  1
-  Te  Te65  1  0.12338436  0.87491292  0.20755124  1
-  Te  Te66  1  0.12338436  0.87508708  0.54244870  1
-  Te  Te67  1  0.62661564  0.87491292  0.54244870  1
-  Te  Te68  1  0.37338436  0.12491292  0.79244870  1
-  Te  Te69  1  0.87661564  0.12508702  0.79244870  1
-  Te  Te70  1  0.87661564  0.12491292  0.45755124  1
-  Te  Te71  1  0.37338436  0.12508702  0.45755124  1
-  Te  Te72  1  0.62661564  0.37508702  0.70755130  1
-  Te  Te73  1  0.12338436  0.37491292  0.70755130  1
-  Te  Te74  1  0.12338436  0.37508702  0.04244870  1
-  Te  Te75  1  0.62661564  0.37491292  0.04244870  1
-  Te  Te76  1  0.37338436  0.62491292  0.29244870  1
-  Te  Te77  1  0.87661564  0.62508702  0.29244870  1
-  Te  Te78  1  0.87661564  0.62491292  0.95755130  1
-  Te  Te79  1  0.37338436  0.62508702  0.95755130  1`;
-
-        // Method B: ManifoldCache (Ours) — Tm2Te3 (a=8.418, b=12.287, c=26.161 Å, P1)
-        const CIF_B = `# generated using pymatgen
 data_Tm2Te3
 _symmetry_space_group_name_H-M   'P 1'
 _cell_length_a   8.41800785
@@ -565,7 +434,114 @@ loop_
   Te  Te78  1  0.37433743  0.62554908  0.29258493  1
   Te  Te79  1  0.87566251  0.62445092  0.29258493  1`;
 
-        // Helper: attempt to load CIF from file path, fall back to embedded string
+        // CIF B = DeepCache — swapped to right panel
+        const CIF_B = `# generated using pymatgen
+data_Tm2Te3
+_symmetry_space_group_name_H-M   'P 1'
+_cell_length_a   8.28109646
+_cell_length_b   12.18861389
+_cell_length_c   26.23364067
+_cell_angle_alpha   90.00000000
+_cell_angle_beta   90.00000000
+_cell_angle_gamma   90.00000000
+_symmetry_Int_Tables_number   1
+_chemical_formula_structural   Tm2Te3
+_chemical_formula_sum   'Tm32 Te48'
+_cell_volume   2647.89481211
+_cell_formula_units_Z   16
+loop_
+ _symmetry_equiv_pos_site_id
+ _symmetry_equiv_pos_as_xyz
+  1  'x, y, z'
+loop_
+ _atom_site_type_symbol
+ _atom_site_label
+ _atom_site_symmetry_multiplicity
+ _atom_site_fract_x
+ _atom_site_fract_y
+ _atom_site_fract_z
+ _atom_site_occupancy
+  Tm  Tm0  1  0.12500000  0.12500000  0.37364611  1
+  Tm  Tm1  1  0.62500000  0.12500000  0.37635389  1
+  Tm  Tm2  1  0.87500000  0.87500000  0.62635386  1
+  Tm  Tm3  1  0.37500000  0.87500000  0.62364614  1
+  Tm  Tm4  1  0.12500000  0.62500000  0.87364614  1
+  Tm  Tm5  1  0.62500000  0.62500000  0.87635386  1
+  Tm  Tm6  1  0.87500000  0.37500000  0.12635389  1
+  Tm  Tm7  1  0.37500000  0.37500000  0.12364614  1
+  Tm  Tm8  1  0.62500000  0.12500000  0.87364614  1
+  Tm  Tm9  1  0.12500000  0.12500000  0.87635386  1
+  Tm  Tm10  1  0.37500000  0.87500000  0.12635389  1
+  Tm  Tm11  1  0.87500000  0.87500000  0.12364614  1
+  Tm  Tm12  1  0.62500000  0.62500000  0.37364611  1
+  Tm  Tm13  1  0.12500000  0.62500000  0.37635389  1
+  Tm  Tm14  1  0.37500000  0.37500000  0.62635386  1
+  Tm  Tm15  1  0.87500000  0.37500000  0.62364614  1
+  Tm  Tm16  1  0.12500000  0.12500000  0.54121011  1
+  Tm  Tm17  1  0.62500000  0.12500000  0.20878989  1
+  Tm  Tm18  1  0.87500000  0.87500000  0.45878989  1
+  Tm  Tm19  1  0.37500000  0.87500000  0.79121011  1
+  Tm  Tm20  1  0.12500000  0.62500000  0.04121017  1
+  Tm  Tm21  1  0.62500000  0.62500000  0.70878989  1
+  Tm  Tm22  1  0.87500000  0.37500000  0.95878989  1
+  Tm  Tm23  1  0.37500000  0.37500000  0.29121017  1
+  Tm  Tm24  1  0.62500000  0.12500000  0.04121017  1
+  Tm  Tm25  1  0.12500000  0.12500000  0.70878989  1
+  Tm  Tm26  1  0.37500000  0.87500000  0.95878989  1
+  Tm  Tm27  1  0.87500000  0.87500000  0.29121017  1
+  Tm  Tm28  1  0.62500000  0.62500000  0.54121011  1
+  Tm  Tm29  1  0.12500000  0.62500000  0.20878989  1
+  Tm  Tm30  1  0.37500000  0.37500000  0.45878989  1
+  Tm  Tm31  1  0.87500000  0.37500000  0.79121011  1
+  Te  Te32  1  0.87705350  0.12500000  0.12500000  1
+  Te  Te33  1  0.87294650  0.62500000  0.12500000  1
+  Te  Te34  1  0.12294650  0.87500000  0.87500000  1
+  Te  Te35  1  0.12705350  0.37500000  0.87500000  1
+  Te  Te36  1  0.87705350  0.62500000  0.62500000  1
+  Te  Te37  1  0.87294650  0.12500000  0.62500000  1
+  Te  Te38  1  0.12294650  0.37500000  0.37500000  1
+  Te  Te39  1  0.12705350  0.87500000  0.37500000  1
+  Te  Te40  1  0.37705350  0.12500000  0.62500000  1
+  Te  Te41  1  0.37294650  0.62500000  0.62500000  1
+  Te  Te42  1  0.62294650  0.87500000  0.37500000  1
+  Te  Te43  1  0.62705350  0.37500000  0.37500000  1
+  Te  Te44  1  0.37705350  0.62500000  0.12500000  1
+  Te  Te45  1  0.37294650  0.12500000  0.12500000  1
+  Te  Te46  1  0.62294650  0.37500000  0.87500000  1
+  Te  Te47  1  0.62705350  0.87500000  0.87500000  1
+  Te  Te48  1  0.12661564  0.87508708  0.70755130  1
+  Te  Te49  1  0.62338436  0.87491292  0.70755130  1
+  Te  Te50  1  0.62338436  0.87508708  0.04244870  1
+  Te  Te51  1  0.12661564  0.87491292  0.04244870  1
+  Te  Te52  1  0.87338436  0.12491292  0.29244870  1
+  Te  Te53  1  0.37661564  0.12508702  0.29244870  1
+  Te  Te54  1  0.37661564  0.12491292  0.95755130  1
+  Te  Te55  1  0.87338436  0.12508702  0.95755130  1
+  Te  Te56  1  0.12661564  0.37508702  0.20755124  1
+  Te  Te57  1  0.62338436  0.37491292  0.20755124  1
+  Te  Te58  1  0.62338436  0.37508702  0.54244870  1
+  Te  Te59  1  0.12661564  0.37491292  0.54244870  1
+  Te  Te60  1  0.87338436  0.62491292  0.79244870  1
+  Te  Te61  1  0.37661564  0.62508702  0.79244870  1
+  Te  Te62  1  0.37661564  0.62491292  0.45755124  1
+  Te  Te63  1  0.87338436  0.62508702  0.45755124  1
+  Te  Te64  1  0.62661564  0.87508708  0.20755124  1
+  Te  Te65  1  0.12338436  0.87491292  0.20755124  1
+  Te  Te66  1  0.12338436  0.87508708  0.54244870  1
+  Te  Te67  1  0.62661564  0.87491292  0.54244870  1
+  Te  Te68  1  0.37338436  0.12491292  0.79244870  1
+  Te  Te69  1  0.87661564  0.12508702  0.79244870  1
+  Te  Te70  1  0.87661564  0.12491292  0.45755124  1
+  Te  Te71  1  0.37338436  0.12508702  0.45755124  1
+  Te  Te72  1  0.62661564  0.37508702  0.70755130  1
+  Te  Te73  1  0.12338436  0.37491292  0.70755130  1
+  Te  Te74  1  0.12338436  0.37508702  0.04244870  1
+  Te  Te75  1  0.62661564  0.37491292  0.04244870  1
+  Te  Te76  1  0.37338436  0.62491292  0.29244870  1
+  Te  Te77  1  0.87661564  0.62508702  0.29244870  1
+  Te  Te78  1  0.87661564  0.62491292  0.95755130  1
+  Te  Te79  1  0.37338436  0.62508702  0.95755130  1`;
+
         function loadCrystalViewer(containerId, filePath, fallbackCif, spinAxis) {
             var el = document.getElementById(containerId);
             if (!el) return;
@@ -577,47 +553,35 @@ loop_
 
             function renderCif(cifText) {
                 viewer.addModel(cifText, "cif", { normalizeAssembly: true, duplicateAssemblyAtoms: true });
-
-                // Atoms: element-based coloring with spheres
                 viewer.setStyle({}, {
                     sphere: { scale: 0.32, colorscheme: "Jmol" }
                 });
-
-                // Bonds rendered as sticks
                 viewer.addStyle({}, {
                     stick: { radius: 0.08, colorscheme: "Jmol" }
                 });
-
-                // Translucent unit cell box
                 viewer.addUnitCell({
                     box: { color: "#38bdf8", linewidth: 1.5, opacity: 0.6 },
                     astep: 5,
                     bstep: 5,
                     cstep: 5
                 });
-
                 viewer.zoomTo();
                 viewer.spin(spinAxis || "y", 0.8);
                 viewer.render();
             }
 
-            // Try fetching from disk first
             fetch(filePath)
                 .then(function(resp) {
                     if (!resp.ok) throw new Error("not found");
                     return resp.text();
                 })
-                .then(function(text) {
-                    renderCif(text);
-                })
-                .catch(function() {
-                    // Fall back to embedded CIF
-                    renderCif(fallbackCif);
-                });
+                .then(function(text) { renderCif(text); })
+                .catch(function() { renderCif(fallbackCif); });
         }
 
-        loadCrystalViewer("crystal-viewer-a", "./method_a.cif", CIF_A, "y");
-        loadCrystalViewer("crystal-viewer-b", "./method_b.cif", CIF_B, "y");
+        // Swapped: crystal-viewer-a = ManifoldCache (CIF_A), crystal-viewer-b = DeepCache (CIF_B)
+        loadCrystalViewer("crystal-viewer-a", "./method_b.cif", CIF_A, "y");
+        loadCrystalViewer("crystal-viewer-b", "./method_a.cif", CIF_B, "y");
     });
     </script>
 
