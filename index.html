@@ -55,6 +55,15 @@
             max-width: 1400px;
         }
 
+        /* 4-Column Row Layout for the SMILES methods */
+        .smiles-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(22%, 1fr));
+            gap: 20px;
+            width: 100%;
+            max-width: 1400px;
+        }
+
         .viewer-card {
             background-color: #1e293b;
             border-radius: 12px;
@@ -65,12 +74,16 @@
             flex-direction: column;
         }
 
-        /* 3D Volumes specific rendering context constraint height */
         .viewer-card.volume-height {
             height: 65vh;
         }
 
-        .canvas-wrapper, .video-wrapper {
+        /* Fixed height container for molecular 3D structures */
+        .viewer-card.molecule-height {
+            height: 38vh;
+        }
+
+        .canvas-wrapper, .video-wrapper, .molecule-wrapper {
             flex-grow: 1;
             width: 100%;
             position: relative;
@@ -115,6 +128,8 @@
             text-align: center;
         }
     </style>
+    <!-- Include the stable library CDN for 3Dmol.js molecule viewers -->
+    <script src="https://3dmol.org"></script>
 </head>
 <body>
 
@@ -165,11 +180,42 @@
         </div>
     </div>
 
-    <!-- Official ESM Sourcing Pipeline matching your documentation structure -->
-    <script type="module" async>
-        import { Niivue } from "https://unpkg.com/@niivue/niivue@0.57.0/dist/index.js"
+    <!-- ROW 3: SMILES 3D Molecular Comparison Viewports -->
+    <div class="section-title">SMILES Molecular Structure Generation (OCC(O)C(S)c1cccc(O)c1)</div>
+    <div class="smiles-container">
+        <!-- Method 1: ManifoldCache -->
+        <div class="viewer-card molecule-height">
+            <div id="mol-manifold" class="molecule-wrapper" data-style="stick"></div>
+            <div class="caption">ManifoldCache (Ours)</div>
+            <div class="sub-caption">3D Rotate Interaction Enabled</div>
+        </div>
 
-        // Build absolute safe paths to resolve GitHub Pages subfolders automatically
+        <!-- Method 2: DeepCache -->
+        <div class="viewer-card molecule-height">
+            <div id="mol-deepcache" class="molecule-wrapper" data-style="stick"></div>
+            <div class="caption">DeepCache</div>
+            <div class="sub-caption">3D Rotate Interaction Enabled</div>
+        </div>
+
+        <!-- Method 3: PAB -->
+        <div class="viewer-card molecule-height">
+            <div id="mol-pab" class="molecule-wrapper" data-style="stick"></div>
+            <div class="caption">PAB</div>
+            <div class="sub-caption">3D Rotate Interaction Enabled</div>
+        </div>
+
+        <!-- Method 4: Ground Truth / Baseline -->
+        <div class="viewer-card molecule-height">
+            <div id="mol-baseline" class="molecule-wrapper" data-style="stick"></div>
+            <div class="caption">Ground Truth</div>
+            <div class="sub-caption">3D Rotate Interaction Enabled</div>
+        </div>
+    </div>
+
+    <!-- Official ESM Sourcing Pipeline matching your working structure -->
+    <script type="module" async>
+        import { Niivue } from "https://unpkg.com"
+
         const currentPath = window.location.pathname.substring(0, window.location.pathname.lastIndexOf('/'));
         const rootUrl = `${window.location.origin}${currentPath}`;
 
@@ -181,21 +227,46 @@
             { url: `${rootUrl}/deepcache_flair.nii.gz` }
         ];
 
-        // 1. Setup Left Viewer (ManifoldCache)
         const nvManifold = new Niivue({ isResizeCanvas: true });
-        nvManifold.setSliceType(nvManifold.sliceTypeRender); // Force 3D Render View
+        nvManifold.setSliceType(nvManifold.sliceTypeRender); 
         await nvManifold.attachTo("canvas-manifold");
         await nvManifold.loadVolumes(volumeManifold);
 
-        // 2. Setup Right Viewer (DeepCache)
         const nvDeepcache = new Niivue({ isResizeCanvas: true });
-        nvDeepcache.setSliceType(nvDeepcache.sliceTypeRender); // Force 3D Render View
+        nvDeepcache.setSliceType(nvDeepcache.sliceTypeRender); 
         await nvDeepcache.attachTo("canvas-deepcache");
         await nvDeepcache.loadVolumes(volumeDeepcache);
 
-        // Sync views so they rotate together
         nvManifold.broadcastTo([nvDeepcache], { "2d": false, "3d": true });
         nvDeepcache.broadcastTo([nvManifold], { "2d": false, "3d": true });
+    </script>
+
+    <!-- 3Dmol Rendering Framework -->
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            // Target elements map array
+            const viewIds = ["mol-manifold", "mol-deepcache", "mol-pab", "mol-baseline"];
+            
+            viewIds.forEach(id => {
+                const element = document.getElementById(id);
+                // Construct standard viewer canvas inside target wrapper elements
+                const viewer = $3Dmol.createViewer(element, { backgroundColor: '#000000' });
+                
+                // Native direct parsing pipeline utilizing internal 3Dmol structure mapping
+                $3Dmol.download("smiles:OCC(O)C(S)c1cccc(O)c1", viewer, {
+                    style: { stick: { colorscheme: "Jmol", radius: 0.25 } }
+                }, function() {
+                    viewer.zoomTo();
+                    viewer.render();
+                    
+                    // Slow rotation loop sequence setup
+                    setInterval(() => {
+                        viewer.rotate(0.5, 'y');
+                        viewer.render();
+                    }, 35);
+                });
+            });
+        });
     </script>
 </body>
 </html>
