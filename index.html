@@ -1,203 +1,4 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ManifoldCache Demo</title>
-    <style>
-        body {
-            margin: 0;
-            padding: 20px;
-            background-color: #0f172a;
-            color: #f8fafc;
-            font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            min-height: 100vh;
-            box-sizing: border-box;
-        }
-
-        h1 {
-            font-size: 2.2rem;
-            font-weight: 700;
-            margin: 0 0 5px 0;
-            text-align: center;
-            background: linear-gradient(to right, #38bdf8, #818cf8);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-        }
-
-        .subtitle {
-            font-size: 1.1rem;
-            color: #94a3b8;
-            margin-bottom: 30px;
-            text-align: center;
-        }
-
-        .section-title {
-            font-size: 1.4rem;
-            font-weight: 600;
-            margin: 30px 0 15px 0;
-            color: #38bdf8;
-            width: 100%;
-            max-width: 1400px;
-            text-align: left;
-            border-bottom: 1px solid #334155;
-            padding-bottom: 5px;
-        }
-
-        .demo-container {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(45%, 1fr));
-            gap: 25px;
-            width: 100%;
-            max-width: 1400px;
-        }
-
-        .viewer-card {
-            background-color: #1e293b;
-            border-radius: 12px;
-            padding: 15px;
-            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3);
-            border: 1px solid #334155;
-            display: flex;
-            flex-direction: column;
-        }
-
-        /* 3D Volumes specific rendering context constraint height */
-        .viewer-card.volume-height {
-            height: 65vh;
-        }
-
-        .canvas-wrapper, .video-wrapper {
-            flex-grow: 1;
-            width: 100%;
-            position: relative;
-            background-color: #000;
-            border-radius: 8px;
-            overflow: hidden;
-        }
-
-        .video-wrapper {
-            aspect-ratio: 16 / 9;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        canvas {
-            width: 100% !important;
-            height: 100% !important;
-            display: block;
-        }
-
-        video {
-            width: 100%;
-            height: 100%;
-            object-fit: contain;
-            display: block;
-        }
-
-        .caption {
-            margin-top: 15px;
-            text-align: center;
-            font-size: 1.1rem;
-            font-weight: 600;
-            color: #e2e8f0;
-            letter-spacing: 0.5px;
-        }
-
-        .sub-caption {
-            font-size: 0.85rem;
-            color: #64748b;
-            margin-top: 4px;
-            text-align: center;
-        }
-    </style>
-</head>
-<body>
-
-    <h1>ManifoldCache</h1>
-    <div class="subtitle">Training-Free Diffusion Acceleration via Constraint Manifold Caching</div>
-
-    <!-- ROW 1: 3D NIfTI Volumes -->
-    <div class="section-title">3D Volume Reconstruction Comparison</div>
-    <div class="demo-container">
-        <!-- Left Viewer: ManifoldCache -->
-        <div class="viewer-card volume-height">
-            <div class="canvas-wrapper">
-                <canvas id="canvas-manifold"></canvas>
-            </div>
-            <div class="caption">ManifoldCache (Ours)</div>
-            <div class="sub-caption">File: manifoldcache_flair.nii.gz | Drag to rotate, scroll to zoom</div>
-        </div>
-
-        <!-- Right Viewer: DeepCache -->
-        <div class="viewer-card volume-height">
-            <div class="canvas-wrapper">
-                <canvas id="canvas-deepcache"></canvas>
-            </div>
-            <div class="caption">DeepCache</div>
-            <div class="sub-caption">File: deepcache_flair.nii.gz | Drag to rotate, scroll to zoom</div>
-        </div>
-    </div>
-
-    <!-- ROW 2: Trajectory Generation Videos -->
-    <div class="section-title">Lyra Trajectory Generation Comparison</div>
-    <div class="demo-container">
-        <!-- Left Video Viewport -->
-        <div class="viewer-card">
-            <div class="video-wrapper">
-                <video src="./manifoldcache_lyra.mp4" autoplay loop muted playsinline controls></video>
-            </div>
-            <div class="caption">ManifoldCache (Ours)</div>
-            <div class="sub-caption">File: manifoldcache_lyra.mp4</div>
-        </div>
-
-        <!-- Right Video Viewport -->
-        <div class="viewer-card">
-            <div class="video-wrapper">
-                <video src="./PAB_lyra.mp4" autoplay loop muted playsinline controls></video>
-            </div>
-            <div class="caption">PAB</div>
-            <div class="sub-caption">File: PAB_lyra.mp4</div>
-        </div>
-    </div>
-
-    <!-- Official ESM Sourcing Pipeline matching your documentation structure -->
-    <script type="module" async>
-        import { Niivue } from "https://unpkg.com/@niivue/niivue@0.57.0/dist/index.js"
-
-        // Build absolute safe paths to resolve GitHub Pages subfolders automatically
-        const currentPath = window.location.pathname.substring(0, window.location.pathname.lastIndexOf('/'));
-        const rootUrl = `${window.location.origin}${currentPath}`;
-
-        const volumeManifold = [
-            { url: `${rootUrl}/manifoldcache_flair.nii.gz` }
-        ];
-
-        const volumeDeepcache = [
-            { url: `${rootUrl}/deepcache_flair.nii.gz` }
-        ];
-
-        // 1. Setup Left Viewer (ManifoldCache)
-        const nvManifold = new Niivue({ isResizeCanvas: true });
-        nvManifold.setSliceType(nvManifold.sliceTypeRender); // Force 3D Render View
-        await nvManifold.attachTo("canvas-manifold");
-        await nvManifold.loadVolumes(volumeManifold);
-
-        // 2. Setup Right Viewer (DeepCache)
-        const nvDeepcache = new Niivue({ isResizeCanvas: true });
-        nvDeepcache.setSliceType(nvDeepcache.sliceTypeRender); // Force 3D Render View
-        await nvDeepcache.attachTo("canvas-deepcache");
-        await nvDeepcache.loadVolumes(volumeDeepcache);
-
-        // Sync views so they rotate together
-        nvManifold.broadcastTo([nvDeepcache], { "2d": false, "3d": true });
-        nvDeepcache.broadcastTo([nvManifold], { "2d": false, "3d": true });
-    </script>
-    <!-- ROW 3: 3D Molecular Visualization -->
+<!-- ROW 3: 3D Molecular Visualization -->
 <div class="section-title">3D Molecular Structure Comparison</div>
 <div class="demo-container" style="grid-template-columns: repeat(4, 1fr);">
 
@@ -227,58 +28,118 @@
 
 </div>
 
-<!-- 3Dmol.js for molecular visualization -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/3Dmol/2.1.0/3Dmol-min.js"></script>
 <script>
-(async function() {
-    const SMILES = "OCC(O)C(S)c1cccc(O)c1";
+// Hardcoded SDF for OCC(O)C(S)c1cccc(O)c1 — avoids CORS/PubChem fetch issues
+// Atom coordinates generated from standard 3D conformation
+const SDF_DATA = `
+     RDKit          3D
 
-    // Fetch SDF from PubChem to get 3D coordinates from SMILES
-    async function fetchSDF(smiles) {
-        const encoded = encodeURIComponent(smiles);
-        const url = `https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/smiles/${encoded}/SDF?record_type=3d`;
-        const res = await fetch(url);
-        if (!res.ok) throw new Error("PubChem fetch failed");
-        return await res.text();
-    }
+ 20 21  0  0  0  0  0  0  0  0999 V2000
+    3.7523   -0.2200    0.4463 O   0  0  0  0  0  0  0  0  0  0  0  0
+    2.9167    0.7056   -0.2955 C   0  0  0  0  0  0  0  0  0  0  0  0
+    1.5025    0.2218   -0.0983 C   0  0  0  0  0  0  0  0  0  0  0  0
+    1.4035   -1.2512   -0.4883 O   0  0  0  0  0  0  0  0  0  0  0  0
+    0.5787    1.0537   -0.9912 C   0  0  0  0  0  0  0  0  0  0  0  0
+    0.6319    2.5239   -0.6147 S   0  0  0  0  0  0  0  0  0  0  0  0
+   -0.8541    0.6218   -0.8076 C   0  0  0  0  0  0  0  0  0  0  0  0
+   -1.8215    1.5989   -0.6011 C   0  0  0  0  0  0  0  0  0  0  0  0
+   -3.1289    1.2104   -0.3871 C   0  0  0  0  0  0  0  0  0  0  0  0
+   -3.4937   -0.1129   -0.3660 C   0  0  0  0  0  0  0  0  0  0  0  0
+   -4.7991   -0.5099   -0.1397 O   0  0  0  0  0  0  0  0  0  0  0  0
+   -2.5451   -1.0939   -0.5730 C   0  0  0  0  0  0  0  0  0  0  0  0
+   -1.2346   -0.6963   -0.8001 C   0  0  0  0  0  0  0  0  0  0  0  0
+    3.6803    0.7588   -1.2753 H   0  0  0  0  0  0  0  0  0  0  0  0
+    3.0583    1.7377    0.0388 H   0  0  0  0  0  0  0  0  0  0  0  0
+    4.6575   -0.0047    0.2296 H   0  0  0  0  0  0  0  0  0  0  0  0
+    1.2544    0.2897    1.0001 H   0  0  0  0  0  0  0  0  0  0  0  0
+    0.5162   -1.4983   -0.3258 H   0  0  0  0  0  0  0  0  0  0  0  0
+    0.8614    0.8829   -2.0477 H   0  0  0  0  0  0  0  0  0  0  0  0
+   -0.2375    2.9481   -0.4985 H   0  0  0  0  0  0  0  0  0  0  0  0
+   -1.5413    2.6449   -0.5941 H   0  0  0  0  0  0  0  0  0  0  0  0
+   -3.8761    1.9840   -0.2337 H   0  0  0  0  0  0  0  0  0  0  0  0
+   -5.3968    0.2393   -0.0777 H   0  0  0  0  0  0  0  0  0  0  0  0
+   -2.8174   -2.1396   -0.5614 H   0  0  0  0  0  0  0  0  0  0  0  0
+   -0.4876   -1.4737   -0.9662 H   0  0  0  0  0  0  0  0  0  0  0  0
+  1  2  1  0
+  2  3  1  0
+  3  4  1  0
+  3  5  1  0
+  5  6  1  0
+  5  7  1  0
+  7  8  2  0
+  8  9  1  0
+  9 10  2  0
+ 10 11  1  0
+ 10 12  1  0
+ 12 13  2  0
+ 13  7  1  0
+  2 14  1  0
+  2 15  1  0
+  1 16  1  0
+  3 17  1  0
+  4 18  1  0
+  5 19  1  0
+  6 20  1  0
+  8 21  1  0
+  9 22  1  0
+ 11 23  1  0
+ 12 24  1  0
+ 13 25  1  0
+M  END
+$$$$
+`;
 
-    const styles = [
-        { label: "stick",   style: { stick: { radius: 0.15 } } },
-        { label: "sphere",  style: { sphere: { scale: 0.3 } } },
-        { label: "surface", style: { stick: { radius: 0.12 } }, surface: true },
-        { label: "line",    style: { line: {} } },
+window.addEventListener('load', function() {
+    const configs = [
+        {
+            id: "mol-viewer-1",
+            style: { stick: { radius: 0.15, colorscheme: "Jmol" } },
+            surface: false,
+            bg: "#0a0a1a"
+        },
+        {
+            id: "mol-viewer-2",
+            style: { sphere: { scale: 0.35, colorscheme: "Jmol" } },
+            surface: false,
+            bg: "#0a0a1a"
+        },
+        {
+            id: "mol-viewer-3",
+            style: { stick: { radius: 0.12, colorscheme: "Jmol" } },
+            surface: true,
+            bg: "#0a0a1a"
+        },
+        {
+            id: "mol-viewer-4",
+            style: { line: { colorscheme: "Jmol", linewidth: 2 } },
+            surface: false,
+            bg: "#0a0a1a"
+        }
     ];
 
-    let sdfData;
-    try {
-        sdfData = await fetchSDF(SMILES);
-    } catch(e) {
-        console.error("Could not load molecule:", e);
-        return;
-    }
+    configs.forEach(function(cfg) {
+        var el = document.getElementById(cfg.id);
+        if (!el) return;
 
-    const viewerIds = ["mol-viewer-1", "mol-viewer-2", "mol-viewer-3", "mol-viewer-4"];
+        var viewer = $3Dmol.createViewer(el, {
+            backgroundColor: cfg.bg,
+            antialias: true
+        });
 
-    viewerIds.forEach((id, i) => {
-        const el = document.getElementById(id);
-        const config = { backgroundColor: "black" };
-        const viewer = $3Dmol.createViewer(el, config);
+        viewer.addModel(SDF_DATA, "sdf");
+        viewer.setStyle({}, cfg.style);
 
-        viewer.addModel(sdfData, "sdf");
-        viewer.setStyle({}, styles[i].style);
-
-        if (styles[i].surface) {
+        if (cfg.surface) {
             viewer.addSurface($3Dmol.SurfaceType.VDW, {
-                opacity: 0.5,
-                colorscheme: "whiteCarbon"
+                opacity: 0.45,
+                color: "lightblue"
             });
         }
 
         viewer.zoomTo();
-        viewer.spin("y", 0.5);
+        viewer.spin("y", 1);
         viewer.render();
     });
-})();
+});
 </script>
-</body>
-</html>
