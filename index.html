@@ -67,6 +67,7 @@
         canvas {
             width: 100% !important;
             height: 100% !important;
+            display: block;
         }
 
         .caption {
@@ -115,30 +116,30 @@
 
     <script>
         async function setupDemo() {
-            // Configuration options with the backColor array syntax fix applied
+            // FIXED: Added missing color values [R, G, B, A] to resolve syntax crash
             const niivueOptions = {
-                loadingText: 'Loading NIfTI Volume...',
-                backColor: [0, 0, 0, 1], // Pure black background inside canvas
-                isColorbar: false,       // Hide colorbar for cleaner presentation
+                loadingText: 'Loading 3D Volume...',
+                backColor: [0, 0, 0, 1], 
+                isColorbar: false,
             };
 
-            // Initialize Left Viewer (ManifoldCache)
+            // 1. Initialize and attach Left Viewer
             const nvManifold = new niivue.Niivue(niivueOptions);
             await nvManifold.attachToCanvas(document.getElementById('canvas-manifold'));
-            nvManifold.setSliceType(nvManifold.sliceTypeRender); // Set to 3D volume rendering
+            nvManifold.setSliceType(nvManifold.sliceTypeRender);
 
+            // 2. Initialize and attach Right Viewer
+            const nvDeepcache = new niivue.Niivue(niivueOptions);
+            await nvDeepcache.attachToCanvas(document.getElementById('canvas-deepcache'));
+            nvDeepcache.setSliceType(nvDeepcache.sliceTypeRender);
+
+            // Explicitly map paths to current directory
             const volumeManifold = [{
                 url: "./manifoldcache_flair.nii.gz",
                 colorMap: "gray",
                 opacity: 1,
                 visible: true
             }];
-            await nvManifold.loadVolumes(volumeManifold);
-
-            // Initialize Right Viewer (DeepCache)
-            const nvDeepcache = new niivue.Niivue(niivueOptions);
-            await nvDeepcache.attachToCanvas(document.getElementById('canvas-deepcache'));
-            nvDeepcache.setSliceType(nvDeepcache.sliceTypeRender); // Set to 3D volume rendering
 
             const volumeDeepcache = [{
                 url: "./deepcache_flair.nii.gz",
@@ -146,14 +147,26 @@
                 opacity: 1,
                 visible: true
             }];
-            await nvDeepcache.loadVolumes(volumeDeepcache);
 
-            // Bidirectional camera linking for 3D views according to Niivue specs
+            // Load datasets
+            try {
+                await Promise.all([
+                    nvManifold.loadVolumes(volumeManifold),
+                    nvDeepcache.loadVolumes(volumeDeepcache)
+                ]);
+                
+                // Redraw canvases
+                nvManifold.updateGLVolume();
+                nvDeepcache.updateGLVolume();
+            } catch (error) {
+                console.error("Failed loading volumes:", error);
+            }
+
+            // Sync camera controls across viewports
             nvManifold.broadcastTo([nvDeepcache], { "2d": false, "3d": true });
             nvDeepcache.broadcastTo([nvManifold], { "2d": false, "3d": true });
         }
 
-        // Execute initialization when page finishes loading
         window.addEventListener('DOMContentLoaded', setupDemo);
     </script>
 </body>
