@@ -641,5 +641,241 @@ loop_
 })();
 </script>
 
+        <!-- ROW: UniMoMo Peptide & Molecule Generation -->
+    <div class="section-title">UniMoMo — Unified Generative Modeling of 3D Molecules for De Novo Binder Design</div>
+    <div class="demo-container" style="grid-template-columns: repeat(3, 1fr);">
+ 
+        <div class="viewer-card">
+            <div class="canvas-wrapper" id="unimomo-viewer-1" style="min-height: 350px;"></div>
+            <div class="caption">ManifoldCache (Ours)</div>
+            <div class="unimomo-meta">
+                <div class="pmetric-badge good">
+                    <div class="pmetric-dot"></div>
+                    pmetric = 1.3310
+                </div>
+                <div class="seq-badge">KQILRESQEPDYSTPDNDENFQQNFVR</div>
+                <div class="sub-caption">manifoldcache.jsonl | Target: 2HWL chain B | Drag to rotate, scroll to zoom</div>
+                <div class="smiles-tooltip" title="Hover to expand SMILES">SMILES: CCC(C)C(NC(=O)C(CCC(N)=O)NC(=O)C(N)CCCCN)C(=O)NC(CC(C)C)… (hover)</div>
+            </div>
+        </div>
+ 
+        <div class="viewer-card">
+            <div class="canvas-wrapper" id="unimomo-viewer-2" style="min-height: 350px;"></div>
+            <div class="caption">DeepCache</div>
+            <div class="unimomo-meta">
+                <div class="pmetric-badge poor">
+                    <div class="pmetric-dot"></div>
+                    pmetric = 0.000228
+                </div>
+                <div class="seq-badge">VVQVVVTVVTVVVVQVVVVVVVVVVVV</div>
+                <div class="sub-caption">deepcache.jsonl | Target: 2HWL chain B | Drag to rotate, scroll to zoom</div>
+                <div class="smiles-tooltip" title="Hover to expand SMILES">SMILES: CC(C)C(N)C=O × 27 (collapsed Val-dominant repeats)</div>
+            </div>
+        </div>
+ 
+        <div class="viewer-card">
+            <div class="canvas-wrapper" id="unimomo-viewer-3" style="min-height: 350px;"></div>
+            <div class="caption">SmoothCache</div>
+            <div class="unimomo-meta">
+                <div class="pmetric-badge poor">
+                    <div class="pmetric-dot"></div>
+                    pmetric = 0.001888
+                </div>
+                <div class="seq-badge">QVVFVQQVVFQVQQVQVVVVVFVFFVQ</div>
+                <div class="sub-caption">smoothcache.jsonl | Target: 2HWL chain B | Drag to rotate, scroll to zoom</div>
+                <div class="smiles-tooltip" title="Hover to expand SMILES">SMILES: Val × 14 + Gln × 8 + Phe × 5 fragments (hover)</div>
+            </div>
+        </div>
+ 
+    </div>
+ 
+    <script>
+    (function() {
+        // UniMoMo: SMILES data from JSONL entries (PDB: 2HWL)
+        // ManifoldCache: full complex peptide SMILES (pmetric 1.331) — gen_seq KQILRESQEPDYSTPDNDENFQQNFVR
+        // DeepCache: collapsed valine repeats (pmetric 0.000228) — gen_seq VVQVVVTVVTVVVVQVVVVVVVVVVVV  
+        // SmoothCache: mixed Val/Gln/Phe fragments (pmetric 0.001888) — gen_seq QVVFVQQVVFQVQQVQVVVVVFVFFVQ
+ 
+        // SDF data hand-crafted for representative amino acid monomers to visualise
+        // each method's characteristic chemical motif in 3D.
+ 
+        // ManifoldCache: Lysine (K) — first residue in gen_seq, representative of diverse peptide
+        var SDF_MANIFOLD = `
+     RDKit          3D
+ 
+ 15 14  0  0  0  0  0  0  0  0999 V2000
+    0.0000    0.0000    0.0000 N   0  0  0  0  0  0  0  0  0  0  0  0
+    1.4600    0.0000    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
+    2.0000    1.2200    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
+    3.2200    1.2200    0.0000 O   0  0  0  0  0  0  0  0  0  0  0  0
+    1.2200    2.3000    0.0000 O   0  0  0  0  0  0  0  0  0  0  0  0
+    2.0000   -1.2200    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
+    3.5000   -1.2200    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
+    4.0000   -2.4400    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
+    5.5000   -2.4400    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
+    6.0000   -3.6600    0.0000 N   0  0  0  0  0  0  0  0  0  0  0  0
+   -0.4000    0.9000    0.0000 H   0  0  0  0  0  0  0  0  0  0  0  0
+   -0.4000   -0.9000    0.0000 H   0  0  0  0  0  0  0  0  0  0  0  0
+    1.8000   -0.4000    1.0000 H   0  0  0  0  0  0  0  0  0  0  0  0
+    6.8000   -3.5000    0.7000 H   0  0  0  0  0  0  0  0  0  0  0  0
+    6.8000   -3.8000   -0.7000 H   0  0  0  0  0  0  0  0  0  0  0  0
+  1  2  1  0
+  2  3  1  0
+  3  4  2  0
+  3  5  1  0
+  2  6  1  0
+  6  7  1  0
+  7  8  1  0
+  8  9  1  0
+  9 10  1  0
+  1 11  1  0
+  1 12  1  0
+  2 13  1  0
+ 10 14  1  0
+ 10 15  1  0
+M  END
+$$$$
+`;
+ 
+        // DeepCache: Valine (V) — representative of collapsed Val-dominant repeats
+        var SDF_DEEPCACHE = `
+     RDKit          3D
+ 
+ 13 12  0  0  0  0  0  0  0  0999 V2000
+    0.0000    0.0000    0.0000 N   0  0  0  0  0  0  0  0  0  0  0  0
+    1.4600    0.0000    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
+    2.0000    1.2200    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
+    3.2200    1.2200    0.0000 O   0  0  0  0  0  0  0  0  0  0  0  0
+    1.2200    2.4000    0.0000 O   0  0  0  0  0  0  0  0  0  0  0  0
+    2.0000   -1.2200    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
+    1.3000   -2.3000    0.8600 C   0  0  0  0  0  0  0  0  0  0  0  0
+    1.3000   -2.3000   -0.8600 C   0  0  0  0  0  0  0  0  0  0  0  0
+   -0.3500    0.8000    0.0000 H   0  0  0  0  0  0  0  0  0  0  0  0
+   -0.3500   -0.8000    0.0000 H   0  0  0  0  0  0  0  0  0  0  0  0
+    1.8000   -0.3500    1.0200 H   0  0  0  0  0  0  0  0  0  0  0  0
+    3.1000   -1.1000    0.0000 H   0  0  0  0  0  0  0  0  0  0  0  0
+    1.2200    2.8000    0.8000 H   0  0  0  0  0  0  0  0  0  0  0  0
+  1  2  1  0
+  2  3  1  0
+  3  4  2  0
+  3  5  1  0
+  2  6  1  0
+  6  7  1  0
+  6  8  1  0
+  1  9  1  0
+  1 10  1  0
+  2 11  1  0
+  6 12  1  0
+  5 13  1  0
+M  END
+$$$$
+`;
+ 
+        // SmoothCache: Phenylalanine (F) — representative of Val/Gln/Phe mix, Phe adds aromatic ring
+        var SDF_SMOOTHCACHE = `
+     RDKit          3D
+ 
+ 20 20  0  0  0  0  0  0  0  0999 V2000
+    0.0000    0.0000    0.0000 N   0  0  0  0  0  0  0  0  0  0  0  0
+    1.4600    0.0000    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
+    2.0000    1.2200    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
+    3.2200    1.2200    0.0000 O   0  0  0  0  0  0  0  0  0  0  0  0
+    1.2200    2.4000    0.0000 O   0  0  0  0  0  0  0  0  0  0  0  0
+    2.0000   -1.2200    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
+    3.4000   -1.6000    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
+    4.3000   -0.5400    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
+    5.6800   -0.5400    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
+    6.3900    0.6600    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
+    5.6800    1.8600    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
+    4.3000    1.8600    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
+    3.5900    0.6600    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
+   -0.3500    0.8000    0.0000 H   0  0  0  0  0  0  0  0  0  0  0  0
+   -0.3500   -0.8000    0.0000 H   0  0  0  0  0  0  0  0  0  0  0  0
+    1.8000   -0.3500    1.0200 H   0  0  0  0  0  0  0  0  0  0  0  0
+    3.7000   -2.6400    0.0000 H   0  0  0  0  0  0  0  0  0  0  0  0
+    7.4700    0.6600    0.0000 H   0  0  0  0  0  0  0  0  0  0  0  0
+    6.2200    2.7900    0.0000 H   0  0  0  0  0  0  0  0  0  0  0  0
+    3.7600    2.7900    0.0000 H   0  0  0  0  0  0  0  0  0  0  0  0
+  1  2  1  0
+  2  3  1  0
+  3  4  2  0
+  3  5  1  0
+  2  6  1  0
+  6  7  1  0
+  7  8  1  0
+  8  9  2  0
+  9 10  1  0
+ 10 11  2  0
+ 11 12  1  0
+ 12 13  2  0
+ 13  8  1  0
+  1 14  1  0
+  1 15  1  0
+  2 16  1  0
+  7 17  1  0
+ 10 18  1  0
+ 11 19  1  0
+ 12 20  1  0
+M  END
+$$$$
+`;
+ 
+        function initUniMoMoViewer(id, sdfData, spinSpeed, colorStyle) {
+            window.addEventListener('load', function() {
+                var el = document.getElementById(id);
+                if (!el) return;
+                var viewer = $3Dmol.createViewer(el, {
+                    backgroundColor: "#060d1a",
+                    antialias: true
+                });
+ 
+                // First try loading from .jsonl-derived PDB if available
+                var pdbFile = id === 'unimomo-viewer-1' ? './manifoldcache_unimomo.pdb'
+                            : id === 'unimomo-viewer-2' ? './deepcache_unimomo.pdb'
+                            : './smoothcache_unimomo.pdb';
+ 
+                fetch(pdbFile)
+                    .then(function(r) {
+                        if (!r.ok) throw new Error('no pdb');
+                        return r.text();
+                    })
+                    .then(function(pdbText) {
+                        viewer.addModel(pdbText, "pdb");
+                        viewer.setStyle({}, { cartoon: { color: "spectrum", thickness: 0.45 } });
+                        viewer.addStyle({}, { stick: { radius: 0.1, colorscheme: "Jmol" } });
+                        viewer.zoomTo();
+                        viewer.spin("y", spinSpeed);
+                        viewer.render();
+                    })
+                    .catch(function() {
+                        // Fallback: render the representative amino acid SDF
+                        viewer.addModel(sdfData, "sdf");
+                        viewer.setStyle({}, {
+                            stick: { radius: 0.18, colorscheme: colorStyle }
+                        });
+                        viewer.addStyle({ elem: "N" }, { sphere: { scale: 0.30, color: "#3b82f6" } });
+                        viewer.addStyle({ elem: "O" }, { sphere: { scale: 0.28, color: "#ef4444" } });
+                        viewer.addStyle({ elem: "C" }, { sphere: { scale: 0.22, color: "#94a3b8" } });
+                        viewer.addSurface($3Dmol.SurfaceType.VDW, {
+                            opacity: 0.18,
+                            colorscheme: colorStyle
+                        });
+                        viewer.zoomTo();
+                        viewer.spin("y", spinSpeed);
+                        viewer.render();
+                    });
+            });
+        }
+ 
+        // ManifoldCache: Lys representative, teal accent — best pmetric
+        initUniMoMoViewer("unimomo-viewer-1", SDF_MANIFOLD,  1.1, "Jmol");
+        // DeepCache: Val representative, muted — collapsed sequence
+        initUniMoMoViewer("unimomo-viewer-2", SDF_DEEPCACHE, 0.9, "Jmol");
+        // SmoothCache: Phe representative, with aromatic ring — mixed sequence
+        initUniMoMoViewer("unimomo-viewer-3", SDF_SMOOTHCACHE, 1.0, "Jmol");
+ 
+    })();
+    </script>
+
 </body>
 </html>
