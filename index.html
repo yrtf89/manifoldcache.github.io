@@ -641,5 +641,216 @@ loop_
 })();
 </script>
 
+    <!-- ============================================================ -->
+<!-- ROW: UniMoMo Peptide Generation (PDB: 2hwl)                 -->
+<!-- Place this block anywhere inside <body>, before </body>      -->
+<!-- Requires 3Dmol already loaded:                               -->
+<!--   <script src="https://cdnjs.cloudflare.com/ajax/libs/3Dmol/2.1.0/3Dmol-min.js"></script> -->
+<!-- ============================================================ -->
+
+<style>
+    .pmetric-badge {
+        display: inline-block;
+        margin-top: 6px;
+        padding: 2px 10px;
+        border-radius: 999px;
+        font-size: 0.78rem;
+        font-weight: 600;
+        letter-spacing: 0.3px;
+    }
+    .pmetric-good { background: #14532d; color: #86efac; }
+    .pmetric-low  { background: #1c1917; color: #a8a29e; }
+
+    .seq-display {
+        font-family: 'Courier New', Courier, monospace;
+        font-size: 0.72rem;
+        color: #94a3b8;
+        margin-top: 5px;
+        word-break: break-all;
+        letter-spacing: 0.5px;
+    }
+
+    .seq-display span {
+        display: inline-block;
+        width: 1.1em;
+        text-align: center;
+        border-radius: 2px;
+        padding: 0 1px;
+    }
+    .aa-pos  { color: #60a5fa; }
+    .aa-neg  { color: #f87171; }
+    .aa-pol  { color: #4ade80; }
+    .aa-aro  { color: #c084fc; }
+    .aa-hph  { color: #fbbf24; }
+    .aa-spc  { color: #9ca3af; }
+</style>
+
+<div class="section-title">
+    UniMoMo — Unified Generative Modeling of 3D Molecules
+    <span style="font-size:0.85rem; font-weight:400; color:#64748b; margin-left:8px;">
+        Peptide binder design · Target: 2hwl chain B
+    </span>
+</div>
+
+<div class="demo-container" style="grid-template-columns: repeat(3, 1fr);">
+
+    <!-- ManifoldCache -->
+    <div class="viewer-card">
+        <div class="canvas-wrapper" id="unimomo-manifold" style="min-height: 350px;"></div>
+        <div class="caption">ManifoldCache (Ours)</div>
+        <div class="sub-caption">
+            <span class="pmetric-badge pmetric-good">pmetric: 1.3310</span>
+        </div>
+        <div class="seq-display" id="seq-manifold"></div>
+    </div>
+
+    <!-- DeepCache -->
+    <div class="viewer-card">
+        <div class="canvas-wrapper" id="unimomo-deepcache" style="min-height: 350px;"></div>
+        <div class="caption">DeepCache</div>
+        <div class="sub-caption">
+            <span class="pmetric-badge pmetric-low">pmetric: 2.28 × 10⁻⁴</span>
+        </div>
+        <div class="seq-display" id="seq-deepcache"></div>
+    </div>
+
+    <!-- SmoothCache -->
+    <div class="viewer-card">
+        <div class="canvas-wrapper" id="unimomo-smoothcache" style="min-height: 350px;"></div>
+        <div class="caption">SmoothCache</div>
+        <div class="sub-caption">
+            <span class="pmetric-badge pmetric-low">pmetric: 1.89 × 10⁻³</span>
+        </div>
+        <div class="seq-display" id="seq-smoothcache"></div>
+    </div>
+
+</div>
+
+<script>
+(function () {
+    /* ── amino acid helpers ─────────────────────────────────── */
+    var AA3 = {
+        A:'ALA',R:'ARG',N:'ASN',D:'ASP',C:'CYS',E:'GLU',Q:'GLN',
+        G:'GLY',H:'HIS',I:'ILE',L:'LEU',K:'LYS',M:'MET',F:'PHE',
+        P:'PRO',S:'SER',T:'THR',W:'TRP',Y:'TYR',V:'VAL'
+    };
+
+    /* residue → CSS class for coloured sequence display */
+    var AA_CLASS = {
+        K:'aa-pos',R:'aa-pos',H:'aa-pos',
+        D:'aa-neg',E:'aa-neg',
+        N:'aa-pol',Q:'aa-pol',S:'aa-pol',T:'aa-pol',C:'aa-pol',
+        F:'aa-aro',W:'aa-aro',Y:'aa-aro',
+        A:'aa-hph',V:'aa-hph',I:'aa-hph',L:'aa-hph',M:'aa-hph',
+        G:'aa-spc',P:'aa-spc'
+    };
+
+    /* residue → hex colour for 3Dmol cartoon */
+    var AA_COLOR = {
+        K:'#3b82f6',R:'#3b82f6',H:'#60a5fa',
+        D:'#ef4444',E:'#f87171',
+        N:'#a3e635',Q:'#a3e635',S:'#4ade80',T:'#4ade80',C:'#fde047',
+        F:'#c084fc',W:'#a855f7',Y:'#9333ea',
+        A:'#fbbf24',V:'#f59e0b',I:'#d97706',L:'#b45309',M:'#92400e',
+        G:'#e5e7eb',P:'#d1d5db'
+    };
+
+    /* ── dataset ────────────────────────────────────────────── */
+    var ENTRIES = [
+        {
+            canvasId: 'unimomo-manifold',
+            seqId:    'seq-manifold',
+            seq:      'KQILRESQEPDYSTPDNDENFQQNFVR'
+        },
+        {
+            canvasId: 'unimomo-deepcache',
+            seqId:    'seq-deepcache',
+            seq:      'VVQVVVTVVTVVVVQVVVVVVVVVVVV'
+        },
+        {
+            canvasId: 'unimomo-smoothcache',
+            seqId:    'seq-smoothcache',
+            seq:      'QVVFVQQVVFQVQQVQVVVVVFVFFVQ'
+        }
+    ];
+
+    /* ── build a pseudo-helix PDB from one-letter sequence ──── */
+    function seqToPDB(seq) {
+        var lines = ['REMARK UniMoMo pseudo-helix'];
+        var serial = 1;
+        for (var i = 0; i < seq.length; i++) {
+            var t   = i * (2 * Math.PI / 3.6);          // 3.6 res/turn
+            var x   = (1.5  * Math.cos(t)).toFixed(3);
+            var y   = (1.5  * Math.sin(t)).toFixed(3);
+            var z   = (i * 1.5).toFixed(3);
+            var xn  = (1.5  * Math.cos(t) - 0.4).toFixed(3);
+            var yn  = (1.5  * Math.sin(t) + 0.6).toFixed(3);
+            var zn  = (i * 1.5 - 0.5).toFixed(3);
+            var xc  = (1.5  * Math.cos(t) + 0.4).toFixed(3);
+            var yc  = (1.5  * Math.sin(t) - 0.6).toFixed(3);
+            var zc  = (i * 1.5 + 0.5).toFixed(3);
+            var aa3 = AA3[seq[i]] || 'GLY';
+            var ri  = String(i + 1).padStart(4, ' ');
+
+            function atomLine(ser, name, ax, ay, az, elem) {
+                return 'ATOM  ' + String(ser).padStart(5,' ') + '  ' + name.padStart(3,' ') +
+                       ' ' + aa3 + ' A' + ri + '    ' +
+                       String(ax).padStart(8,' ') + String(ay).padStart(8,' ') + String(az).padStart(8,' ') +
+                       '  1.00  0.00           ' + elem;
+            }
+            lines.push(atomLine(serial++, 'CA', x,  y,  z,  'C'));
+            lines.push(atomLine(serial++, 'N',  xn, yn, zn, 'N'));
+            lines.push(atomLine(serial++, 'C',  xc, yc, zc, 'C'));
+        }
+        lines.push('END');
+        return lines.join('\n');
+    }
+
+    /* ── coloured sequence display ───────────────────────────── */
+    function renderSeqLabel(containerId, seq) {
+        var el = document.getElementById(containerId);
+        if (!el) return;
+        var html = '';
+        for (var i = 0; i < seq.length; i++) {
+            var cls = AA_CLASS[seq[i]] || 'aa-spc';
+            html += '<span class="' + cls + '" title="' + (AA3[seq[i]] || seq[i]) + ' ' + (i+1) + '">' + seq[i] + '</span>';
+        }
+        el.innerHTML = html;
+    }
+
+    /* ── 3Dmol viewer ────────────────────────────────────────── */
+    function initViewer(entry) {
+        var el = document.getElementById(entry.canvasId);
+        if (!el || typeof $3Dmol === 'undefined') return;
+
+        var viewer = $3Dmol.createViewer(el, { backgroundColor: '#060d1a', antialias: true });
+        viewer.addModel(seqToPDB(entry.seq), 'pdb');
+
+        /* per-residue colour by chemical type */
+        for (var i = 0; i < entry.seq.length; i++) {
+            var col = AA_COLOR[entry.seq[i]] || '#9ca3af';
+            viewer.setStyle(
+                { resi: i + 1 },
+                {
+                    cartoon: { color: col, thickness: 0.5, opacity: 0.92 },
+                    stick:   { radius: 0.12, color: col }
+                }
+            );
+        }
+
+        viewer.zoomTo();
+        viewer.spin('y', 0.7);
+        viewer.render();
+
+        renderSeqLabel(entry.seqId, entry.seq);
+    }
+
+    /* ── init after DOM + 3Dmol ready ───────────────────────── */
+    window.addEventListener('load', function () {
+        ENTRIES.forEach(initViewer);
+    });
+})();
+</script>
+
 </body>
 </html>
