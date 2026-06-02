@@ -225,7 +225,7 @@
     </div>
 
     <!-- ROW 4: 3D Crystal Structure Visualization (DiffCSP-PP) -->
-    <div class="section-title">DiffCSP-PP Crystal Structure Prediction (Space Group Constrained Generation)</div>
+    <div class="section-title">DiffCSP++ Crystal Structure Prediction (Space Group Constrained Generation)</div>
     <div class="demo-container">
 
         <div class="viewer-card">
@@ -580,8 +580,8 @@ loop_
         }
 
         // Swapped: crystal-viewer-a = ManifoldCache (CIF_A), crystal-viewer-b = DeepCache (CIF_B)
-        loadCrystalViewer("crystal-viewer-a", "./method_b.cif", CIF_A, "y");
-        loadCrystalViewer("crystal-viewer-b", "./method_a.cif", CIF_B, "y");
+        loadCrystalViewer("crystal-viewer-a", "./manifoldcache.cif", CIF_A, "y");
+        loadCrystalViewer("crystal-viewer-b", "./deepcache.cif", CIF_B, "y");
     });
     </script>
 
