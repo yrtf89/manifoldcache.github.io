@@ -1,1 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ManifoldCache Demo</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 20px;
+            background-color: #0f172a;
+            color: #f8fafc;
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+            box-sizing: border-box;
+        }
+
+        h1 {
+            font-size: 2.2rem;
+            font-weight: 700;
+            margin-bottom: 5px;
+            text-align: center;
+            background: linear-gradient(to right, #38bdf8, #818cf8);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .subtitle {
+            font-size: 1.1rem;
+            color: #94a3b8;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+
+        .demo-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(45%, 1fr));
+            gap: 25px;
+            width: 100%;
+            max-width: 1400px;
+            flex-grow: 1;
+        }
+
+        .viewer-card {
+            background-color: #1e293b;
+            border-radius: 12px;
+            padding: 15px;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3);
+            border: 1px solid #334155;
+            display: flex;
+            flex-direction: column;
+            height: 70vh;
+        }
+
+        .canvas-wrapper {
+            flex-grow: 1;
+            width: 100%;
+            position: relative;
+            background-color: #000;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        canvas {
+            width: 100%;
+            height: 100%;
+        }
+
+        .caption {
+            margin-top: 15px;
+            text-align: center;
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: #e2e8f0;
+            letter-spacing: 0.5px;
+        }
+
+        .sub-caption {
+            font-size: 0.85rem;
+            color: #64748b;
+            margin-top: 4px;
+            text-align: center;
+        }
+    </style>
+    <!-- Load Niivue Library -->
+    <script src="https://github.io"></script>
+</head>
+<body>
+
+    <h1>ManifoldCache</h1>
+    <div class="subtitle">Training-Free Diffusion Acceleration via Constraint Manifold Caching</div>
+
+    <div class="demo-container">
+        <!-- Left Viewer: ManifoldCache -->
+        <div class="viewer-card">
+            <div class="canvas-wrapper">
+                <canvas id="canvas-manifold"></canvas>
+            </div>
+            <div class="caption">ManifoldCache (Ours)</div>
+            <div class="sub-caption">File: manifoldcache_flair.nii.gz | Drag to rotate, scroll to zoom</div>
+        </div>
+
+        <!-- Right Viewer: DeepCache -->
+        <div class="viewer-card">
+            <div class="canvas-wrapper">
+                <canvas id="canvas-deepcache"></canvas>
+            </div>
+            <div class="caption">DeepCache</div>
+            <div class="sub-caption">File: deepcache_flair.nii.gz | Drag to rotate, scroll to zoom</div>
+        </div>
+    </div>
+
+    <script>
+        // Shared configuration options for both viewports
+        const niivueOptions = {
+            loadingText: 'Loading NIfTI Volume...',
+            backColor: [0, 0, 0, 1], // Pure black background inside canvas
+            isColorbar: false,       // Hide colorbar for cleaner presentation
+        };
+
+        // Initialize Left Viewer (ManifoldCache)
+        const nvManifold = new niivue.Niivue(niivueOptions);
+        nvManifold.attachTo('canvas-manifold');
+        nvManifold.setSliceType(nvManifold.sliceTypeRender); // Set to 3D volume rendering
+
+        const volumeManifold = [{
+            url: "./manifoldcache_flair.nii.gz", // Keep file in same directory or provide full URL
+            colorMap: "gray",
+            opacity: 1,
+            visible: true
+        }];
+        nvManifold.loadVolumes(volumeManifold);
+
+        // Initialize Right Viewer (DeepCache)
+        const nvDeepcache = new niivue.Niivue(niivueOptions);
+        nvDeepcache.attachTo('canvas-deepcache');
+        nvDeepcache.setSliceType(nvDeepcache.sliceTypeRender); // Set to 3D volume rendering
+
+        const volumeDeepcache = [{
+            url: "./deepcache_flair.nii.gz", // Keep file in same directory or provide full URL
+            colorMap: "gray",
+            opacity: 1,
+            visible: true
+        }];
+        nvDeepcache.loadVolumes(volumeDeepcache);
+
+        // Optional: Link the cameras so rotating one rotates the other synchronously
+        nvManifold.broadcastTo(nvDeepcache);
+        nvDeepcache.broadcastTo(nvManifold);
+    </script>
+</body>
+</html>
 
