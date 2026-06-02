@@ -735,7 +735,6 @@ loop_
         P:'PRO',S:'SER',T:'THR',W:'TRP',Y:'TYR',V:'VAL'
     };
 
-    /* residue → CSS class for coloured sequence display */
     var AA_CLASS = {
         K:'aa-pos',R:'aa-pos',H:'aa-pos',
         D:'aa-neg',E:'aa-neg',
@@ -745,7 +744,6 @@ loop_
         G:'aa-spc',P:'aa-spc'
     };
 
-    /* residue → hex colour for 3Dmol cartoon */
     var AA_COLOR = {
         K:'#3b82f6',R:'#3b82f6',H:'#60a5fa',
         D:'#ef4444',E:'#f87171',
@@ -777,81 +775,123 @@ loop_
         }
     ];
 
-    /* ── build a pseudo-helix PDB from one-letter sequence ──── */
-    function seqToPDB(seq) {
-        var lines = ['REMARK UniMoMo pseudo-helix'];
-        var serial = 1;
-        for (var i = 0; i < seq.length; i++) {
-            var t   = i * (2 * Math.PI / 3.6);          // 3.6 res/turn
-            var x   = (1.5  * Math.cos(t)).toFixed(3);
-            var y   = (1.5  * Math.sin(t)).toFixed(3);
-            var z   = (i * 1.5).toFixed(3);
-            var xn  = (1.5  * Math.cos(t) - 0.4).toFixed(3);
-            var yn  = (1.5  * Math.sin(t) + 0.6).toFixed(3);
-            var zn  = (i * 1.5 - 0.5).toFixed(3);
-            var xc  = (1.5  * Math.cos(t) + 0.4).toFixed(3);
-            var yc  = (1.5  * Math.sin(t) - 0.6).toFixed(3);
-            var zc  = (i * 1.5 + 0.5).toFixed(3);
-            var aa3 = AA3[seq[i]] || 'GLY';
-            var ri  = String(i + 1).padStart(4, ' ');
+    /* ── recentre PDB text: translate chain A atoms so their
+       centroid sits at the chain B centroid (or origin if no B).
+       This fixes degenerate/exploded UniMoMo outputs where each
+       residue was placed at a random position in space.           ── */
+    function recentrePDB(pdbText) {
+        var lines = pdbText.split('\n');
+        var parsed = [];
 
-            function atomLine(ser, name, ax, ay, az, elem) {
-                return 'ATOM  ' + String(ser).padStart(5,' ') + '  ' + name.padStart(3,' ') +
-                       ' ' + aa3 + ' A' + ri + '    ' +
-                       String(ax).padStart(8,' ') + String(ay).padStart(8,' ') + String(az).padStart(8,' ') +
-                       '  1.00  0.00           ' + elem;
+        /* parse every ATOM/HETATM line */
+        lines.forEach(function (line) {
+            if (!line.match(/^(ATOM|HETATM)/)) {
+                parsed.push({ raw: line, isAtom: false });
+                return;
             }
-            lines.push(atomLine(serial++, 'CA', x,  y,  z,  'C'));
-            lines.push(atomLine(serial++, 'N',  xn, yn, zn, 'N'));
-            lines.push(atomLine(serial++, 'C',  xc, yc, zc, 'C'));
+            var chain = line[21] || ' ';
+            var x, y, z;
+            try {
+                x = parseFloat(line.substring(30, 38));
+                y = parseFloat(line.substring(38, 46));
+                z = parseFloat(line.substring(46, 54));
+            } catch (e) {
+                parsed.push({ raw: line, isAtom: false });
+                return;
+            }
+            if (isNaN(x) || isNaN(y) || isNaN(z)) {
+                parsed.push({ raw: line, isAtom: false });
+                return;
+            }
+            parsed.push({ raw: line, isAtom: true, chain: chain, x: x, y: y, z: z });
+        });
+
+        /* centroid of chain A */
+        var aAtoms = parsed.filter(function (p) { return p.isAtom && p.chain === 'A'; });
+        if (aAtoms.length === 0) return pdbText;   /* nothing to fix */
+
+        var cx = aAtoms.reduce(function (s, p) { return s + p.x; }, 0) / aAtoms.length;
+        var cy = aAtoms.reduce(function (s, p) { return s + p.y; }, 0) / aAtoms.length;
+        var cz = aAtoms.reduce(function (s, p) { return s + p.z; }, 0) / aAtoms.length;
+
+        /* centroid of chain B (to anchor A near B) */
+        var bAtoms = parsed.filter(function (p) { return p.isAtom && p.chain === 'B'; });
+        var tx = 0, ty = 0, tz = 0;
+        if (bAtoms.length > 0) {
+            tx = bAtoms.reduce(function (s, p) { return s + p.x; }, 0) / bAtoms.length;
+            ty = bAtoms.reduce(function (s, p) { return s + p.y; }, 0) / bAtoms.length;
+            tz = bAtoms.reduce(function (s, p) { return s + p.z; }, 0) / bAtoms.length;
         }
-        lines.push('END');
-        return lines.join('\n');
+
+        var dx = tx - cx, dy = ty - cy, dz = tz - cz;
+
+        /* rebuild PDB lines with shifted chain A coords */
+        var out = parsed.map(function (p) {
+            if (!p.isAtom || p.chain !== 'A') return p.raw;
+            var nx = (p.x + dx).toFixed(3);
+            var ny = (p.y + dy).toFixed(3);
+            var nz = (p.z + dz).toFixed(3);
+            return p.raw.substring(0, 30) +
+                   String(nx).padStart(8, ' ') +
+                   String(ny).padStart(8, ' ') +
+                   String(nz).padStart(8, ' ') +
+                   p.raw.substring(54);
+        });
+        return out.join('\n');
     }
 
-    /* ── coloured sequence display ───────────────────────────── */
+    /* ── coloured sequence display ──────────────────────────── */
     function renderSeqLabel(containerId, seq) {
         var el = document.getElementById(containerId);
         if (!el) return;
         var html = '';
         for (var i = 0; i < seq.length; i++) {
             var cls = AA_CLASS[seq[i]] || 'aa-spc';
-            html += '<span class="' + cls + '" title="' + (AA3[seq[i]] || seq[i]) + ' ' + (i+1) + '">' + seq[i] + '</span>';
+            html += '<span class="' + cls + '" title="' +
+                    (AA3[seq[i]] || seq[i]) + ' ' + (i + 1) + '">' + seq[i] + '</span>';
         }
         el.innerHTML = html;
     }
 
-    /* ── style a loaded PDB model ───────────────────────────── */
-    function styleAndRender(viewer, entry) {
-        /* receptor chain B: dim cartoon drawn first as background */
+    /* ── apply 3Dmol styles and render ─────────────────────── */
+    function styleAndRender(viewer, seq) {
+        /* chain B: dim grey cartoon as background scaffold */
         viewer.setStyle(
             { chain: 'B' },
-            { cartoon: { color: '#334155', thickness: 0.3, opacity: 0.45 } }
+            { cartoon: { color: '#334155', thickness: 0.28, opacity: 0.35 } }
         );
 
-        /* peptide chain A:
-           Use cartoon + stick + sphere together so the viewer works whether
-           the chain is connected (cartoon draws ribbon) or fragmented into
-           single-residue segments (spheres+sticks always render).           */
-        for (var i = 0; i < entry.seq.length; i++) {
-            var col = AA_COLOR[entry.seq[i]] || '#9ca3af';
+        /* chain A: sphere + stick per residue, coloured by AA type.
+           Spheres render even when residues are non-bonded / disconnected.
+           Cartoon is added on top — if backbone is connected it draws a
+           ribbon; if not, it silently no-ops without breaking anything.   */
+        viewer.setStyle(
+            { chain: 'A' },
+            {
+                sphere: { radius: 0.35, colorscheme: 'amino' },
+                stick:  { radius: 0.14, colorscheme: 'amino' }
+            }
+        );
+
+        /* overlay per-residue chemical-type colours */
+        for (var i = 0; i < seq.length; i++) {
+            var col = AA_COLOR[seq[i]] || '#9ca3af';
             viewer.setStyle(
                 { chain: 'A', resi: i + 1 },
                 {
-                    cartoon: { color: col, thickness: 0.55, opacity: 0.95 },
-                    stick:   { radius: 0.12, color: col },
-                    sphere:  { radius: 0.28, color: col, opacity: 0.85 }
+                    cartoon: { color: col, thickness: 0.5,  opacity: 0.9 },
+                    sphere:  { color: col, radius:  0.32, opacity: 0.9 },
+                    stick:   { color: col, radius:  0.13 }
                 }
             );
         }
 
-        /* zoom into the peptide so it fills the canvas */
         viewer.zoomTo({ chain: 'A' });
         viewer.spin('y', 0.7);
         viewer.render();
     }
 
-    /* ── 3Dmol viewer ────────────────────────────────────────── */
+    /* ── init one viewer ────────────────────────────────────── */
     function initViewer(entry) {
         var el = document.getElementById(entry.canvasId);
         if (!el || typeof $3Dmol === 'undefined') return;
@@ -863,29 +903,18 @@ loop_
                 if (!r.ok) throw new Error('PDB not found: ' + entry.pdb);
                 return r.text();
             })
-            .then(function (pdbText) {
+            .then(function (raw) {
+                var pdbText = recentrePDB(raw);
                 viewer.addModel(pdbText, 'pdb');
-                styleAndRender(viewer, entry);
+                styleAndRender(viewer, entry.seq);
             })
             .catch(function (err) {
-                console.warn(err.message + ' — falling back to pseudo-helix');
-                viewer.addModel(seqToPDB(entry.seq), 'pdb');
-                for (var i = 0; i < entry.seq.length; i++) {
-                    var col = AA_COLOR[entry.seq[i]] || '#9ca3af';
-                    viewer.setStyle({ resi: i + 1 }, {
-                        cartoon: { color: col, thickness: 0.5, opacity: 0.92 },
-                        stick:   { radius: 0.12, color: col }
-                    });
-                }
-                viewer.zoomTo();
-                viewer.spin('y', 0.7);
-                viewer.render();
+                console.warn(err.message);
             });
 
         renderSeqLabel(entry.seqId, entry.seq);
     }
 
-    /* ── init after DOM + 3Dmol ready ───────────────────────── */
     window.addEventListener('load', function () {
         ENTRIES.forEach(initViewer);
     });
