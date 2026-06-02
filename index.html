@@ -86,7 +86,7 @@
             text-align: center;
         }
     </style>
-    <!-- Kept your preferred unpkg script tag -->
+    <!-- Sourcing the requested version 0.21.2 library file -->
     <script src="https://unpkg.com/@niivue/niivue@0.21.2/dist/niivue.umd.js"></script>
 </head>
 <body>
@@ -115,54 +115,52 @@
     </div>
 
     <script>
-        async function setupDemo() {
-            const niivueOptions = {
-                loadingText: 'Loading 3D Volume...',
-                backColor: [0, 0, 0, 1], 
-                isColorbar: false,
-            };
+        // Configuration initialization options for older 0.21.2 engine versions
+        var niivueOptions = {
+            loadingText: 'Loading 3D Volume...',
+            backColor: [0, 0, 0, 1], 
+            isColorbar: false,
+        };
 
-            // 1. Initialize and attach Left Viewer using version 0.21.2 syntax
-            const nvManifold = new niivue.Niivue(niivueOptions);
-            nvManifold.attachTo('canvas-manifold');
-            nvManifold.setSliceType(nvManifold.sliceTypeRender);
+        // 1. Initialize and attach Left Viewer (ManifoldCache)
+        var nvManifold = new niivue.Niivue(niivueOptions);
+        nvManifold.attachTo('canvas-manifold');
 
-            // 2. Initialize and attach Right Viewer using version 0.21.2 syntax
-            const nvDeepcache = new niivue.Niivue(niivueOptions);
-            nvDeepcache.attachTo('canvas-deepcache');
-            nvDeepcache.setSliceType(nvDeepcache.sliceTypeRender);
+        // FIXED: Added missing volume header and image structure bindings mapping specs
+        var volumeManifold = [{
+            url: "./manifoldcache_flair.nii.gz",
+            volume: {hdr: null, img: null},
+            name: "manifoldcache_flair",
+            colorMap: "gray",
+            opacity: 1,
+            visible: true
+        }];
 
-            // Paths directly pointing to the root folder of your repository
-            const volumeManifold = [{
-                url: "./manifoldcache_flair.nii.gz",
-                colorMap: "gray",
-                opacity: 1,
-                visible: true
-            }];
+        // Load the Left dataset and force full 3D layout rendering configuration mode
+        nvManifold.loadVolumes(volumeManifold);
+        nvManifold.setSliceType(nvManifold.sliceTypeRender); 
 
-            const volumeDeepcache = [{
-                url: "./deepcache_flair.nii.gz",
-                colorMap: "gray",
-                opacity: 1,
-                visible: true
-            }];
+        // 2. Initialize and attach Right Viewer (DeepCache)
+        var nvDeepcache = new niivue.Niivue(niivueOptions);
+        nvDeepcache.attachTo('canvas-deepcache');
 
-            // Stream both NIfTI files simultaneously
-            try {
-                await Promise.all([
-                    nvManifold.loadVolumes(volumeManifold),
-                    nvDeepcache.loadVolumes(volumeDeepcache)
-                ]);
-            } catch (error) {
-                console.error("Failed loading local neuroimaging volumes:", error);
-            }
+        // FIXED: Added missing volume header and image structure bindings mapping specs
+        var volumeDeepcache = [{
+            url: "./deepcache_flair.nii.gz",
+            volume: {hdr: null, img: null},
+            name: "deepcache_flair",
+            colorMap: "gray",
+            opacity: 1,
+            visible: true
+        }];
 
-            // Sync camera controls dynamically across viewports
-            nvManifold.broadcastTo(nvDeepcache);
-            nvDeepcache.broadcastTo(nvManifold);
-        }
+        // Load the Right dataset and force full 3D layout rendering configuration mode
+        nvDeepcache.loadVolumes(volumeDeepcache);
+        nvDeepcache.setSliceType(nvDeepcache.sliceTypeRender); 
 
-        window.addEventListener('DOMContentLoaded', setupDemo);
+        // Synchronize manual mouse rotation controls symmetrically between the views
+        nvManifold.broadcastTo(nvDeepcache);
+        nvDeepcache.broadcastTo(nvManifold);
     </script>
 </body>
 </html>
