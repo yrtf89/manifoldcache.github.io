@@ -585,5 +585,61 @@ loop_
     });
     </script>
 
+    <!-- ROW: Proteina Protein Backbone Generation -->
+<div class="section-title">Proteina - foundation model for protein backbone generation</div>
+<div class="demo-container" style="grid-template-columns: repeat(3, 1fr);">
+
+    <div class="viewer-card">
+        <div class="canvas-wrapper" id="prot-viewer-1" style="min-height: 350px;"></div>
+        <div class="caption">ManifoldCache (Ours)</div>
+        <div class="sub-caption">manifoldcache.pdb | Drag to rotate, scroll to zoom</div>
+    </div>
+
+    <div class="viewer-card">
+        <div class="canvas-wrapper" id="prot-viewer-2" style="min-height: 350px;"></div>
+        <div class="caption">Fora</div>
+        <div class="sub-caption">fora.pdb | Drag to rotate, scroll to zoom</div>
+    </div>
+
+    <div class="viewer-card">
+        <div class="canvas-wrapper" id="prot-viewer-3" style="min-height: 350px;"></div>
+        <div class="caption">SmoothCache</div>
+        <div class="sub-caption">smoothcache.pdb | Drag to rotate, scroll to zoom</div>
+    </div>
+
+</div>
+
+<script>
+(function() {
+    var PROT_FILES = [
+        { id: "prot-viewer-1", file: "./manifoldcache.pdb" },
+        { id: "prot-viewer-2", file: "./fora.pdb" },
+        { id: "prot-viewer-3", file: "./smoothcache.pdb" },
+    ];
+
+    function initProtViewer(cfg) {
+        var el = document.getElementById(cfg.id);
+        if (!el) return;
+        var viewer = $3Dmol.createViewer(el, { backgroundColor: "#060d1a", antialias: true });
+
+        fetch(cfg.file)
+            .then(function(r) { if (!r.ok) throw new Error(); return r.text(); })
+            .then(function(pdbText) {
+                viewer.addModel(pdbText, "pdb");
+                viewer.setStyle({}, { cartoon: { color: "spectrum", thickness: 0.4 } });
+                viewer.addStyle({ atom: ["CA", "N", "C", "O"] }, { stick: { radius: 0.08, colorscheme: "Jmol" } });
+                viewer.zoomTo();
+                viewer.spin("y", 0.8);
+                viewer.render();
+            })
+            .catch(function() { console.warn("PDB not found: " + cfg.file); });
+    }
+
+    window.addEventListener('load', function() {
+        PROT_FILES.forEach(initProtViewer);
+    });
+})();
+</script>
+
 </body>
 </html>
