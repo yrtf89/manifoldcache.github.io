@@ -641,7 +641,7 @@ loop_
 })();
 </script>
 
-    <!-- ============================================================ -->
+ <!-- ============================================================ -->
 <!-- ROW: UniMoMo Peptide Generation (PDB: 2hwl)                 -->
 <!-- Place this block anywhere inside <body>, before </body>      -->
 <!-- Requires 3Dmol already loaded:                               -->
@@ -760,17 +760,20 @@ loop_
         {
             canvasId: 'unimomo-manifold',
             seqId:    'seq-manifold',
-            seq:      'KQILRESQEPDYSTPDNDENFQQNFVR'
+            seq:      'KQILRESQEPDYSTPDNDENFQQNFVR',
+            pdb:      './manifoldcache_unimomo.pdb'
         },
         {
             canvasId: 'unimomo-deepcache',
             seqId:    'seq-deepcache',
-            seq:      'VVQVVVTVVTVVVVQVVVVVVVVVVVV'
+            seq:      'VVQVVVTVVTVVVVQVVVVVVVVVVVV',
+            pdb:      './deepcache_unimomo.pdb'
         },
         {
             canvasId: 'unimomo-smoothcache',
             seqId:    'seq-smoothcache',
-            seq:      'QVVFVQQVVFQVQQVQVVVVVFVFFVQ'
+            seq:      'QVVFVQQVVFQVQQVQVVVVVFVFFVQ',
+            pdb:      './smoothcache_unimomo.pdb'
         }
     ];
 
@@ -818,29 +821,61 @@ loop_
         el.innerHTML = html;
     }
 
+    /* ── style a loaded PDB model ───────────────────────────── */
+    function styleAndRender(viewer, entry) {
+        /* cartoon coloured by spectrum across the chain */
+        viewer.setStyle({}, { cartoon: { color: 'spectrum', thickness: 0.5, opacity: 0.92 } });
+        /* highlight ligand chain A (peptide) with per-residue type colours */
+        for (var i = 0; i < entry.seq.length; i++) {
+            var col = AA_COLOR[entry.seq[i]] || '#9ca3af';
+            viewer.setStyle(
+                { chain: 'A', resi: i + 1 },
+                {
+                    cartoon: { color: col, thickness: 0.55, opacity: 0.95 },
+                    stick:   { radius: 0.10, color: col }
+                }
+            );
+        }
+        /* receptor chain B — subtle grey cartoon */
+        viewer.setStyle(
+            { chain: 'B' },
+            { cartoon: { color: '#475569', thickness: 0.35, opacity: 0.6 } }
+        );
+        viewer.zoomTo();
+        viewer.spin('y', 0.7);
+        viewer.render();
+    }
+
     /* ── 3Dmol viewer ────────────────────────────────────────── */
     function initViewer(entry) {
         var el = document.getElementById(entry.canvasId);
         if (!el || typeof $3Dmol === 'undefined') return;
 
         var viewer = $3Dmol.createViewer(el, { backgroundColor: '#060d1a', antialias: true });
-        viewer.addModel(seqToPDB(entry.seq), 'pdb');
 
-        /* per-residue colour by chemical type */
-        for (var i = 0; i < entry.seq.length; i++) {
-            var col = AA_COLOR[entry.seq[i]] || '#9ca3af';
-            viewer.setStyle(
-                { resi: i + 1 },
-                {
-                    cartoon: { color: col, thickness: 0.5, opacity: 0.92 },
-                    stick:   { radius: 0.12, color: col }
+        fetch(entry.pdb)
+            .then(function (r) {
+                if (!r.ok) throw new Error('PDB not found: ' + entry.pdb);
+                return r.text();
+            })
+            .then(function (pdbText) {
+                viewer.addModel(pdbText, 'pdb');
+                styleAndRender(viewer, entry);
+            })
+            .catch(function (err) {
+                console.warn(err.message + ' — falling back to pseudo-helix');
+                viewer.addModel(seqToPDB(entry.seq), 'pdb');
+                for (var i = 0; i < entry.seq.length; i++) {
+                    var col = AA_COLOR[entry.seq[i]] || '#9ca3af';
+                    viewer.setStyle({ resi: i + 1 }, {
+                        cartoon: { color: col, thickness: 0.5, opacity: 0.92 },
+                        stick:   { radius: 0.12, color: col }
+                    });
                 }
-            );
-        }
-
-        viewer.zoomTo();
-        viewer.spin('y', 0.7);
-        viewer.render();
+                viewer.zoomTo();
+                viewer.spin('y', 0.7);
+                viewer.render();
+            });
 
         renderSeqLabel(entry.seqId, entry.seq);
     }
