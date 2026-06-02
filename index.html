@@ -86,8 +86,8 @@
             text-align: center;
         }
     </style>
-    <!-- Load Niivue Library -->
-    <script src="https://github.io"></script>
+    <!-- ALTERNATIVE WORKING SCRIPT PIPELINE SOURCE LINK -->
+    <script src="https://unpkg.com"></script>
 </head>
 <body>
 
@@ -116,7 +116,6 @@
 
     <script>
         async function setupDemo() {
-            // FIXED: Added missing color values [R, G, B, A] to resolve syntax crash
             const niivueOptions = {
                 loadingText: 'Loading 3D Volume...',
                 backColor: [0, 0, 0, 1], 
@@ -133,7 +132,7 @@
             await nvDeepcache.attachToCanvas(document.getElementById('canvas-deepcache'));
             nvDeepcache.setSliceType(nvDeepcache.sliceTypeRender);
 
-            // Explicitly map paths to current directory
+            // Paths directly pointing to the root folder of your repository
             const volumeManifold = [{
                 url: "./manifoldcache_flair.nii.gz",
                 colorMap: "gray",
@@ -148,7 +147,7 @@
                 visible: true
             }];
 
-            // Load datasets
+            // Stream both NIfTI files simultaneously
             try {
                 await Promise.all([
                     nvManifold.loadVolumes(volumeManifold),
@@ -159,10 +158,10 @@
                 nvManifold.updateGLVolume();
                 nvDeepcache.updateGLVolume();
             } catch (error) {
-                console.error("Failed loading volumes:", error);
+                console.error("Failed loading local neuroimaging volumes:", error);
             }
 
-            // Sync camera controls across viewports
+            // Sync camera controls dynamically across viewports
             nvManifold.broadcastTo([nvDeepcache], { "2d": false, "3d": true });
             nvDeepcache.broadcastTo([nvManifold], { "2d": false, "3d": true });
         }
