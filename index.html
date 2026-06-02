@@ -21,7 +21,7 @@
         h1 {
             font-size: 2.2rem;
             font-weight: 700;
-            margin-bottom: 5px;
+            margin: 0 0 5px 0;
             text-align: center;
             background: linear-gradient(to right, #38bdf8, #818cf8);
             -webkit-background-clip: text;
@@ -52,7 +52,7 @@
             border: 1px solid #334155;
             display: flex;
             flex-direction: column;
-            height: 70vh;
+            height: 65vh;
         }
 
         .canvas-wrapper {
@@ -65,8 +65,8 @@
         }
 
         canvas {
-            width: 100%;
-            height: 100%;
+            width: 100% !important;
+            height: 100% !important;
         }
 
         .caption {
@@ -114,43 +114,47 @@
     </div>
 
     <script>
-        // Shared configuration options for both viewports
-        const niivueOptions = {
-            loadingText: 'Loading NIfTI Volume...',
-            backColor: [0, 0, 0, 1], // Pure black background inside canvas
-            isColorbar: false,       // Hide colorbar for cleaner presentation
-        };
+        async function setupDemo() {
+            // Configuration options with the backColor array syntax fix applied
+            const niivueOptions = {
+                loadingText: 'Loading NIfTI Volume...',
+                backColor: [0, 0, 0, 1], // Pure black background inside canvas
+                isColorbar: false,       // Hide colorbar for cleaner presentation
+            };
 
-        // Initialize Left Viewer (ManifoldCache)
-        const nvManifold = new niivue.Niivue(niivueOptions);
-        nvManifold.attachTo('canvas-manifold');
-        nvManifold.setSliceType(nvManifold.sliceTypeRender); // Set to 3D volume rendering
+            // Initialize Left Viewer (ManifoldCache)
+            const nvManifold = new niivue.Niivue(niivueOptions);
+            await nvManifold.attachToCanvas(document.getElementById('canvas-manifold'));
+            nvManifold.setSliceType(nvManifold.sliceTypeRender); // Set to 3D volume rendering
 
-        const volumeManifold = [{
-            url: "./manifoldcache_flair.nii.gz", // Keep file in same directory or provide full URL
-            colorMap: "gray",
-            opacity: 1,
-            visible: true
-        }];
-        nvManifold.loadVolumes(volumeManifold);
+            const volumeManifold = [{
+                url: "./manifoldcache_flair.nii.gz",
+                colorMap: "gray",
+                opacity: 1,
+                visible: true
+            }];
+            await nvManifold.loadVolumes(volumeManifold);
 
-        // Initialize Right Viewer (DeepCache)
-        const nvDeepcache = new niivue.Niivue(niivueOptions);
-        nvDeepcache.attachTo('canvas-deepcache');
-        nvDeepcache.setSliceType(nvDeepcache.sliceTypeRender); // Set to 3D volume rendering
+            // Initialize Right Viewer (DeepCache)
+            const nvDeepcache = new niivue.Niivue(niivueOptions);
+            await nvDeepcache.attachToCanvas(document.getElementById('canvas-deepcache'));
+            nvDeepcache.setSliceType(nvDeepcache.sliceTypeRender); // Set to 3D volume rendering
 
-        const volumeDeepcache = [{
-            url: "./deepcache_flair.nii.gz", // Keep file in same directory or provide full URL
-            colorMap: "gray",
-            opacity: 1,
-            visible: true
-        }];
-        nvDeepcache.loadVolumes(volumeDeepcache);
+            const volumeDeepcache = [{
+                url: "./deepcache_flair.nii.gz",
+                colorMap: "gray",
+                opacity: 1,
+                visible: true
+            }];
+            await nvDeepcache.loadVolumes(volumeDeepcache);
 
-        // Optional: Link the cameras so rotating one rotates the other synchronously
-        nvManifold.broadcastTo(nvDeepcache);
-        nvDeepcache.broadcastTo(nvManifold);
+            // Bidirectional camera linking for 3D views according to Niivue specs
+            nvManifold.broadcastTo([nvDeepcache], { "2d": false, "3d": true });
+            nvDeepcache.broadcastTo([nvManifold], { "2d": false, "3d": true });
+        }
+
+        // Execute initialization when page finishes loading
+        window.addEventListener('DOMContentLoaded', setupDemo);
     </script>
 </body>
 </html>
-
