@@ -35,13 +35,26 @@
             text-align: center;
         }
 
+        /* Group container for distinct rows */
+        .section-title {
+            font-size: 1.4rem;
+            font-weight: 600;
+            margin: 25px 0 15px 0;
+            color: #38bdf8;
+            width: 100%;
+            max-width: 1400px;
+            text-align: left;
+            border-bottom: 1px solid #334155;
+            padding-bottom: 5px;
+        }
+
         .demo-container {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(45%, 1fr));
             gap: 25px;
             width: 100%;
             max-width: 1400px;
-            flex-grow: 1;
+            margin-bottom: 20px;
         }
 
         .viewer-card {
@@ -52,10 +65,14 @@
             border: 1px solid #334155;
             display: flex;
             flex-direction: column;
+        }
+
+        /* 3D viewports row explicit constraint height */
+        .viewer-card.3d-height {
             height: 65vh;
         }
 
-        .canvas-wrapper {
+        .canvas-wrapper, .video-wrapper {
             flex-grow: 1;
             width: 100%;
             position: relative;
@@ -64,9 +81,23 @@
             overflow: hidden;
         }
 
+        .video-wrapper {
+            aspect-ratio: 16 / 9;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
         canvas {
             width: 100% !important;
             height: 100% !important;
+            display: block;
+        }
+
+        video {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
             display: block;
         }
 
@@ -92,9 +123,11 @@
     <h1>ManifoldCache</h1>
     <div class="subtitle">Training-Free Diffusion Acceleration via Constraint Manifold Caching</div>
 
+    <!-- ROW 1: 3D NIfTI Volumes -->
+    <div class="section-title">3D Volume Reconstruction Comparisons</div>
     <div class="demo-container">
         <!-- Left Viewer: ManifoldCache -->
-        <div class="viewer-card">
+        <div class="viewer-card 3d-height">
             <div class="canvas-wrapper">
                 <canvas id="canvas-manifold"></canvas>
             </div>
@@ -103,7 +136,7 @@
         </div>
 
         <!-- Right Viewer: DeepCache -->
-        <div class="viewer-card">
+        <div class="viewer-card 3d-height">
             <div class="canvas-wrapper">
                 <canvas id="canvas-deepcache"></canvas>
             </div>
@@ -112,9 +145,31 @@
         </div>
     </div>
 
-    <!-- Official ESM Sourcing Pipeline matching your documentation structure -->
+    <!-- ROW 2: Diffusion Generation Video Showcase -->
+    <div class="section-title">Lyra Trajectory Generation Videos</div>
+    <div class="demo-container">
+        <!-- Left Video: ManifoldCache Lyra -->
+        <div class="viewer-card">
+            <div class="video-wrapper">
+                <video src="./manifoldcache_lyra.mp4" autoplay loop muted playsinline controls></video>
+            </div>
+            <div class="caption">ManifoldCache (Ours)</div>
+            <div class="sub-caption">File: manifoldcache_lyra.mp4</div>
+        </div>
+
+        <!-- Right Video: PAB Lyra -->
+        <div class="viewer-card">
+            <div class="video-wrapper">
+                <video src="./PAB_lyra.mp4" autoplay loop muted playsinline controls></video>
+            </div>
+            <div class="caption">PAB</div>
+            <div class="sub-caption">File: PAB_lyra.mp4</div>
+        </div>
+    </div>
+
+    <!-- Official ESM Sourcing Pipeline -->
     <script type="module" async>
-        import { Niivue } from "https://unpkg.com/@niivue/niivue@0.57.0/dist/index.js"
+        import { Niivue } from "https://unpkg.com"
 
         // Build absolute safe paths to resolve GitHub Pages subfolders automatically
         const currentPath = window.location.pathname.substring(0, window.location.pathname.lastIndexOf('/'));
@@ -130,13 +185,13 @@
 
         // 1. Setup Left Viewer (ManifoldCache)
         const nvManifold = new Niivue({ isResizeCanvas: true });
-        nvManifold.setSliceType(nvManifold.sliceTypeRender); // Force 3D Render View
+        nvManifold.setSliceType(nvManifold.sliceTypeRender); 
         await nvManifold.attachTo("canvas-manifold");
         await nvManifold.loadVolumes(volumeManifold);
 
         // 2. Setup Right Viewer (DeepCache)
         const nvDeepcache = new Niivue({ isResizeCanvas: true });
-        nvDeepcache.setSliceType(nvDeepcache.sliceTypeRender); // Force 3D Render View
+        nvDeepcache.setSliceType(nvDeepcache.sliceTypeRender); 
         await nvDeepcache.attachTo("canvas-deepcache");
         await nvDeepcache.loadVolumes(volumeDeepcache);
 
