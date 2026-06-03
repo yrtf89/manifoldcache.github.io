@@ -95,8 +95,8 @@
 
         .viewer-card.volume-height {
             /* height: 65vh; */
-            height: clamp(280px, 50vw, 65vh);
-            /* height: clamp(400px, 50vw, 80vh); */
+            /* height: clamp(280px, 50vw, 65vh); */
+            height: clamp(500px, 60vw, 85vh);
         }
 
         .canvas-wrapper, .video-wrapper {
@@ -224,8 +224,6 @@
             requestAnimationFrame(rotateVolumes);
         }
         
-        nvManifold.setZoom(1.5);
-        nvDeepcache.setZoom(1.5);
         rotateVolumes();
         
     </script>
