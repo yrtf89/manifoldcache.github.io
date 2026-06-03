@@ -1131,6 +1131,158 @@ $$$$`;
     })();
     </script>
 
+        <!-- ============================================================ -->
+    <!-- ROW 5: Med-DDPM Dynamic ManifoldCache Stride Analytics       -->
+    <!-- ============================================================ -->
+    <div class="section-title">Med-DDPM Cache Stride Profile (Adaptive Manifold Allocation)</div>
+    
+    <div class="demo-container" style="grid-template-columns: 1fr 1fr; gap: 25px; align-items: start; background-color: #1e293b; padding: 25px; border-radius: 12px; border: 1px solid #334155; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3);">
+        
+        <!-- Left Column: Interactive Horizontal Chart -->
+        <div class="viewer-card" style="background: #0f172a; border-color: #1e293b; padding: 15px; margin: 0;">
+            <div style="position: relative; width: 100%; height: 550px;">
+                <canvas id="strideChart" role="img" aria-label="Bar chart of cache stride per UNet block, sorted shallow to deep, linear interpolation no boost"></canvas>
+            </div>
+            <div class="caption" style="font-size: 1rem; margin-top: 10px;">Visual Stride Spectrum</div>
+            <div class="sub-caption">Deeper feature mappings receive heavier stride caching allocations</div>
+        </div>
+
+        <!-- Right Column: Stride Data Table Mapping -->
+        <div class="viewer-card" style="background: #0f172a; border-color: #1e293b; padding: 15px; margin: 0; max-height: 550px; overflow-y: auto;">
+            <div style="font-size: 13px; color: #f8fafc;">
+                <table style="width: 100%; border-collapse: collapse; text-align: left;">
+                    <thead>
+                        <tr style="border-bottom: 2px solid #334155; position: sticky; top: 0; background-color: #0f172a; z-index: 5;">
+                            <th style="text-align: left; padding: 8px; font-weight: 600; color: #38bdf8; font-size: 0.9rem;">UNet Block</th>
+                            <th style="text-align: right; padding: 8px; font-weight: 600; color: #94a3b8; font-size: 0.9rem;">Depth Metric</th>
+                            <th style="text-align: right; padding: 8px; font-weight: 600; color: #38bdf8; font-size: 0.9rem;">Cache Stride</th>
+                        </tr>
+                    </thead>
+                    <tbody id="stride-table-rows">
+                        <!-- Dynamic script elements injected here -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Chart Engine Initialization Dependencies -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+    <script>
+    (function() {
+        const blocks = [
+            {name:"enc_0 init",    depth:0/14},
+            {name:"enc_1 res",     depth:1/14},
+            {name:"enc_2 res",     depth:2/14},
+            {name:"enc_3 down",    depth:3/14},
+            {name:"enc_4 res",     depth:4/14},
+            {name:"enc_5 res",     depth:5/14},
+            {name:"enc_6 down",    depth:6/14},
+            {name:"enc_7 res",     depth:7/14},
+            {name:"enc_8 res",     depth:8/14},
+            {name:"enc_9 down",    depth:9/14},
+            {name:"enc_10 res",    depth:10/14},
+            {name:"enc_11 res",    depth:11/14},
+            {name:"enc_12 down",   depth:12/14},
+            {name:"enc_13 res",    depth:13/14},
+            {name:"enc_14 res",    depth:14/14},
+            {name:"middle",        depth:1.0},
+            {name:"dec_14 res+up", depth:0/14},
+            {name:"dec_13 res",    depth:1/14},
+            {name:"dec_12 res",    depth:2/14},
+            {name:"dec_11 res+up", depth:3/14},
+            {name:"dec_10 res",    depth:4/14},
+            {name:"dec_9 res",     depth:5/14},
+            {name:"dec_8 res+up",  depth:6/14},
+            {name:"dec_7 res",     depth:7/14},
+            {name:"dec_6 res",     depth:8/14},
+            {name:"dec_5 res+up",  depth:9/14},
+            {name:"dec_4 res",     depth:10/14},
+            {name:"dec_3 res",     depth:11/14},
+            {name:"dec_2 res",     depth:12/14},
+            {name:"dec_1 res",     depth:13/14},
+            {name:"dec_0 res",     depth:14/14},
+        ];
+
+        const shallow = 2, deep = 5;
+
+        // Adaptive manifold linear interpolation calculation
+        blocks.forEach(b => {
+            const base = shallow + (deep - shallow) * b.depth;
+            b.stride = Math.max(1, Math.floor(base));
+        });
+
+        // Enforce shallow-to-deep layout processing sorting hierarchy
+        blocks.sort((a,b) => a.depth - b.depth || a.name.localeCompare(b.name));
+
+        // Inject compiled dataset into dashboard table grid
+        const tableRows = document.getElementById("stride-table-rows");
+        blocks.forEach(b => {
+            const tr = document.createElement("tr");
+            tr.style.borderBottom = "1px solid #1e293b";
+            tr.style.transition = "background-color 0.2s ease";
+            
+            // Subtle interactive mouse row illumination rule
+            tr.onmouseenter = function() { this.style.backgroundColor = "#1e293b"; };
+            tr.onmouseleave = function() { this.style.backgroundColor = "transparent"; };
+
+            tr.innerHTML = `
+                <td style="padding:6px 8px; font-family:monospace; font-size:12px; color:#e2e8f0;">${b.name}</td>
+                <td style="padding:6px 8px; text-align:right; color:#64748b; font-family:monospace;">${b.depth.toFixed(3)}</td>
+                <td style="padding:6px 8px; text-align:right; font-weight:600; color:${b.stride >= 4 ? '#818cf8' : '#38bdf8'};">${b.stride}</td>
+            `;
+            tableRows.appendChild(tr);
+        });
+
+        // Consistent modern dark layout theme palette generator
+        const colorFor = s => s >= 5 ? "#818cf8" : s >= 4 ? "#6366f1" : s >= 3 ? "#3b82f6" : "#38bdf8";
+
+        // Initializing ChartJS Instance
+        new Chart(document.getElementById("strideChart"), {
+            type: "bar",
+            data: {
+                labels: blocks.map(b => b.name),
+                datasets: [{
+                    data: blocks.map(b => b.stride),
+                    backgroundColor: blocks.map(b => colorFor(b.stride)),
+                    borderWidth: 0,
+                    borderRadius: 4
+                }]
+            },
+            options: {
+                indexAxis: "y",
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { 
+                    legend: { display: false }, 
+                    tooltip: { 
+                        backgroundColor: '#1e293b',
+                        titleColor: '#38bdf8',
+                        bodyColor: '#f8fafc',
+                        borderColor: '#334155',
+                        borderWidth: 1,
+                        callbacks: { label: c => " Allocated Stride: " + c.parsed.x } 
+                    } 
+                },
+                scales: {
+                    x: { 
+                        beginAtZero: true, 
+                        ticks: { stepSize: 1, color: "#94a3b8" }, 
+                        grid: { color: "rgba(51, 65, 85, 0.4)" }, 
+                        title: { display: true, text: "Cache Stride (S)", color: "#94a3b8", font: { size: 12, weight: 'bold' } } 
+                    },
+                    y: { 
+                        ticks: { color: "#94a3b8", font: { size: 11, family: "monospace" } }, 
+                        grid: { display: false } 
+                    }
+                }
+            }
+        });
+    })();
+    </script>
+
+
    
 </body>
 </html>
