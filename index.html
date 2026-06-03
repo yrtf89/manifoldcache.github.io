@@ -91,9 +91,11 @@
             flex-direction: column;
         }
 
+
         .viewer-card.volume-height {
             /* height: 65vh; */
-            height: clamp(280px, 50vw, 65vh);
+            /* height: clamp(280px, 50vw, 65vh); */
+            height: clamp(400px, 50vw, 80vh);
         }
 
         .canvas-wrapper, .video-wrapper {
@@ -262,13 +264,13 @@
     <div class="demo-container">
 
         <div class="viewer-card">
-            <div class="canvas-wrapper" id="crystal-viewer-a" style="min-height: 380px;"></div>
+            <div class="canvas-wrapper" id="crystal-viewer-a" style="min-height: 550px;"></div>
             <div class="caption">ManifoldCache (Ours)</div>
             <div class="sub-caption">Tm₂Te₃ — Tm32 Te48 | Drag to rotate, scroll to zoom</div>
         </div>
 
         <div class="viewer-card">
-            <div class="canvas-wrapper" id="crystal-viewer-b" style="min-height: 380px;"></div>
+            <div class="canvas-wrapper" id="crystal-viewer-b" style="min-height: 550px;"></div>
             <div class="caption">DeepCache</div>
             <div class="sub-caption">Tm₂Te₃ — Tm32 Te48 | Drag to rotate, scroll to zoom</div>
         </div>
