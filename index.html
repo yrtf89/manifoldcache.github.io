@@ -5,9 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ManifoldCache Demo</title>
     <style>
-
         @media (max-width: 768px) {
-                .mobile-fallback {
+            .mobile-fallback {
                 display: flex;
                 align-items: center;
                 justify-content: center;
@@ -21,11 +20,10 @@
                 border-radius: 8px;
             }
         }
-
-            @media (min-width: 769px) {
-                .mobile-fallback { display: none; }
+        @media (min-width: 769px) {
+            .mobile-fallback { display: none; }
         }
-        
+
         body {
             margin: 0;
             padding: 20px;
@@ -38,7 +36,6 @@
             min-height: 100vh;
             box-sizing: border-box;
         }
-
         h1 {
             font-size: 2.2rem;
             font-weight: 700;
@@ -48,14 +45,12 @@
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
         }
-
         .subtitle {
             font-size: 1.9rem;
             color: #94a3b8;
             margin-bottom: 30px;
             text-align: center;
         }
-
         .section-title {
             font-size: 1.4rem;
             font-weight: 600;
@@ -67,7 +62,6 @@
             border-bottom: 1px solid #334155;
             padding-bottom: 5px;
         }
-
         .demo-container {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(min(45%, 300px), 1fr));
@@ -75,22 +69,18 @@
             width: 100%;
             max-width: 1400px;
         }
-
         .viewer-card {
             background: linear-gradient(145deg, #1a2744 0%, #1e293b 100%);
-            border: 1px solid #2d4a7a;
+            border: 1px solid #334155;
             border-radius: 12px;
             padding: 15px;
             box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3);
-            border: 1px solid #334155;
             display: flex;
             flex-direction: column;
         }
-
         .viewer-card.volume-height {
             height: clamp(280px, 50vw, 65vh);
         }
-
         .canvas-wrapper, .video-wrapper {
             flex-grow: 1;
             width: 100%;
@@ -99,27 +89,23 @@
             border-radius: 8px;
             overflow: hidden;
         }
-
         .video-wrapper {
             aspect-ratio: 16 / 9;
             display: flex;
             align-items: center;
             justify-content: center;
         }
-
         canvas {
             width: 100% !important;
             height: 100% !important;
             display: block;
         }
-
         video {
             width: 100%;
             height: 100%;
             object-fit: contain;
             display: block;
         }
-
         .caption {
             margin-top: 15px;
             text-align: center;
@@ -128,158 +114,388 @@
             color: #e2e8f0;
             letter-spacing: 0.5px;
         }
-
         .sub-caption {
             font-size: 0.85rem;
             color: #64748b;
             margin-top: 4px;
             text-align: center;
         }
+
+        /* ── Lazy-load placeholder ───────────────────────────────────────── */
+        .viewer-placeholder {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+            height: 100%;
+            min-height: 200px;
+            color: #475569;
+            font-size: 0.82rem;
+            gap: 8px;
+            pointer-events: none;
+            user-select: none;
+        }
+        .viewer-placeholder svg {
+            opacity: 0.35;
+            width: 36px;
+            height: 36px;
+        }
+        .viewer-placeholder span {
+            opacity: 0.55;
+        }
+
+        /* ── UniMoMo badges ──────────────────────────────────────────────── */
+        .pmetric-badge, .compact-badge {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 0.78rem;
+            font-weight: 600;
+            margin: 2px 3px;
+        }
+        .pmetric-good  { background: #14532d; color: #86efac; }
+        .pmetric-low   { background: #7f1d1d; color: #fca5a5; }
+        .compact-good  { background: #1e3a5f; color: #7dd3fc; }
+        .compact-bad   { background: #422006; color: #fcd34d; }
+
+        .seq-display {
+            font-family: 'Courier New', monospace;
+            font-size: 0.78rem;
+            letter-spacing: 1px;
+            margin-top: 8px;
+            text-align: center;
+            flex-wrap: wrap;
+            display: flex;
+            justify-content: center;
+        }
+        .aa-pos { color: #3b82f6; }
+        .aa-neg { color: #ef4444; }
+        .aa-pol { color: #a3e635; }
+        .aa-aro { color: #c084fc; }
+        .aa-hph { color: #fbbf24; }
+        .aa-spc { color: #e5e7eb; }
+
+        .scattered-overlay {
+            position: absolute;
+            bottom: 8px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(127,29,29,0.85);
+            color: #fca5a5;
+            font-size: 0.73rem;
+            padding: 4px 10px;
+            border-radius: 5px;
+            white-space: nowrap;
+            pointer-events: none;
+            z-index: 10;
+        }
     </style>
 </head>
 <body>
 
-    <h1>ManifoldCache</h1>
-    <div class="subtitle">Training-Free Diffusion Acceleration via Constraint Manifold Caching</div>
+<h1>ManifoldCache</h1>
+<div class="subtitle">Training-Free Diffusion Acceleration via Constraint Manifold Caching</div>
 
-    <!-- ROW 1: 3D NIfTI Volumes -->
-    <div class="section-title">3D Brain MRI Synthesis Comparison (Med-DDPM)</div>
-    <div class="demo-container">
-        <div class="viewer-card volume-height">
-            <div class="canvas-wrapper">
-                <canvas id="canvas-manifold"></canvas>
-                <div class="mobile-fallback">3D viewer requires desktop browser</div>
-            </div>
-            <div class="caption">ManifoldCache (Ours)</div>
-            <div class="sub-caption">File: manifoldcache_flair.nii.gz | Drag to rotate, scroll to zoom</div>
+<!-- ══════════════════════════════════════════════════════════════════════ -->
+<!-- ROW 1: 3D NIfTI Volumes                                               -->
+<!-- ══════════════════════════════════════════════════════════════════════ -->
+<div class="section-title">3D Brain MRI Synthesis Comparison (Med-DDPM)</div>
+<div class="demo-container">
+    <div class="viewer-card volume-height">
+        <div class="canvas-wrapper" id="canvas-manifold-wrap">
+            <canvas id="canvas-manifold"></canvas>
+            <div class="mobile-fallback">3D viewer requires desktop browser</div>
         </div>
-
-        <div class="viewer-card volume-height">
-            <div class="canvas-wrapper">
-                <canvas id="canvas-deepcache"></canvas>
-                <div class="mobile-fallback">3D viewer requires desktop browser</div>
-            </div>
-            <div class="caption">DeepCache</div>
-            <div class="sub-caption">File: deepcache_flair.nii.gz | Drag to rotate, scroll to zoom</div>
-        </div>
+        <div class="caption">ManifoldCache (Ours)</div>
+        <div class="sub-caption">File: manifoldcache_flair.nii.gz | Drag to rotate, scroll to zoom</div>
     </div>
-
-    <!-- ROW 2: Trajectory Generation Videos -->
-    <div class="section-title">Lyra Multi-View Synthesis Comparison</div>
-    <div class="demo-container">
-        <div class="viewer-card">
-            <div class="video-wrapper">
-                <video src="./manifoldcache_lyra.mp4" autoplay loop muted playsinline controls></video>
-            </div>
-            <div class="caption">ManifoldCache (Ours)</div>
-            <div class="sub-caption">File: manifoldcache_lyra.mp4</div>
+    <div class="viewer-card volume-height">
+        <div class="canvas-wrapper" id="canvas-deepcache-wrap">
+            <canvas id="canvas-deepcache"></canvas>
+            <div class="mobile-fallback">3D viewer requires desktop browser</div>
         </div>
-
-        <div class="viewer-card">
-            <div class="video-wrapper">
-                <video src="./PAB_lyra.mp4" autoplay loop muted playsinline controls></video>
-            </div>
-            <div class="caption">PAB</div>
-            <div class="sub-caption">File: PAB_lyra.mp4</div>
-        </div>
+        <div class="caption">DeepCache</div>
+        <div class="sub-caption">File: deepcache_flair.nii.gz | Drag to rotate, scroll to zoom</div>
     </div>
+</div>
 
-    <script type="module" async>
-        import { Niivue } from "https://unpkg.com/@niivue/niivue@0.57.0/dist/index.js"
+<!-- ══════════════════════════════════════════════════════════════════════ -->
+<!-- ROW 2: Video                                                           -->
+<!-- ══════════════════════════════════════════════════════════════════════ -->
+<div class="section-title">Lyra Multi-View Synthesis Comparison</div>
+<div class="demo-container">
+    <div class="viewer-card">
+        <div class="video-wrapper">
+            <video src="./manifoldcache_lyra.mp4" autoplay loop muted playsinline controls></video>
+        </div>
+        <div class="caption">ManifoldCache (Ours)</div>
+        <div class="sub-caption">File: manifoldcache_lyra.mp4</div>
+    </div>
+    <div class="viewer-card">
+        <div class="video-wrapper">
+            <video src="./PAB_lyra.mp4" autoplay loop muted playsinline controls></video>
+        </div>
+        <div class="caption">PAB</div>
+        <div class="sub-caption">File: PAB_lyra.mp4</div>
+    </div>
+</div>
 
-        const currentPath = window.location.pathname.substring(0, window.location.pathname.lastIndexOf('/'));
-        const rootUrl = `${window.location.origin}${currentPath}`;
+<!-- ══════════════════════════════════════════════════════════════════════ -->
+<!-- ROW 3: DemoDiff molecular                                              -->
+<!-- ══════════════════════════════════════════════════════════════════════ -->
+<div class="section-title">DemoDiff (molecular foundation model leveraging Graph Diffusion Transformer)</div>
+<div class="demo-container" style="grid-template-columns: repeat(4, 1fr);">
+    <div class="viewer-card">
+        <div class="canvas-wrapper lazy-3dmol" id="mol-viewer-1" style="min-height: 300px;"
+             data-viewer-type="sdf-inline" data-viewer-idx="0"></div>
+        <div class="mobile-fallback">3D viewer requires desktop browser</div>
+        <div class="caption">Method A</div>
+        <div class="sub-caption">OCC(O)C(S)c1cccc(O)c1 | Drag to rotate, scroll to zoom</div>
+    </div>
+    <div class="viewer-card">
+        <div class="canvas-wrapper lazy-3dmol" id="mol-viewer-2" style="min-height: 300px;"
+             data-viewer-type="sdf-inline" data-viewer-idx="1"></div>
+        <div class="mobile-fallback">3D viewer requires desktop browser</div>
+        <div class="caption">Method B</div>
+        <div class="sub-caption">OCC(O)C(S)c1cccc(O)c1 | Drag to rotate, scroll to zoom</div>
+    </div>
+    <div class="viewer-card">
+        <div class="canvas-wrapper lazy-3dmol" id="mol-viewer-3" style="min-height: 300px;"
+             data-viewer-type="sdf-inline" data-viewer-idx="2"></div>
+        <div class="mobile-fallback">3D viewer requires desktop browser</div>
+        <div class="caption">Method C</div>
+        <div class="sub-caption">OCC(O)C(S)c1cccc(O)c1 | Drag to rotate, scroll to zoom</div>
+    </div>
+    <div class="viewer-card">
+        <div class="canvas-wrapper lazy-3dmol" id="mol-viewer-4" style="min-height: 300px;"
+             data-viewer-type="sdf-inline" data-viewer-idx="3"></div>
+        <div class="mobile-fallback">3D viewer requires desktop browser</div>
+        <div class="caption">Method D</div>
+        <div class="sub-caption">OCC(O)C(S)c1cccc(O)c1 | Drag to rotate, scroll to zoom</div>
+    </div>
+</div>
 
-        const volumeManifold = [{ url: `${rootUrl}/manifoldcache_flair.nii.gz` }];
-        const volumeDeepcache = [{ url: `${rootUrl}/deepcache_flair.nii.gz` }];
+<!-- ══════════════════════════════════════════════════════════════════════ -->
+<!-- ROW 4: Crystal structures                                              -->
+<!-- ══════════════════════════════════════════════════════════════════════ -->
+<div class="section-title">DiffCSP++ Crystal Structure Prediction (Space Group Constrained Generation)</div>
+<div class="demo-container">
+    <div class="viewer-card">
+        <div class="canvas-wrapper lazy-3dmol" id="crystal-viewer-a" style="min-height: 380px;"
+             data-viewer-type="crystal" data-crystal-idx="0"></div>
+        <div class="caption">ManifoldCache (Ours)</div>
+        <div class="sub-caption">Tm&#8322;Te&#8323; — Tm32 Te48 | Drag to rotate, scroll to zoom</div>
+    </div>
+    <div class="viewer-card">
+        <div class="canvas-wrapper lazy-3dmol" id="crystal-viewer-b" style="min-height: 380px;"
+             data-viewer-type="crystal" data-crystal-idx="1"></div>
+        <div class="caption">DeepCache</div>
+        <div class="sub-caption">Tm&#8322;Te&#8323; — Tm32 Te48 | Drag to rotate, scroll to zoom</div>
+    </div>
+</div>
 
-        const nvManifold = new Niivue({ isResizeCanvas: true });
-        nvManifold.setSliceType(nvManifold.sliceTypeRender);
-        await nvManifold.attachTo("canvas-manifold");
-        await nvManifold.loadVolumes(volumeManifold);
-        nvManifold.scene.volScaleMultiplier = 1.3;
+<!-- ══════════════════════════════════════════════════════════════════════ -->
+<!-- ROW 5: Proteina                                                        -->
+<!-- ══════════════════════════════════════════════════════════════════════ -->
+<div class="section-title">Proteina - foundation model for protein backbone generation</div>
+<div class="demo-container" style="grid-template-columns: repeat(3, 1fr);">
+    <div class="viewer-card">
+        <div class="canvas-wrapper lazy-3dmol" id="prot-viewer-1" style="min-height: 350px;"
+             data-viewer-type="pdb" data-pdb-file="./manifoldcache.pdb"></div>
+        <div class="caption">ManifoldCache (Ours)</div>
+        <div class="sub-caption">manifoldcache.pdb | Drag to rotate, scroll to zoom</div>
+    </div>
+    <div class="viewer-card">
+        <div class="canvas-wrapper lazy-3dmol" id="prot-viewer-2" style="min-height: 350px;"
+             data-viewer-type="pdb" data-pdb-file="./fora.pdb"></div>
+        <div class="caption">Fora</div>
+        <div class="sub-caption">fora.pdb | Drag to rotate, scroll to zoom</div>
+    </div>
+    <div class="viewer-card">
+        <div class="canvas-wrapper lazy-3dmol" id="prot-viewer-3" style="min-height: 350px;"
+             data-viewer-type="pdb" data-pdb-file="./smoothcache.pdb"></div>
+        <div class="caption">SmoothCache</div>
+        <div class="sub-caption">smoothcache.pdb | Drag to rotate, scroll to zoom</div>
+    </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════════════════ -->
+<!-- ROW 6: UniMoMo                                                         -->
+<!-- ══════════════════════════════════════════════════════════════════════ -->
+<div class="section-title">UniMoMo - Unified Generative Modeling of 3D Molecules for De Novo Binder Design</div>
+<div class="demo-container" style="grid-template-columns: repeat(3, 1fr);">
+    <div class="viewer-card">
+        <div class="canvas-wrapper lazy-3dmol" id="unimomo-manifold" style="min-height: 350px; position: relative;"
+             data-viewer-type="unimomo" data-unimomo-idx="0"></div>
+        <div class="caption">ManifoldCache (Ours)</div>
+        <div class="sub-caption">
+            <span class="pmetric-badge pmetric-good">pmetric: 1.3310</span>
+            <span class="compact-badge compact-good">Compact ✓</span>
+        </div>
+        <div class="seq-display" id="seq-manifold"></div>
+    </div>
+    <div class="viewer-card">
+        <div class="canvas-wrapper lazy-3dmol" id="unimomo-deepcache" style="min-height: 350px; position: relative;"
+             data-viewer-type="unimomo" data-unimomo-idx="1"></div>
+        <div class="caption">DeepCache</div>
+        <div class="sub-caption">
+            <span class="pmetric-badge pmetric-low">pmetric: 2.28 × 10⁻⁴</span>
+            <span class="compact-badge compact-bad">Scattered ✗</span>
+        </div>
+        <div class="seq-display" id="seq-deepcache"></div>
+    </div>
+    <div class="viewer-card">
+        <div class="canvas-wrapper lazy-3dmol" id="unimomo-smoothcache" style="min-height: 350px; position: relative;"
+             data-viewer-type="unimomo" data-unimomo-idx="2"></div>
+        <div class="caption">SmoothCache</div>
+        <div class="sub-caption">
+            <span class="pmetric-badge pmetric-low">pmetric: 1.89 × 10⁻³</span>
+            <span class="compact-badge compact-bad">Scattered ✗</span>
+        </div>
+        <div class="seq-display" id="seq-smoothcache"></div>
+    </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════════════════ -->
+<!-- ROW 7: DiT-MC                                                          -->
+<!-- ══════════════════════════════════════════════════════════════════════ -->
+<div class="section-title">DiT-MC — Molecular Conformer Generation (GEOM-DRUGS Benchmark)</div>
+<div class="demo-container" style="grid-template-columns: repeat(3, 1fr);">
+    <div class="viewer-card">
+        <div class="canvas-wrapper lazy-3dmol" id="ditmc-manifold" style="min-height: 320px;"
+             data-viewer-type="ditmc" data-ditmc-idx="0"></div>
+        <div class="caption">ManifoldCache (Ours)</div>
+        <div class="sub-caption">C[C@@]12[C@H](O)CO[C@@H]1[C@@H]2O · conformer 1 · Drag to rotate, scroll to zoom</div>
+    </div>
+    <div class="viewer-card">
+        <div class="canvas-wrapper lazy-3dmol" id="ditmc-pfabc" style="min-height: 320px;"
+             data-viewer-type="ditmc" data-ditmc-idx="1"></div>
+        <div class="caption">PF-ABC</div>
+        <div class="sub-caption">C[C@@]12[C@H](O)CO[C@@H]1[C@@H]2O · conformer 1 · Drag to rotate, scroll to zoom</div>
+    </div>
+    <div class="viewer-card">
+        <div class="canvas-wrapper lazy-3dmol" id="ditmc-teacache" style="min-height: 320px;"
+             data-viewer-type="ditmc" data-ditmc-idx="2"></div>
+        <div class="caption">TeaCache</div>
+        <div class="sub-caption">C[C@@]12[C@H](O)CO[C@@H]1[C@@H]2O · conformer 1 · Drag to rotate, scroll to zoom</div>
+    </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════════════════ -->
+<!-- SCRIPTS                                                                -->
+<!-- ══════════════════════════════════════════════════════════════════════ -->
+
+<!-- NiiVue (MRI viewers – these are always visible, init immediately) -->
+<script type="module" async>
+    import { Niivue } from "https://unpkg.com/@niivue/niivue@0.57.0/dist/index.js";
+    const currentPath = window.location.pathname.substring(0, window.location.pathname.lastIndexOf('/'));
+    const rootUrl = `${window.location.origin}${currentPath}`;
+
+    const nvManifold = new Niivue({ isResizeCanvas: true });
+    nvManifold.setSliceType(nvManifold.sliceTypeRender);
+    await nvManifold.attachTo("canvas-manifold");
+    await nvManifold.loadVolumes([{ url: `${rootUrl}/manifoldcache_flair.nii.gz` }]);
+    nvManifold.scene.volScaleMultiplier = 1.3;
+    nvManifold.drawScene();
+
+    const nvDeepcache = new Niivue({ isResizeCanvas: true });
+    nvDeepcache.setSliceType(nvDeepcache.sliceTypeRender);
+    await nvDeepcache.attachTo("canvas-deepcache");
+    await nvDeepcache.loadVolumes([{ url: `${rootUrl}/deepcache_flair.nii.gz` }]);
+    nvDeepcache.scene.volScaleMultiplier = 1.3;
+    nvDeepcache.drawScene();
+
+    nvManifold.broadcastTo([nvDeepcache], { "2d": false, "3d": true });
+    nvDeepcache.broadcastTo([nvManifold], { "2d": false, "3d": true });
+
+    let angle = 0;
+    function rotateVolumes() {
+        angle += 0.3;
+        nvManifold.scene.renderAzimuth = angle;
+        nvDeepcache.scene.renderAzimuth = angle;
         nvManifold.drawScene();
-
-        const nvDeepcache = new Niivue({ isResizeCanvas: true });
-        nvDeepcache.setSliceType(nvDeepcache.sliceTypeRender);
-        await nvDeepcache.attachTo("canvas-deepcache");
-        await nvDeepcache.loadVolumes(volumeDeepcache);
-        nvDeepcache.scene.volScaleMultiplier = 1.3;
         nvDeepcache.drawScene();
+        requestAnimationFrame(rotateVolumes);
+    }
+    rotateVolumes();
+</script>
 
-        nvManifold.broadcastTo([nvDeepcache], { "2d": false, "3d": true });
-        nvDeepcache.broadcastTo([nvManifold], { "2d": false, "3d": true });
+<!-- 3Dmol library -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/3Dmol/2.1.0/3Dmol-min.js"></script>
 
-        let angle = 0;
-        function rotateVolumes() {
-            angle += 0.3;
-            nvManifold.scene.renderAzimuth = angle;
-            nvDeepcache.scene.renderAzimuth = angle;
-            nvManifold.drawScene();
-            nvDeepcache.drawScene();
-            requestAnimationFrame(rotateVolumes);
-        }
-        rotateVolumes();
-    </script>
+<script>
+// ═══════════════════════════════════════════════════════════════════════════
+// WebGL Context Pool Manager
+// ═══════════════════════════════════════════════════════════════════════════
+// Browsers cap WebGL contexts at ~8–16 per page.  This manager:
+//   • Tracks every live viewer in a LRU list.
+//   • Before creating a new viewer, evicts the LEAST recently seen one if
+//     we are already at MAX_CONTEXTS, so the new one always succeeds.
+//   • Evicted containers get a lightweight placeholder so the user knows
+//     they can scroll back to reload.
+// ═══════════════════════════════════════════════════════════════════════════
+window.CtxPool = (function () {
+    var MAX_CONTEXTS = 10;   // stay well under the browser's hard cap
+    var pool = [];           // [{ id, viewer, destroy }]  — front = oldest
 
-    <!-- Load 3Dmol ONCE, early, before any rows that use it -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/3Dmol/2.1.0/3Dmol-min.js"></script>
+    function placeholder(el) {
+        el.innerHTML = '';
+        var d = document.createElement('div');
+        d.className = 'viewer-placeholder';
+        d.innerHTML =
+            '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">' +
+            '<path stroke-linecap="round" stroke-linejoin="round" d="M12 4v1m0 14v1m8-8h-1M5 12H4m' +
+            '14.364-6.364-.707.707M6.343 17.657l-.707.707M17.657 17.657l-.707-.707M6.343 6.343l-.707-.707"/>' +
+            '</svg>' +
+            '<span>Scroll to reload viewer</span>';
+        el.appendChild(d);
+    }
 
-    <!--
-        Shared helper: waitFor3Dmol(fn)
-        Retries every 100ms up to 5s, then calls fn() once $3Dmol is available.
-        Defined globally so every subsequent script block can reuse it.
-    -->
-    <script>
-    window.waitFor3Dmol = function(fn, tries) {
-        tries = tries || 0;
-        if (typeof $3Dmol !== 'undefined') {
-            fn();
-        } else if (tries < 50) {
-            setTimeout(function() { window.waitFor3Dmol(fn, tries + 1); }, 100);
-        } else {
-            console.warn('3Dmol never loaded after 5s');
-        }
+    return {
+        register: function (id, viewer, destroyFn) {
+            // If already registered just bump to back (most-recently-used)
+            pool = pool.filter(function (e) { return e.id !== id; });
+            pool.push({ id: id, viewer: viewer, destroy: destroyFn });
+            // Evict oldest if over limit
+            while (pool.length > MAX_CONTEXTS) {
+                var victim = pool.shift();
+                try { victim.destroy(); } catch (_) {}
+                var el = document.getElementById(victim.id);
+                if (el) placeholder(el);
+            }
+        },
+        touch: function (id) {
+            var idx = pool.findIndex(function (e) { return e.id === id; });
+            if (idx > -1) {
+                var e = pool.splice(idx, 1)[0];
+                pool.push(e);
+            }
+        },
+        remove: function (id) {
+            pool = pool.filter(function (e) { return e.id !== id; });
+        },
+        size: function () { return pool.length; }
     };
-    </script>
+})();
 
-    <!-- ROW 3: 3D Molecular Visualization (DemoDiff) -->
-    <div class="section-title">DemoDiff (molecular foundation model leveraging Graph Diffusion Transformer)</div>
-    <div class="demo-container" style="grid-template-columns: repeat(4, 1fr);">
+// ═══════════════════════════════════════════════════════════════════════════
+// 3Dmol readiness helper
+// ═══════════════════════════════════════════════════════════════════════════
+window.waitFor3Dmol = function (fn, tries) {
+    tries = tries || 0;
+    if (typeof $3Dmol !== 'undefined') { fn(); }
+    else if (tries < 50) { setTimeout(function () { window.waitFor3Dmol(fn, tries + 1); }, 100); }
+    else { console.warn('3Dmol never loaded after 5 s'); }
+};
 
-        <div class="viewer-card">
-            <div class="canvas-wrapper" id="mol-viewer-1" style="min-height: 300px;"></div>
-            <div class="mobile-fallback">3D viewer requires desktop browser</div>
-            <div class="caption">Method A</div>
-            <div class="sub-caption">OCC(O)C(S)c1cccc(O)c1 | Drag to rotate, scroll to zoom</div>
-        </div>
+// ═══════════════════════════════════════════════════════════════════════════
+// Inline data — all your SDF / CIF strings
+// ═══════════════════════════════════════════════════════════════════════════
+window._DEMO_DATA = {};
 
-        <div class="viewer-card">
-            <div class="canvas-wrapper" id="mol-viewer-2" style="min-height: 300px;"></div>
-            <div class="mobile-fallback">3D viewer requires desktop browser</div>
-            <div class="caption">Method B</div>
-            <div class="sub-caption">OCC(O)C(S)c1cccc(O)c1 | Drag to rotate, scroll to zoom</div>
-        </div>
-
-        <div class="viewer-card">
-            <div class="canvas-wrapper" id="mol-viewer-3" style="min-height: 300px;"></div>
-            <div class="mobile-fallback">3D viewer requires desktop browser</div>
-            <div class="caption">Method C</div>
-            <div class="sub-caption">OCC(O)C(S)c1cccc(O)c1 | Drag to rotate, scroll to zoom</div>
-        </div>
-
-        <div class="viewer-card">
-            <div class="canvas-wrapper" id="mol-viewer-4" style="min-height: 300px;"></div>
-            <div class="mobile-fallback">3D viewer requires desktop browser</div>
-            <div class="caption">Method D</div>
-            <div class="sub-caption">OCC(O)C(S)c1cccc(O)c1 | Drag to rotate, scroll to zoom</div>
-        </div>
-
-    </div>
-
-    <script>
-    (function() {
-        var SDF_DATA = `
+// ── DemoDiff SDF (shared for all 4 methods) ────────────────────────────────
+window._DEMO_DATA.demodiff_sdf = `
      RDKit          3D
 
  20 21  0  0  0  0  0  0  0  0999 V2000
@@ -337,66 +553,8 @@ M  END
 $$$$
 `;
 
-        var configs = [
-            { id: "mol-viewer-1", style: { stick: { radius: 0.15, colorscheme: "Jmol" } }, bg: "#0a0a1a" },
-            { id: "mol-viewer-2", style: { stick: { radius: 0.15, colorscheme: "Jmol" } }, bg: "#0a0a1a" },
-            { id: "mol-viewer-3", style: { stick: { radius: 0.15, colorscheme: "Jmol" } }, bg: "#0a0a1a" },
-            { id: "mol-viewer-4", style: { stick: { radius: 0.15, colorscheme: "Jmol" } }, bg: "#0a0a1a" },
-        ];
-
-        /*
-         * FIX 1 — DemoDiff "Method A" white box
-         * ----------------------------------------
-         * Root cause: all 4 viewers were initialised simultaneously in a forEach
-         * loop. When $3Dmol.createViewer runs before the browser has painted the
-         * container, it measures 0×0 px, allocates a 0-size WebGL canvas, and the
-         * element falls back to a white rectangle.
-         *
-         * Fix: stagger each viewer with a 180 ms offset (idx * 180 ms), then call
-         * viewer.resize() + viewer.render() after another 100 ms so the canvas
-         * fills the now-painted container correctly.
-         */
-        waitFor3Dmol(function() {
-            configs.forEach(function(cfg, idx) {
-                setTimeout(function() {
-                    var el = document.getElementById(cfg.id);
-                    if (!el) return;
-                    var viewer = $3Dmol.createViewer(el, { backgroundColor: cfg.bg, antialias: true });
-                    viewer.addModel(SDF_DATA, "sdf");
-                    viewer.setStyle({}, cfg.style);
-                    viewer.zoomTo();
-                    viewer.spin("y", 1);
-                    viewer.render();
-                    /* Force a resize pass so the WebGL canvas adopts the
-                       container's real pixel dimensions after layout settles. */
-                    setTimeout(function() { viewer.resize(); viewer.render(); }, 100);
-                }, idx * 180);
-            });
-        });
-    })();
-    </script>
-
-    <!-- ROW 4: 3D Crystal Structure Visualization (DiffCSP-PP) -->
-    <div class="section-title">DiffCSP++ Crystal Structure Prediction (Space Group Constrained Generation)</div>
-    <div class="demo-container">
-
-        <div class="viewer-card">
-            <div class="canvas-wrapper" id="crystal-viewer-a" style="min-height: 380px;"></div>
-            <div class="caption">ManifoldCache (Ours)</div>
-            <div class="sub-caption">Tm&#8322;Te&#8323; — Tm32 Te48 | Drag to rotate, scroll to zoom</div>
-        </div>
-
-        <div class="viewer-card">
-            <div class="canvas-wrapper" id="crystal-viewer-b" style="min-height: 380px;"></div>
-            <div class="caption">DeepCache</div>
-            <div class="sub-caption">Tm&#8322;Te&#8323; — Tm32 Te48 | Drag to rotate, scroll to zoom</div>
-        </div>
-
-    </div>
-
-    <script>
-    (function() {
-        var CIF_A = `# generated using pymatgen
+// ── Crystal CIFs ───────────────────────────────────────────────────────────
+window._DEMO_DATA.cif_a = `# generated using pymatgen
 data_Tm2Te3
 _symmetry_space_group_name_H-M   'P 1'
 _cell_length_a   8.41800785
@@ -490,20 +648,20 @@ loop_
   Te  Te65  1  0.62566251  0.87554908  0.54258496  1
   Te  Te66  1  0.62566251  0.87445092  0.20741510  1
   Te  Te67  1  0.12433743  0.87554908  0.20741510  1
-  Te  Te68  1  0.87566251  0.12554908  0.45741507  1
-  Te  Te69  1  0.37433743  0.12445092  0.45741507  1
-  Te  Te70  1  0.37433743  0.12554908  0.79258496  1
-  Te  Te71  1  0.87566251  0.12445092  0.79258496  1
-  Te  Te72  1  0.12433743  0.37445092  0.04258493  1
-  Te  Te73  1  0.62566251  0.37554908  0.04258493  1
-  Te  Te74  1  0.62566251  0.37445092  0.70741504  1
-  Te  Te75  1  0.12433743  0.37554908  0.70741504  1
-  Te  Te76  1  0.87566251  0.62554908  0.95741504  1
-  Te  Te77  1  0.37433743  0.62445092  0.95741504  1
-  Te  Te78  1  0.37433743  0.62554908  0.29258493  1
-  Te  Te79  1  0.87566251  0.62445092  0.29258493  1`;
+  Te  Te68  1  0.37338436  0.12491292  0.79244870  1
+  Te  Te69  1  0.87661564  0.12508702  0.79244870  1
+  Te  Te70  1  0.87661564  0.12491292  0.45755124  1
+  Te  Te71  1  0.37338436  0.12508702  0.45755124  1
+  Te  Te72  1  0.62661564  0.37508702  0.70755130  1
+  Te  Te73  1  0.12338436  0.37491292  0.70755130  1
+  Te  Te74  1  0.12338436  0.37508702  0.04244870  1
+  Te  Te75  1  0.62661564  0.37491292  0.04244870  1
+  Te  Te76  1  0.37338436  0.62491292  0.29244870  1
+  Te  Te77  1  0.87661564  0.62508702  0.29244870  1
+  Te  Te78  1  0.87661564  0.62491292  0.95755130  1
+  Te  Te79  1  0.37338436  0.62508702  0.95755130  1`;
 
-        var CIF_B = `# generated using pymatgen
+window._DEMO_DATA.cif_b = `# generated using pymatgen
 data_Tm2Te3
 _symmetry_space_group_name_H-M   'P 1'
 _cell_length_a   8.28109646
@@ -610,338 +768,9 @@ loop_
   Te  Te78  1  0.87661564  0.62491292  0.95755130  1
   Te  Te79  1  0.37338436  0.62508702  0.95755130  1`;
 
-        function loadCrystalViewer(containerId, filePath, fallbackCif, spinAxis) {
-            var el = document.getElementById(containerId);
-            if (!el) return;
-            var viewer = $3Dmol.createViewer(el, { backgroundColor: "#060d1a", antialias: true });
-
-            function renderCif(cifText) {
-                viewer.addModel(cifText, "cif", { normalizeAssembly: true, duplicateAssemblyAtoms: true });
-                viewer.setStyle({}, { sphere: { scale: 0.32, colorscheme: "Jmol" } });
-                viewer.addStyle({}, { stick: { radius: 0.08, colorscheme: "Jmol" } });
-                viewer.addUnitCell({
-                    box: { color: "#38bdf8", linewidth: 1.5, opacity: 0.6 },
-                    astep: 5, bstep: 5, cstep: 5
-                });
-                viewer.zoomTo();
-                viewer.zoom(1.4);
-                viewer.spin(spinAxis || "y", 0.8);
-                viewer.render();
-            }
-
-            fetch(filePath)
-                .then(function(resp) {
-                    if (!resp.ok) throw new Error("not found");
-                    return resp.text();
-                })
-                .then(function(text) { renderCif(text); })
-                .catch(function() { renderCif(fallbackCif); });
-        }
-
-        waitFor3Dmol(function() {
-            loadCrystalViewer("crystal-viewer-a", "./manifoldcache.cif", CIF_A, "y");
-            loadCrystalViewer("crystal-viewer-b", "./deepcache.cif", CIF_B, "y");
-        });
-    })();
-    </script>
-
-    <!-- ROW: Proteina Protein Backbone Generation -->
-    <div class="section-title">Proteina - foundation model for protein backbone generation</div>
-    <div class="demo-container" style="grid-template-columns: repeat(3, 1fr);">
-
-        <div class="viewer-card">
-            <div class="canvas-wrapper" id="prot-viewer-1" style="min-height: 350px;"></div>
-            <div class="caption">ManifoldCache (Ours)</div>
-            <div class="sub-caption">manifoldcache.pdb | Drag to rotate, scroll to zoom</div>
-        </div>
-
-        <div class="viewer-card">
-            <div class="canvas-wrapper" id="prot-viewer-2" style="min-height: 350px;"></div>
-            <div class="caption">Fora</div>
-            <div class="sub-caption">fora.pdb | Drag to rotate, scroll to zoom</div>
-        </div>
-
-        <div class="viewer-card">
-            <div class="canvas-wrapper" id="prot-viewer-3" style="min-height: 350px;"></div>
-            <div class="caption">SmoothCache</div>
-            <div class="sub-caption">smoothcache.pdb | Drag to rotate, scroll to zoom</div>
-        </div>
-
-    </div>
-
-    <script>
-    (function() {
-        var PROT_FILES = [
-            { id: "prot-viewer-1", file: "./manifoldcache.pdb" },
-            { id: "prot-viewer-2", file: "./fora.pdb" },
-            { id: "prot-viewer-3", file: "./smoothcache.pdb" },
-        ];
-
-        function initProtViewer(cfg) {
-            var el = document.getElementById(cfg.id);
-            if (!el) return;
-            var viewer = $3Dmol.createViewer(el, { backgroundColor: "#060d1a", antialias: true });
-            fetch(cfg.file)
-                .then(function(r) { if (!r.ok) throw new Error(); return r.text(); })
-                .then(function(pdbText) {
-                    viewer.addModel(pdbText, "pdb");
-                    viewer.setStyle({}, { cartoon: { color: "spectrum", thickness: 0.4 } });
-                    viewer.addStyle({ atom: ["CA", "N", "C", "O"] }, { stick: { radius: 0.08, colorscheme: "Jmol" } });
-                    viewer.zoomTo();
-                    viewer.spin("y", 0.8);
-                    viewer.render();
-                })
-                .catch(function() { console.warn("PDB not found: " + cfg.file); });
-        }
-
-        waitFor3Dmol(function() {
-            PROT_FILES.forEach(initProtViewer);
-        });
-    })();
-    </script>
-
-    <!-- ROW: UniMoMo Peptide Generation -->
-    <div class="section-title">
-        UniMoMo - Unified Generative Modeling of 3D Molecules for De Novo Binder Design
-    </div>
-
-    <div class="demo-container" style="grid-template-columns: repeat(3, 1fr);">
-
-        <div class="viewer-card">
-            <div class="canvas-wrapper" id="unimomo-manifold" style="min-height: 350px; position: relative;"></div>
-            <div class="caption">ManifoldCache (Ours)</div>
-            <div class="sub-caption">
-                <span class="pmetric-badge pmetric-good">pmetric: 1.3310</span>
-                <span class="compact-badge compact-good">Compact ✓</span>
-            </div>
-            <div class="seq-display" id="seq-manifold"></div>
-        </div>
-
-        <div class="viewer-card">
-            <div class="canvas-wrapper" id="unimomo-deepcache" style="min-height: 350px; position: relative;"></div>
-            <div class="caption">DeepCache</div>
-            <div class="sub-caption">
-                <span class="pmetric-badge pmetric-low">pmetric: 2.28 × 10⁻⁴</span>
-                <span class="compact-badge compact-bad">Scattered ✗</span>
-            </div>
-            <div class="seq-display" id="seq-deepcache"></div>
-        </div>
-
-        <div class="viewer-card">
-            <div class="canvas-wrapper" id="unimomo-smoothcache" style="min-height: 350px; position: relative;"></div>
-            <div class="caption">SmoothCache</div>
-            <div class="sub-caption">
-                <span class="pmetric-badge pmetric-low">pmetric: 1.89 × 10⁻³</span>
-                <span class="compact-badge compact-bad">Scattered ✗</span>
-            </div>
-            <div class="seq-display" id="seq-smoothcache"></div>
-        </div>
-
-    </div>
-
-    <script>
-    (function () {
-        var AA3 = {
-            A:'ALA',R:'ARG',N:'ASN',D:'ASP',C:'CYS',E:'GLU',Q:'GLN',
-            G:'GLY',H:'HIS',I:'ILE',L:'LEU',K:'LYS',M:'MET',F:'PHE',
-            P:'PRO',S:'SER',T:'THR',W:'TRP',Y:'TYR',V:'VAL'
-        };
-        var AA_CLASS = {
-            K:'aa-pos',R:'aa-pos',H:'aa-pos',
-            D:'aa-neg',E:'aa-neg',
-            N:'aa-pol',Q:'aa-pol',S:'aa-pol',T:'aa-pol',C:'aa-pol',
-            F:'aa-aro',W:'aa-aro',Y:'aa-aro',
-            A:'aa-hph',V:'aa-hph',I:'aa-hph',L:'aa-hph',M:'aa-hph',
-            G:'aa-spc',P:'aa-spc'
-        };
-        var AA_COLOR = {
-            K:'#3b82f6',R:'#3b82f6',H:'#60a5fa',
-            D:'#ef4444',E:'#f87171',
-            N:'#a3e635',Q:'#a3e635',S:'#4ade80',T:'#4ade80',C:'#fde047',
-            F:'#c084fc',W:'#a855f7',Y:'#9333ea',
-            A:'#fbbf24',V:'#f59e0b',I:'#d97706',L:'#b45309',M:'#92400e',
-            G:'#e5e7eb',P:'#d1d5db'
-        };
-
-        function normalizePDB(pdbText) {
-            var lines = pdbText.split('\n');
-            var atomsA = [], atomsB = [];
-            lines.forEach(function(raw) {
-                var rec = raw.slice(0, 6).trim();
-                if (rec !== 'ATOM' && rec !== 'HETATM') return;
-                var chain = raw.length > 21 ? raw[21] : ' ';
-                var x = parseFloat(raw.slice(30, 38));
-                var y = parseFloat(raw.slice(38, 46));
-                var z = parseFloat(raw.slice(46, 54));
-                if (isNaN(x) || isNaN(y) || isNaN(z)) return;
-                var atom = { raw: raw, x: x, y: y, z: z };
-                if (chain === 'A') atomsA.push(atom);
-                else if (chain === 'B') atomsB.push(atom);
-            });
-            if (atomsA.length === 0 || atomsB.length === 0) return pdbText;
-            function centroid(arr) {
-                var sx=0,sy=0,sz=0;
-                arr.forEach(function(a){sx+=a.x;sy+=a.y;sz+=a.z;});
-                return {x:sx/arr.length,y:sy/arr.length,z:sz/arr.length};
-            }
-            var cA = centroid(atomsA), cB = centroid(atomsB);
-            var dx = cB.x-cA.x, dy = cB.y-cA.y, dz = cB.z-cA.z;
-            function fmtCoord(v) {
-                var s = v.toFixed(3);
-                while (s.length < 8) s = ' ' + s;
-                if (s.length > 8) s = s.slice(s.length - 8);
-                return s;
-            }
-            var out = [];
-            atomsA.forEach(function(a) {
-                out.push(a.raw.slice(0,30) + fmtCoord(a.x+dx) + fmtCoord(a.y+dy) + fmtCoord(a.z+dz) + a.raw.slice(54));
-            });
-            out.push('TER');
-            atomsB.forEach(function(a) { out.push(a.raw); });
-            out.push('END');
-            return out.join('\n');
-        }
-
-        function measureSpread(pdbText) {
-            var pts = [];
-            pdbText.split('\n').forEach(function(line) {
-                var rec = line.slice(0,6).trim();
-                if (rec !== 'ATOM' && rec !== 'HETATM') return;
-                if (line[21] !== 'A') return;
-                if (line.slice(12,16).trim() !== 'CA') return;
-                var x = parseFloat(line.slice(30,38));
-                var y = parseFloat(line.slice(38,46));
-                var z = parseFloat(line.slice(46,54));
-                if (!isNaN(x)) pts.push([x,y,z]);
-            });
-            if (pts.length < 2) return 0;
-            var maxD = 0;
-            for (var i=0;i<pts.length;i++) {
-                for (var j=i+1;j<pts.length;j++) {
-                    var d = Math.sqrt(
-                        Math.pow(pts[i][0]-pts[j][0],2)+
-                        Math.pow(pts[i][1]-pts[j][1],2)+
-                        Math.pow(pts[i][2]-pts[j][2],2));
-                    if (d>maxD) maxD=d;
-                }
-            }
-            return maxD;
-        }
-
-        function renderViewer(viewer, seq, isCompact) {
-            viewer.setStyle(
-                { chain: 'B' },
-                { cartoon: { color: '#334155', thickness: 0.28, opacity: isCompact ? 0.35 : 0.55 } }
-            );
-            if (isCompact) {
-                viewer.setStyle({ chain: 'A' }, {
-                    sphere: { scale: 0.28, colorscheme: 'amino' },
-                    stick:  { radius: 0.14, colorscheme: 'amino' }
-                });
-                for (var i=0; i<seq.length; i++) {
-                    var col = AA_COLOR[seq[i]] || '#9ca3af';
-                    viewer.setStyle({ chain: 'A', resi: i+1 }, {
-                        cartoon: { color: col, thickness: 0.5, opacity: 0.9 },
-                        sphere:  { color: col, radius: 0.30, opacity: 0.9 },
-                        stick:   { color: col, radius: 0.12 }
-                    });
-                }
-                viewer.zoomTo({ chain: 'A' });
-            } else {
-                for (var i=0; i<seq.length; i++) {
-                    var col = AA_COLOR[seq[i]] || '#9ca3af';
-                    viewer.setStyle({ chain: 'A', resi: i+1 }, {
-                        sphere: { color: col, radius: 0.6, opacity: 0.80 }
-                    });
-                }
-                viewer.zoomTo({ chain: 'B' });
-            }
-            viewer.spin('y', 0.7);
-            viewer.render();
-        }
-
-        function addScatteredOverlay(canvasId) {
-            var el = document.getElementById(canvasId);
-            if (!el) return;
-            var d = document.createElement('div');
-            d.className = 'scattered-overlay';
-            d.textContent = '⚠ Non-compact — residues scattered in space (failed generation)';
-            el.appendChild(d);
-        }
-
-        function renderSeqLabel(id, seq) {
-            var el = document.getElementById(id);
-            if (!el) return;
-            var html = '';
-            for (var i=0;i<seq.length;i++) {
-                var cls = AA_CLASS[seq[i]] || 'aa-spc';
-                html += '<span class="'+cls+'" title="'+(AA3[seq[i]]||seq[i])+' '+(i+1)+'">'+seq[i]+'</span>';
-            }
-            el.innerHTML = html;
-        }
-
-        var COMPACT_THRESHOLD = 120;
-
-        function initUniMoMoViewer(entry) {
-            var el = document.getElementById(entry.canvasId);
-            if (!el) return;
-            var viewer = $3Dmol.createViewer(el, { backgroundColor: '#060d1a', antialias: true });
-            fetch(entry.pdb)
-                .then(function(r) {
-                    if (!r.ok) throw new Error('PDB not found: ' + entry.pdb);
-                    return r.text();
-                })
-                .then(function(raw) {
-                    var norm = normalizePDB(raw);
-                    var spread = measureSpread(norm);
-                    var isCompact = (spread < COMPACT_THRESHOLD);
-                    viewer.addModel(norm, 'pdb');
-                    renderViewer(viewer, entry.seq, isCompact);
-                    if (!isCompact) addScatteredOverlay(entry.canvasId);
-                })
-                .catch(function(err) { console.warn(err.message); });
-            renderSeqLabel(entry.seqId, entry.seq);
-        }
-
-        var ENTRIES = [
-            { canvasId: 'unimomo-manifold',   seqId: 'seq-manifold',   seq: 'KQILRESQEPDYSTPDNDENFQQNFVR', pdb: './manifoldcache_unimomo.pdb' },
-            { canvasId: 'unimomo-deepcache',  seqId: 'seq-deepcache',  seq: 'VVQVVVTVVTVVVVQVVVVVVVVVVVV', pdb: './deepcache_unimomo.pdb'     },
-            { canvasId: 'unimomo-smoothcache',seqId: 'seq-smoothcache',seq: 'QVVFVQQVVFQVQQVQVVVVVFVFFVQ', pdb: './smoothcache_unimomo.pdb'    }
-        ];
-
-        waitFor3Dmol(function() {
-            ENTRIES.forEach(initUniMoMoViewer);
-        });
-    })();
-    </script>
-
-    <!-- ROW: DiT-MC Molecular Conformer Generation -->
-    <div class="section-title">DiT-MC — Molecular Conformer Generation (GEOM-DRUGS Benchmark)</div>
-    <div class="demo-container" style="grid-template-columns: repeat(3, 1fr);">
-
-        <div class="viewer-card">
-            <div class="canvas-wrapper" id="ditmc-manifold" style="min-height: 320px;"></div>
-            <div class="caption">ManifoldCache (Ours)</div>
-            <div class="sub-caption">C[C@@]12[C@H](O)CO[C@@H]1[C@@H]2O · conformer 1 · Drag to rotate, scroll to zoom</div>
-        </div>
-
-        <div class="viewer-card">
-            <div class="canvas-wrapper" id="ditmc-pfabc" style="min-height: 320px;"></div>
-            <div class="caption">PF-ABC</div>
-            <div class="sub-caption">C[C@@]12[C@H](O)CO[C@@H]1[C@@H]2O · conformer 1 · Drag to rotate, scroll to zoom</div>
-        </div>
-
-        <div class="viewer-card">
-            <div class="canvas-wrapper" id="ditmc-teacache" style="min-height: 320px;"></div>
-            <div class="caption">TeaCache</div>
-            <div class="sub-caption">C[C@@]12[C@H](O)CO[C@@H]1[C@@H]2O · conformer 1 · Drag to rotate, scroll to zoom</div>
-        </div>
-
-    </div>
-
-    <script>
-    (function () {
-        var SDF_MANIFOLD = `
+// ── DiT-MC SDFs ────────────────────────────────────────────────────────────
+window._DEMO_DATA.ditmc = [
+`
      RDKit          3D
 
  19 20  0  0  0  0  0  0  0  0999 V2000
@@ -985,9 +814,8 @@ loop_
  13 16  1  6
  14 15  1  0
 M  END
-$$$$`;
-
-        var SDF_PFABC = `
+$$$$`,
+`
      RDKit          3D
  19 20  0  0  0  0  0  0  0  0999 V2000
    -2.0466    0.3278    0.0238 C   0  0  0  0  0  0  0  0  0  0  0  0
@@ -1030,9 +858,8 @@ $$$$`;
  13 16  1  1
  14 15  1  0
 M  END
-$$$$`;
-
-        var SDF_TEACACHE = `
+$$$$`,
+`
      RDKit          3D
  19 20  0  0  0  0  0  0  0  0999 V2000
    -2.0483    0.2097    0.1449 C   0  0  0  0  0  0  0  0  0  0  0  0
@@ -1075,47 +902,198 @@ $$$$`;
  13 16  1  1
  14 15  1  0
 M  END
-$$$$`;
+$$$$`
+];
 
-        var VIEWERS = [
-            { id: 'ditmc-manifold', sdf: SDF_MANIFOLD },
-            { id: 'ditmc-pfabc',    sdf: SDF_PFABC    },
-            { id: 'ditmc-teacache', sdf: SDF_TEACACHE  },
-        ];
+// ── UniMoMo entries ────────────────────────────────────────────────────────
+window._DEMO_DATA.unimomo = [
+    { canvasId: 'unimomo-manifold',    seqId: 'seq-manifold',    seq: 'KQILRESQEPDYSTPDNDENFQQNFVR', pdb: './manifoldcache_unimomo.pdb' },
+    { canvasId: 'unimomo-deepcache',   seqId: 'seq-deepcache',   seq: 'VVQVVVTVVTVVVVQVVVVVVVVVVVV', pdb: './deepcache_unimomo.pdb'    },
+    { canvasId: 'unimomo-smoothcache', seqId: 'seq-smoothcache', seq: 'QVVFVQQVVFQVQQVQVVVVVFVFFVQ', pdb: './smoothcache_unimomo.pdb'   }
+];
 
-        /*
-         * FIX 2 — DiT-MC PF-ABC and TeaCache black boxes
-         * ------------------------------------------------
-         * Root cause: same race condition as Fix 1. All three viewers were
-         * initialised at once; viewers 2 and 3 had 0×0 px containers at the
-         * moment $3Dmol tried to create their WebGL contexts.
-         *
-         * Fix A – stagger each viewer with a 220 ms offset per index.
-         * Fix B – call viewer.resize() + viewer.render() 120 ms after the first
-         *         render so the canvas adopts the container's real dimensions.
-         */
-        function initViewer(v) {
-            var el = document.getElementById(v.id);
-            if (!el) return;
-            var viewer = $3Dmol.createViewer(el, { backgroundColor: '#060d1a', antialias: true });
-            viewer.addModel(v.sdf, 'sdf');
-            viewer.setStyle({}, {
-                stick:  { radius: 0.14, colorscheme: 'Jmol' },
-                sphere: { scale: 0.26, colorscheme: 'Jmol' }
-            });
-            viewer.zoomTo();
-            viewer.spin('y', 0.8);
-            viewer.render();
-            setTimeout(function() { viewer.resize(); viewer.render(); }, 120);
+// ═══════════════════════════════════════════════════════════════════════════
+// Lazy viewer initialization via IntersectionObserver
+// ═══════════════════════════════════════════════════════════════════════════
+waitFor3Dmol(function () {
+
+    // ── AA helpers for UniMoMo ──────────────────────────────────────────
+    var AA3 = {A:'ALA',R:'ARG',N:'ASN',D:'ASP',C:'CYS',E:'GLU',Q:'GLN',G:'GLY',H:'HIS',I:'ILE',L:'LEU',K:'LYS',M:'MET',F:'PHE',P:'PRO',S:'SER',T:'THR',W:'TRP',Y:'TYR',V:'VAL'};
+    var AA_CLASS = {K:'aa-pos',R:'aa-pos',H:'aa-pos',D:'aa-neg',E:'aa-neg',N:'aa-pol',Q:'aa-pol',S:'aa-pol',T:'aa-pol',C:'aa-pol',F:'aa-aro',W:'aa-aro',Y:'aa-aro',A:'aa-hph',V:'aa-hph',I:'aa-hph',L:'aa-hph',M:'aa-hph',G:'aa-spc',P:'aa-spc'};
+    var AA_COLOR = {K:'#3b82f6',R:'#3b82f6',H:'#60a5fa',D:'#ef4444',E:'#f87171',N:'#a3e635',Q:'#a3e635',S:'#4ade80',T:'#4ade80',C:'#fde047',F:'#c084fc',W:'#a855f7',Y:'#9333ea',A:'#fbbf24',V:'#f59e0b',I:'#d97706',L:'#b45309',M:'#92400e',G:'#e5e7eb',P:'#d1d5db'};
+
+    function renderSeqLabel(id, seq) {
+        var el = document.getElementById(id);
+        if (!el) return;
+        var html = '';
+        for (var i = 0; i < seq.length; i++) {
+            var cls = AA_CLASS[seq[i]] || 'aa-spc';
+            html += '<span class="' + cls + '" title="' + (AA3[seq[i]] || seq[i]) + ' ' + (i+1) + '">' + seq[i] + '</span>';
         }
+        el.innerHTML = html;
+    }
 
-        waitFor3Dmol(function() {
-            VIEWERS.forEach(function(v, idx) {
-                setTimeout(function() { initViewer(v); }, idx * 220);
-            });
+    function measureSpread(pdbText) {
+        var pts = [];
+        pdbText.split('\n').forEach(function (line) {
+            var rec = line.slice(0,6).trim();
+            if (rec !== 'ATOM' && rec !== 'HETATM') return;
+            if (line[21] !== 'A') return;
+            if (line.slice(12,16).trim() !== 'CA') return;
+            var x = parseFloat(line.slice(30,38)), y = parseFloat(line.slice(38,46)), z = parseFloat(line.slice(46,54));
+            if (!isNaN(x)) pts.push([x,y,z]);
         });
-    })();
-    </script>
+        if (pts.length < 2) return 0;
+        var maxD = 0;
+        for (var i = 0; i < pts.length; i++) for (var j = i+1; j < pts.length; j++) {
+            var d = Math.sqrt(Math.pow(pts[i][0]-pts[j][0],2)+Math.pow(pts[i][1]-pts[j][1],2)+Math.pow(pts[i][2]-pts[j][2],2));
+            if (d > maxD) maxD = d;
+        }
+        return maxD;
+    }
+
+    function normalizePDB(pdbText) {
+        var lines = pdbText.split('\n'), atomsA = [], atomsB = [];
+        lines.forEach(function (raw) {
+            var rec = raw.slice(0,6).trim();
+            if (rec !== 'ATOM' && rec !== 'HETATM') return;
+            var chain = raw.length > 21 ? raw[21] : ' ';
+            var x = parseFloat(raw.slice(30,38)), y = parseFloat(raw.slice(38,46)), z = parseFloat(raw.slice(46,54));
+            if (isNaN(x)||isNaN(y)||isNaN(z)) return;
+            var atom = {raw:raw,x:x,y:y,z:z};
+            if (chain==='A') atomsA.push(atom); else if (chain==='B') atomsB.push(atom);
+        });
+        if (!atomsA.length || !atomsB.length) return pdbText;
+        function centroid(arr){var sx=0,sy=0,sz=0;arr.forEach(function(a){sx+=a.x;sy+=a.y;sz+=a.z;});return{x:sx/arr.length,y:sy/arr.length,z:sz/arr.length};}
+        var cA=centroid(atomsA),cB=centroid(atomsB),dx=cB.x-cA.x,dy=cB.y-cA.y,dz=cB.z-cA.z;
+        function fmtCoord(v){var s=v.toFixed(3);while(s.length<8)s=' '+s;if(s.length>8)s=s.slice(s.length-8);return s;}
+        var out=[];
+        atomsA.forEach(function(a){out.push(a.raw.slice(0,30)+fmtCoord(a.x+dx)+fmtCoord(a.y+dy)+fmtCoord(a.z+dz)+a.raw.slice(54));});
+        out.push('TER');
+        atomsB.forEach(function(a){out.push(a.raw);});
+        out.push('END');
+        return out.join('\n');
+    }
+
+    // ── Per-type init functions ─────────────────────────────────────────
+
+    function initSdfInline(el, idx) {
+        var viewer = $3Dmol.createViewer(el, { backgroundColor: '#0a0a1a', antialias: true });
+        viewer.addModel(window._DEMO_DATA.demodiff_sdf, 'sdf');
+        viewer.setStyle({}, { stick: { radius: 0.15, colorscheme: 'Jmol' } });
+        viewer.zoomTo();
+        viewer.spin('y', 1);
+        viewer.render();
+        setTimeout(function () { viewer.resize(); viewer.render(); }, 120);
+        CtxPool.register(el.id, viewer, function () { viewer.clear(); });
+    }
+
+    function initCrystal(el, idx) {
+        var cif = idx === 0 ? window._DEMO_DATA.cif_a : window._DEMO_DATA.cif_b;
+        var filePath = idx === 0 ? './manifoldcache.cif' : './deepcache.cif';
+        var viewer = $3Dmol.createViewer(el, { backgroundColor: '#060d1a', antialias: true });
+        function renderCif(cifText) {
+            viewer.addModel(cifText, 'cif', { normalizeAssembly: true, duplicateAssemblyAtoms: true });
+            viewer.setStyle({}, { sphere: { scale: 0.32, colorscheme: 'Jmol' }, stick: { radius: 0.08, colorscheme: 'Jmol' } });
+            viewer.addUnitCell({ box: { color: '#38bdf8', linewidth: 1.5, opacity: 0.6 }, astep: 5, bstep: 5, cstep: 5 });
+            viewer.zoomTo(); viewer.zoom(1.4); viewer.spin('y', 0.8); viewer.render();
+        }
+        fetch(filePath).then(function(r){if(!r.ok)throw new Error();return r.text();}).then(renderCif).catch(function(){renderCif(cif);});
+        CtxPool.register(el.id, viewer, function () { viewer.clear(); });
+    }
+
+    function initPdb(el) {
+        var file = el.getAttribute('data-pdb-file');
+        var viewer = $3Dmol.createViewer(el, { backgroundColor: '#060d1a', antialias: true });
+        fetch(file).then(function(r){if(!r.ok)throw new Error();return r.text();})
+            .then(function(pdbText){
+                viewer.addModel(pdbText, 'pdb');
+                viewer.setStyle({}, { cartoon: { color: 'spectrum', thickness: 0.4 } });
+                viewer.addStyle({ atom: ['CA','N','C','O'] }, { stick: { radius: 0.08, colorscheme: 'Jmol' } });
+                viewer.zoomTo(); viewer.spin('y', 0.8); viewer.render();
+            }).catch(function(){ console.warn('PDB not found: ' + file); });
+        CtxPool.register(el.id, viewer, function () { viewer.clear(); });
+    }
+
+    function initUnimomo(el, idx) {
+        var entry = window._DEMO_DATA.unimomo[idx];
+        renderSeqLabel(entry.seqId, entry.seq);
+        var viewer = $3Dmol.createViewer(el, { backgroundColor: '#060d1a', antialias: true });
+        fetch(entry.pdb).then(function(r){if(!r.ok)throw new Error();return r.text();})
+            .then(function(raw){
+                var norm = normalizePDB(raw);
+                var spread = measureSpread(norm);
+                var isCompact = spread < 120;
+                viewer.addModel(norm, 'pdb');
+                viewer.setStyle({ chain:'B' }, { cartoon: { color:'#334155', thickness:0.28, opacity: isCompact?0.35:0.55 } });
+                if (isCompact) {
+                    for (var i=0;i<entry.seq.length;i++) {
+                        var col=AA_COLOR[entry.seq[i]]||'#9ca3af';
+                        viewer.setStyle({chain:'A',resi:i+1},{cartoon:{color:col,thickness:0.5,opacity:0.9},sphere:{color:col,radius:0.30,opacity:0.9},stick:{color:col,radius:0.12}});
+                    }
+                    viewer.zoomTo({chain:'A'});
+                } else {
+                    for (var i=0;i<entry.seq.length;i++) {
+                        var col=AA_COLOR[entry.seq[i]]||'#9ca3af';
+                        viewer.setStyle({chain:'A',resi:i+1},{sphere:{color:col,radius:0.6,opacity:0.80}});
+                    }
+                    // scattered overlay
+                    var d=document.createElement('div');d.className='scattered-overlay';
+                    d.textContent='⚠ Non-compact — residues scattered in space (failed generation)';
+                    el.appendChild(d);
+                    viewer.zoomTo({chain:'B'});
+                }
+                viewer.spin('y', 0.7); viewer.render();
+            }).catch(function(err){ console.warn(err.message||err); });
+        CtxPool.register(el.id, viewer, function () { viewer.clear(); });
+    }
+
+    function initDitmc(el, idx) {
+        var viewer = $3Dmol.createViewer(el, { backgroundColor: '#060d1a', antialias: true });
+        viewer.addModel(window._DEMO_DATA.ditmc[idx], 'sdf');
+        viewer.setStyle({}, { stick: { radius: 0.14, colorscheme: 'Jmol' }, sphere: { scale: 0.26, colorscheme: 'Jmol' } });
+        viewer.zoomTo(); viewer.spin('y', 0.8); viewer.render();
+        setTimeout(function () { viewer.resize(); viewer.render(); }, 120);
+        CtxPool.register(el.id, viewer, function () { viewer.clear(); });
+    }
+
+    // ── Dispatch based on data attributes ──────────────────────────────
+    function initViewer(el) {
+        // Clear placeholder if present
+        el.innerHTML = '';
+        var type = el.getAttribute('data-viewer-type');
+        if (type === 'sdf-inline')  { initSdfInline(el, +el.getAttribute('data-viewer-idx')); }
+        else if (type === 'crystal'){ initCrystal(el, +el.getAttribute('data-crystal-idx')); }
+        else if (type === 'pdb')    { initPdb(el); }
+        else if (type === 'unimomo'){ initUnimomo(el, +el.getAttribute('data-unimomo-idx')); }
+        else if (type === 'ditmc')  { initDitmc(el, +el.getAttribute('data-ditmc-idx')); }
+    }
+
+    // ── IntersectionObserver: fire once per element entry ──────────────
+    var io = new IntersectionObserver(function (entries) {
+        entries.forEach(function (entry) {
+            if (!entry.isIntersecting) return;
+            var el = entry.target;
+            // Skip if already has a real WebGL canvas inside
+            if (el.querySelector('canvas')) { CtxPool.touch(el.id); return; }
+            initViewer(el);
+            // Don't unobserve — we re-init after eviction (placeholder has no canvas)
+        });
+    }, { rootMargin: '200px 0px', threshold: 0 });
+
+    document.querySelectorAll('.lazy-3dmol').forEach(function (el) {
+        // Insert placeholder immediately so layout height is preserved
+        var d = document.createElement('div');
+        d.className = 'viewer-placeholder';
+        d.innerHTML =
+            '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">' +
+            '<circle cx="12" cy="12" r="9"/><path stroke-linecap="round" d="M12 8v4l3 3"/></svg>' +
+            '<span>Loading viewer…</span>';
+        el.appendChild(d);
+        io.observe(el);
+    });
+});
+</script>
 
 </body>
 </html>
