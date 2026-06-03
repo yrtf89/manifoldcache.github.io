@@ -930,6 +930,202 @@ loop_
         window.addEventListener('load', function() { ENTRIES.forEach(initViewer); });
     })();
     </script>
+
+        <!-- ============================================================ -->
+    <!-- ROW: DiT-MC Molecular Synthesis Optimization                -->
+    <!-- ============================================================ -->
+    <div class="section-title">DiT-MC (Diffusion Transformer Optimization for Small Molecules)</div>
+    <div class="demo-container" style="grid-template-columns: repeat(3, 1fr);">
+
+        <div class="viewer-card">
+            <div class="canvas-wrapper" id="ditmc-manifold" style="min-height: 350px;"></div>
+            <div class="caption">ManifoldCache (Ours)</div>
+            <div class="sub-caption">High-fidelity geometric optimization | Drag to rotate, scroll to zoom</div>
+        </div>
+
+        <div class="viewer-card">
+            <div class="canvas-wrapper" id="ditmc-pfabc" style="min-height: 350px;"></div>
+            <div class="caption">PF_ABC</div>
+            <div class="sub-caption">Standard approximation sampling | Drag to rotate, scroll to zoom</div>
+        </div>
+
+        <div class="viewer-card">
+            <div class="canvas-wrapper" id="ditmc-teacache" style="min-height: 350px;"></div>
+            <div class="caption">TeaCache</div>
+            <div class="sub-caption">Mismatched trajectory cache baseline | Drag to rotate, scroll to zoom</div>
+        </div>
+
+    </div>
+
+    <script>
+    (function() {
+        // Dataset mappings for the three provided 3D RDKit SDF variants
+        const SDF_MANIFOLD = `
+     RDKit          3D
+
+ 19 20  0  0  0  0  0  0  0  0999 V2000
+   -0.6879   -1.3929   -1.4720 C   0  0  0  0  0  0  0  0  0  0  0  0
+   -0.2991   -0.3546   -0.4474 C   0  0  1  0  0  0  0  0  0  0  0  0
+   -0.6347    1.1086   -0.5314 C   0  0  1  0  0  0  0  0  0  0  0  0
+   -1.3264    0.2404    0.4840 C   0  0  2  0  0  0  0  0  0  0  0  0
+   -1.0658    0.4235    1.8415 O   0  0  0  0  0  0  0  0  0  0  0  0
+   -0.6782    1.2952    1.9581 H   0  0  0  0  0  0  0  0  0  0  0  0
+   -2.3642   -0.0312    0.3029 H   0  0  0  0  0  0  0  0  0  0  0  0
+   -1.1724    1.5707   -1.3507 H   0  0  0  0  0  0  0  0  0  0  0
+    0.4061    1.8966   -0.0369 O   0  0  0  0  0  0  0  0  0  0  0  0
+    1.4746    1.0635    0.3883 C   0  0  0  0  0  0  0  0  0  0  0  0
+    1.6748    1.2261    1.4538 H   0  0  0  0  0  0  0  0  0  0  0  0
+    2.3759    1.3597   -0.1596 H   0  0  0  0  0  0  0  0  0  0  0  0
+    1.1100   -0.4193    0.1402 C   0  0  1  0  0  0  0  0  0  0  0  0
+    1.2126   -1.2153    1.2893 O   0  0  0  0  0  0  0  0  0  0  0  0
+    0.5134   -0.9405    1.9013 H   0  0  0  0  0  0  0  0  0  0  0  0
+    1.7950   -0.8787   -0.5837 H   0  0  0  0  0  0  0  0  0  0  0
+   -0.0280   -1.3222   -2.3394 H   0  0  0  0  0  0  0  0  0  0  0
+   -0.5890   -2.3863   -1.0392 H   0  0  0  0  0  0  0  0  0  0  0
+   -1.7169   -1.2433   -1.7989 H   0  0  0  0  0  0  0  0  0  0  0
+  2  1  1  6
+  1 17  1  0
+  1 18  1  0
+  1 19  1  0
+  2  3  1  0
+  2  4  1  0
+  2 13  1  0
+  3  4  1  0
+  3  8  1  6
+  3  9  1  0
+  4  5  1  0
+  4  7  1  1
+  5  6  1  0
+  9 10  1  0
+ 10 11  1  0
+ 10 12  1  0
+ 10 13  1  0
+ 13 14  1  0
+ 13 16  1  6
+ 14 15  1  0
+M  END
+$$$$`;
+
+        const SDF_PFABC = `
+     RDKit          3D
+
+ 19 20  0  0  0  0  0  0  0  0999 V2000
+   -2.0466    0.3278    0.0238 C   0  0  0  0  0  0  0  0  0  0  0  0
+   -0.5581    0.1304   -0.1007 C   0  0  1  0  0  0  0  0  0  0  0  0
+    0.1522   -0.3497   -1.3515 C   0  0  1  0  0  0  0  0  0  0  0  0
+    0.2786    1.0902   -0.9208 C   0  0  2  0  0  0  0  0  0  0  0  0
+    1.5111    1.5792   -0.4768 O   0  0  0  0  0  0  0  0  0  0  0  0
+    1.3589    2.4269   -0.0268 H   0  0  0  0  0  0  0  0  0  0  0  0
+   -0.2847    1.8015   -1.5215 H   0  0  0  0  0  0  0  0  0  0  0  0
+   -0.3692   -0.5797   -2.2739 H   0  0  0  0  0  0  0  0  0  0  0  0
+    1.1658   -1.2514   -1.0474 O   0  0  0  0  0  0  0  0  0  0  0  0
+    1.1132   -1.5769    0.3245 C   0  0  0  0  0  0  0  0  0  0  0  0
+    0.7216   -2.6008    0.4428 H   0  0  0  0  0  0  0  0  0  0  0  0
+    2.1166   -1.5433    0.7323 H   0  0  0  0  0  0  0  0  0  0  0  0
+    0.1873   -0.5605    1.0537 C   0  0  1  0  0  0  0  0  0  0  0  0
+    0.8748    0.3172    1.8999 O   0  0  0  0  0  0  0  0  0  0  0  0
+    1.5686    0.7429    1.3483 H   0  0  0  0  0  0  0  0  0  0  0  0
+   -0.5267   -1.0755    1.7040 H   0  0  0  0  0  0  0  0  0  0  0  0
+   -2.5428   -0.6357    0.1632 H   0  0  0  0  0  0  0  0  0  0  0  0
+   -2.2675    0.9558    0.8909 H   0  0  0  0  0  0  0  0  0  0  0  0
+   -2.4530    0.8016   -0.8640 H   0  0  0  0  0  0  0  0  0  0  0
+  2  1  1  6
+  1 17  1  0
+  1 18  1  0
+  1 19  1  0
+  2  3  1  0
+  2  4  1  0
+  2 13  1  0
+  3  4  1  0
+  3  8  1  6
+  3  9  1  0
+  4  5  1  0
+  4  7  1  6
+  5  6  1  0
+  9 10  1  0
+ 10 11  1  0
+ 10 12  1  0
+ 10 13  1  0
+ 13 14  1  0
+ 13 16  1  1
+ 14 15  1  0
+M  END
+$$$$`;
+
+        const SDF_TEACACHE = `
+     RDKit          3D
+
+ 19 20  0  0  0  0  0  0  0  0999 V2000
+   -2.0483    0.2097    0.1449 C   0  0  0  0  0  0  0  0  0  0  0  0
+   -0.5581    0.1186   -0.0580 C   0  0  1  0  0  0  0  0  0  0  0  0
+    0.1174   -0.2428   -1.3681 C   0  0  1  0  0  0  0  0  0  0  0  0
+    0.1730    1.1756   -0.8581 C   0  0  2  0  0  0  0  0  0  0  0  0
+    1.3940    1.7227   -0.4515 O   0  0  0  0  0  0  0  0  0  0  0  0
+    1.2127    2.5051    0.0977 H   0  0  0  0  0  0  0  0  0  0  0  0
+   -0.4651    1.8792   -1.3890 H   0  0  0  0  0  0  0  0  0  0  0  0
+   -0.4341   -0.4540   -2.2767 H   0  0  0  0  0  0  0  0  0  0  0  0
+    1.2020   -1.0894   -1.1595 O   0  0  0  0  0  0  0  0  0  0  0  0
+    1.1646   -1.5602    0.1688 C   0  0  0  0  0  0  0  0  0  0  0  0
+    0.7397   -2.5793    0.1896 H   0  0  0  0  0  0  0  0  0  0  0  0
+    2.1802   -1.5994    0.5502 H   0  0  0  0  0  0  0  0  0  0  0  0
+    0.2826   -0.5979    1.0131 C   0  0  1  0  0  0  0  0  0  0  0  0
+    1.0175    0.2584    1.8414 O   0  0  0  0  0  0  0  0  0  0  0  0
+    1.6614    0.7211    1.2525 H   0  0  0  0  0  0  0  0  0  0  0  0
+   -0.3697   -1.1558    1.6927 H   0  0  0  0  0  0  0  0  0  0  0  0
+   -2.4748   -0.7892    0.2513 H   0  0  0  0  0  0  0  0  0  0  0  0
+   -2.2677    0.7747    1.0536 H   0  0  0  0  0  0  0  0  0  0  0  0
+   -2.5275    0.7031   -0.6949 H   0  0  0  0  0  0  0  0  0  0  0  0
+  2  1  1  6
+  1 17  1  0
+  1 18  1  0
+  1 19  1  0
+  2  3  1  0
+  2  4  1  0
+  2 13  1  0
+  3  4  1  0
+  3  8  1  6
+  3  9  1  0
+  4  5  1  0
+  4  7  1  6
+  5  6  1  0
+  9 10  1  0
+ 10 11  1  0
+ 10 12  1  0
+ 10 13  1  0
+ 13 14  1  0
+ 13 16  1  1
+ 14 15  1  0
+M  END
+$$$$`;
+
+        const CONFIGS = [
+            { id: "ditmc-manifold", data: SDF_MANIFOLD },
+            { id: "ditmc-pfabc", data: SDF_PFABC },
+            { id: "ditmc-teacache", data: SDF_TEACACHE }
+        ];
+
+        window.addEventListener('load', function() {
+            CONFIGS.forEach(function(cfg) {
+                const el = document.getElementById(cfg.id);
+                if (!el || typeof $3Dmol === 'undefined') return;
+
+                const viewer = $3Dmol.createViewer(el, { backgroundColor: "#060d1a", antialias: true });
+                viewer.addModel(cfg.data, "sdf");
+                
+                // Style configurations optimized for small molecule structural fidelity mapping
+                viewer.setStyle({}, {
+                    stick: { radius: 0.15, colorscheme: "Jmol" },
+                    sphere: { radius: 0.42, colorscheme: "Jmol" }
+                });
+
+                viewer.zoomTo();
+                viewer.spin("y", 0.6);
+                viewer.render();
+            });
+        });
+    })();
+    </script>
+
    
 </body>
 </html>
