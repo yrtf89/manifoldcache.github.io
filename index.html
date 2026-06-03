@@ -2,277 +2,253 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>ManifoldCache — Training-Free Diffusion Acceleration</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ManifoldCache Demo</title>
     <style>
-        * {
+        body {
             margin: 0;
-            padding: 0;
+            padding: 20px;
+            background-color: #0f172a;
+            color: #f8fafc;
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
             box-sizing: border-box;
         }
 
-        body {
-            background: radial-gradient(circle at 20% 30%, #0a0f1e, #03060f);
-            color: #eef2ff;
-            font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
-            padding: 2rem 1.5rem;
-        }
-
-        .container {
-            max-width: 1500px;
-            margin: 0 auto;
-        }
-
         h1 {
-            font-size: 2.8rem;
+            font-size: 2.2rem;
             font-weight: 700;
-            background: linear-gradient(135deg, #90f7ec, #c084fc, #f472b6);
+            margin: 0 0 5px 0;
+            text-align: center;
+            background: linear-gradient(to right, #38bdf8, #818cf8);
             -webkit-background-clip: text;
-            background-clip: text;
-            color: transparent;
-            letter-spacing: -0.01em;
-            text-align: center;
+            -webkit-text-fill-color: transparent;
         }
 
-        .tagline {
+        .subtitle {
+            font-size: 1.1rem;
+            color: #94a3b8;
+            margin-bottom: 30px;
             text-align: center;
-            color: #8ca3c7;
-            font-size: 1.2rem;
-            margin-bottom: 3rem;
-            border-bottom: 1px dashed #2d3a5e;
-            display: inline-block;
-            width: auto;
-            margin-left: auto;
-            margin-right: auto;
-            padding-bottom: 0.5rem;
-        }
-
-        .section {
-            margin-top: 3rem;
         }
 
         .section-title {
-            font-size: 1.6rem;
+            font-size: 1.4rem;
             font-weight: 600;
-            background: linear-gradient(120deg, #38bdf8, #818cf8);
-            -webkit-background-clip: text;
-            background-clip: text;
-            color: transparent;
-            margin-bottom: 1.2rem;
-            padding-left: 0.5rem;
-            border-left: 4px solid #38bdf8;
-        }
-
-        .grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-            gap: 1.8rem;
-        }
-
-        .card {
-            background: rgba(15, 25, 45, 0.65);
-            backdrop-filter: blur(2px);
-            border: 1px solid #2a3a60;
-            border-radius: 1.2rem;
-            overflow: hidden;
-            transition: transform 0.2s ease, box-shadow 0.2s ease;
-            box-shadow: 0 10px 20px -5px rgba(0,0,0,0.5);
-        }
-
-        .card:hover {
-            transform: translateY(-3px);
-            border-color: #4f7bc0;
-            box-shadow: 0 20px 30px -12px rgba(0,0,0,0.6);
-        }
-
-        .viewer-wrapper {
-            position: relative;
+            margin: 30px 0 15px 0;
+            color: #38bdf8;
             width: 100%;
-            background: #03070f;
-            border-bottom: 1px solid #1e2a44;
-            min-height: 300px;
-            height: clamp(280px, 45vh, 380px);
+            max-width: 1400px;
+            text-align: left;
+            border-bottom: 1px solid #334155;
+            padding-bottom: 5px;
         }
 
-        .viewer-3d {
+        .demo-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(45%, 1fr));
+            gap: 25px;
+            width: 100%;
+            max-width: 1400px;
+        }
+
+        .viewer-card {
+            background-color: #1e293b;
+            border-radius: 12px;
+            padding: 15px;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3);
+            border: 1px solid #334155;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .viewer-card.volume-height {
+            height: 65vh;
+        }
+
+        .canvas-wrapper, .video-wrapper {
+            flex-grow: 1;
+            width: 100%;
+            position: relative;
+            background-color: #000;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        .video-wrapper {
+            aspect-ratio: 16 / 9;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        canvas {
+            width: 100% !important;
+            height: 100% !important;
+            display: block;
+        }
+
+        video {
             width: 100%;
             height: 100%;
+            object-fit: contain;
             display: block;
         }
 
         .caption {
-            padding: 0.9rem 1rem 0.5rem;
-            font-weight: 700;
-            font-size: 1.1rem;
-            background: linear-gradient(90deg, #131f33, transparent);
-        }
-
-        .sub {
-            padding: 0 1rem 1rem;
-            font-size: 0.75rem;
-            color: #8aa0c0;
-            display: flex;
-            flex-wrap: wrap;
-            gap: 0.6rem;
-            align-items: center;
-            justify-content: space-between;
-        }
-
-        .badge {
-            display: inline-flex;
-            padding: 0.2rem 0.7rem;
-            border-radius: 20px;
-            font-size: 0.7rem;
-            font-weight: 600;
-            letter-spacing: 0.3px;
-        }
-
-        .badge-pmetric-good {
-            background: #0f2e1a;
-            color: #86efac;
-            border: 1px solid #2e7d5e;
-        }
-
-        .badge-pmetric-low {
-            background: #3b1a1a;
-            color: #fca5a5;
-            border: 1px solid #b91c1c;
-        }
-
-        .badge-compact {
-            background: #142c4a;
-            color: #7dd3fc;
-        }
-
-        .badge-scattered {
-            background: #4a2a0a;
-            color: #fcd34d;
-        }
-
-        .seq-view {
-            font-family: 'Fira Mono', 'Courier New', monospace;
-            font-size: 0.7rem;
-            letter-spacing: 0.5px;
-            background: #0c1422;
-            padding: 0.4rem 0.8rem;
-            border-radius: 24px;
-            word-break: break-all;
+            margin-top: 15px;
             text-align: center;
-            margin-top: 6px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: #e2e8f0;
+            letter-spacing: 0.5px;
         }
 
-        .aa-pos { color: #60a5fa; }
-        .aa-neg { color: #f87171; }
-        .aa-pol { color: #a3e635; }
-        .aa-aro { color: #c084fc; }
-        .aa-hph { color: #fbbf24; }
-        .aa-spc { color: #cbd5e1; }
-
-        .scatter-warning {
-            position: absolute;
-            bottom: 12px;
-            left: 50%;
-            transform: translateX(-50%);
-            background: rgba(0,0,0,0.7);
-            backdrop-filter: blur(8px);
-            padding: 4px 12px;
-            border-radius: 40px;
-            font-size: 0.7rem;
-            font-weight: 500;
-            color: #facc15;
-            border-left: 3px solid #facc15;
-            pointer-events: none;
-            z-index: 20;
-            white-space: nowrap;
-        }
-
-        @media (max-width: 760px) {
-            body { padding: 1rem; }
-            .section-title { font-size: 1.3rem; }
-            .grid { gap: 1rem; }
-            .caption { font-size: 0.95rem; }
-        }
-
-        .loading-placeholder {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            height: 100%;
-            color: #7086b0;
-            font-size: 0.8rem;
-            background: #03070f;
+        .sub-caption {
+            font-size: 0.85rem;
+            color: #64748b;
+            margin-top: 4px;
+            text-align: center;
         }
     </style>
-    <!-- 3Dmol.js CDN -->
-    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/3Dmol/2.1.0/3Dmol-min.js"></script>
 </head>
 <body>
-<div class="container">
-    <h1>⚡ ManifoldCache</h1>
-    <div style="text-align: center; margin-top: 0.5rem; margin-bottom: 2rem;">
-        <span class="tagline">training‑free diffusion acceleration via constraint manifold caching</span>
-    </div>
 
-    <!-- ========= DemoDiff (molecular foundation) ========= -->
-    <div class="section">
-        <div class="section-title">🧪 DemoDiff · Graph Diffusion Transformer</div>
-        <div class="grid" style="grid-template-columns: repeat(4,1fr);">
-            <div class="card"><div class="viewer-wrapper" id="mol-methodA"></div><div class="caption">Method A · baseline</div><div class="sub">OCC(O)C(S)c1cccc(O)c1</div></div>
-            <div class="card"><div class="viewer-wrapper" id="mol-methodB"></div><div class="caption">Method B · fast sampler</div><div class="sub">OCC(O)C(S)c1cccc(O)c1</div></div>
-            <div class="card"><div class="viewer-wrapper" id="mol-methodC"></div><div class="caption">Method C · cache‑aware</div><div class="sub">OCC(O)C(S)c1cccc(O)c1</div></div>
-            <div class="card"><div class="viewer-wrapper" id="mol-methodD"></div><div class="caption">Method D · manifold prior</div><div class="sub">OCC(O)C(S)c1cccc(O)c1</div></div>
+    <h1>ManifoldCache</h1>
+    <div class="subtitle">Training-Free Diffusion Acceleration via Constraint Manifold Caching</div>
+
+    <!-- ROW 1: 3D NIfTI Volumes -->
+    <div class="section-title">3D Brain MRI Synthesis Comparison (Med-DDPM)</div>
+    <div class="demo-container">
+        <div class="viewer-card volume-height">
+            <div class="canvas-wrapper">
+                <canvas id="canvas-manifold"></canvas>
+            </div>
+            <div class="caption">ManifoldCache (Ours)</div>
+            <div class="sub-caption">File: manifoldcache_flair.nii.gz | Drag to rotate, scroll to zoom</div>
+        </div>
+
+        <div class="viewer-card volume-height">
+            <div class="canvas-wrapper">
+                <canvas id="canvas-deepcache"></canvas>
+            </div>
+            <div class="caption">DeepCache</div>
+            <div class="sub-caption">File: deepcache_flair.nii.gz | Drag to rotate, scroll to zoom</div>
         </div>
     </div>
 
-    <!-- ========= DiffCSP++ Crystal structures ========= -->
-    <div class="section">
-        <div class="section-title">🔮 DiffCSP++ · Space Group Constrained Generation</div>
-        <div class="grid">
-            <div class="card"><div class="viewer-wrapper" id="crystal-manifold"></div><div class="caption">ManifoldCache (Ours) · Tm₂Te₃</div><div class="sub">high symmetry, coherent packing</div></div>
-            <div class="card"><div class="viewer-wrapper" id="crystal-deepcache"></div><div class="caption">DeepCache · distorted lattice</div><div class="sub">Tm₂Te₃ · increased strain</div></div>
+    <!-- ROW 2: Trajectory Generation Videos -->
+    <div class="section-title">Lyra Multi-View Synthesis Comparison</div>
+    <div class="demo-container">
+        <div class="viewer-card">
+            <div class="video-wrapper">
+                <video src="./manifoldcache_lyra.mp4" autoplay loop muted playsinline controls></video>
+            </div>
+            <div class="caption">ManifoldCache (Ours)</div>
+            <div class="sub-caption">File: manifoldcache_lyra.mp4</div>
+        </div>
+
+        <div class="viewer-card">
+            <div class="video-wrapper">
+                <video src="./PAB_lyra.mp4" autoplay loop muted playsinline controls></video>
+            </div>
+            <div class="caption">PAB</div>
+            <div class="sub-caption">File: PAB_lyra.mp4</div>
         </div>
     </div>
 
-    <!-- ========= Proteina - protein backbone ========= -->
-    <div class="section">
-        <div class="section-title">🧬 Proteina · foundation model for protein backbone</div>
-        <div class="grid">
-            <div class="card"><div class="viewer-wrapper" id="prot-manifold"></div><div class="caption">ManifoldCache (Ours)</div><div class="sub">compact α‑helical bundle · high fidelity</div></div>
-            <div class="card"><div class="viewer-wrapper" id="prot-fora"></div><div class="caption">Fora</div><div class="sub">β‑sheet rich · plausible fold</div></div>
-            <div class="card"><div class="viewer-wrapper" id="prot-smoothcache"></div><div class="caption">SmoothCache</div><div class="sub">partially unfolded · lower coherence</div></div>
+    <script type="module" async>
+        import { Niivue } from "https://unpkg.com/@niivue/niivue@0.57.0/dist/index.js"
+
+        const currentPath = window.location.pathname.substring(0, window.location.pathname.lastIndexOf('/'));
+        const rootUrl = `${window.location.origin}${currentPath}`;
+
+        const volumeManifold = [{ url: `${rootUrl}/manifoldcache_flair.nii.gz` }];
+        const volumeDeepcache = [{ url: `${rootUrl}/deepcache_flair.nii.gz` }];
+
+        const nvManifold = new Niivue({ isResizeCanvas: true });
+        nvManifold.setSliceType(nvManifold.sliceTypeRender);
+        await nvManifold.attachTo("canvas-manifold");
+        await nvManifold.loadVolumes(volumeManifold);
+
+        const nvDeepcache = new Niivue({ isResizeCanvas: true });
+        nvDeepcache.setSliceType(nvDeepcache.sliceTypeRender);
+        await nvDeepcache.attachTo("canvas-deepcache");
+        await nvDeepcache.loadVolumes(volumeDeepcache);
+
+        nvManifold.broadcastTo([nvDeepcache], { "2d": false, "3d": true });
+        nvDeepcache.broadcastTo([nvManifold], { "2d": false, "3d": true });
+
+        let angle = 0;
+        function rotateVolumes() {
+            angle += 0.3;
+            nvManifold.scene.renderAzimuth = angle;
+            nvDeepcache.scene.renderAzimuth = angle;
+            nvManifold.drawScene();
+            nvDeepcache.drawScene();
+            requestAnimationFrame(rotateVolumes);
+        }
+        rotateVolumes();
+    </script>
+
+    <!-- ROW 3: 3D Molecular Visualization -->
+    <div class="section-title">DemoDiff (molecular foundation model leveraging Graph Diffusion Transformer)</div>
+    <div class="demo-container" style="grid-template-columns: repeat(4, 1fr);">
+
+        <div class="viewer-card">
+            <div class="canvas-wrapper" id="mol-viewer-1" style="min-height: 300px;"></div>
+            <div class="caption">Method A</div>
+            <div class="sub-caption">OCC(O)C(S)c1cccc(O)c1 | Drag to rotate, scroll to zoom</div>
         </div>
+
+        <div class="viewer-card">
+            <div class="canvas-wrapper" id="mol-viewer-2" style="min-height: 300px;"></div>
+            <div class="caption">Method B</div>
+            <div class="sub-caption">OCC(O)C(S)c1cccc(O)c1 | Drag to rotate, scroll to zoom</div>
+        </div>
+
+        <div class="viewer-card">
+            <div class="canvas-wrapper" id="mol-viewer-3" style="min-height: 300px;"></div>
+            <div class="caption">Method C</div>
+            <div class="sub-caption">OCC(O)C(S)c1cccc(O)c1 | Drag to rotate, scroll to zoom</div>
+        </div>
+
+        <div class="viewer-card">
+            <div class="canvas-wrapper" id="mol-viewer-4" style="min-height: 300px;"></div>
+            <div class="caption">Method D</div>
+            <div class="sub-caption">OCC(O)C(S)c1cccc(O)c1 | Drag to rotate, scroll to zoom</div>
+        </div>
+
     </div>
 
-    <!-- ========= UniMoMo - binder design ========= -->
-    <div class="section">
-        <div class="section-title">🧩 UniMoMo · de novo binder design (GEOM‑DRUGS)</div>
-        <div class="grid">
-            <div class="card"><div class="viewer-wrapper" id="unimomo-manifold"></div><div class="caption">ManifoldCache (Ours)</div><div class="sub"><span class="badge badge-pmetric-good">pmetric: 1.3310</span> <span class="badge badge-compact">Compact ✓</span></div><div class="seq-view" id="seq-manifold"></div></div>
-            <div class="card"><div class="viewer-wrapper" id="unimomo-deepcache"></div><div class="caption">DeepCache</div><div class="sub"><span class="badge badge-pmetric-low">pmetric: 2.28×10⁻⁴</span> <span class="badge badge-scattered">Scattered ✗</span></div><div class="seq-view" id="seq-deepcache"></div></div>
-            <div class="card"><div class="viewer-wrapper" id="unimomo-smoothcache"></div><div class="caption">SmoothCache</div><div class="sub"><span class="badge badge-pmetric-low">pmetric: 1.89×10⁻³</span> <span class="badge badge-scattered">Scattered ✗</span></div><div class="seq-view" id="seq-smoothcache"></div></div>
+    <!-- ROW 4: 3D Crystal Structure Visualization (DiffCSP-PP) -->
+    <div class="section-title">DiffCSP++ Crystal Structure Prediction (Space Group Constrained Generation)</div>
+    <div class="demo-container">
+
+        <div class="viewer-card">
+            <div class="canvas-wrapper" id="crystal-viewer-a" style="min-height: 380px;"></div>
+            <div class="caption">ManifoldCache (Ours)</div>
+            <div class="sub-caption">Tm₂Te₃ — Tm32 Te48 | Drag to rotate, scroll to zoom</div>
         </div>
+
+        <div class="viewer-card">
+            <div class="canvas-wrapper" id="crystal-viewer-b" style="min-height: 380px;"></div>
+            <div class="caption">DeepCache</div>
+            <div class="sub-caption">Tm₂Te₃ — Tm32 Te48 | Drag to rotate, scroll to zoom</div>
+        </div>
+
     </div>
 
-    <!-- ========= DiT-MC molecular conformers ========= -->
-    <div class="section">
-        <div class="section-title">📐 DiT‑MC · GEOM‑DRUGS conformer generation</div>
-        <div class="grid">
-            <div class="card"><div class="viewer-wrapper" id="ditmc-ours"></div><div class="caption">ManifoldCache (Ours)</div><div class="sub">C[C@@]12[C@H](O)CO[C@@H]1[C@@H]2O · low energy conformer</div></div>
-            <div class="card"><div class="viewer-wrapper" id="ditmc-pfabc"></div><div class="caption">PF‑ABC</div><div class="sub">C[C@@]12[C@H](O)CO[C@@H]1[C@@H]2O · moderate RMSD</div></div>
-            <div class="card"><div class="viewer-wrapper" id="ditmc-teacache"></div><div class="caption">TeaCache</div><div class="sub">C[C@@]12[C@H](O)CO[C@@H]1[C@@H]2O · higher strain</div></div>
-        </div>
-    </div>
-</div>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/3Dmol/2.1.0/3Dmol-min.js"></script>
+    <script>
+    // Fixed SDF for OCC(O)C(S)c1cccc(O)c1
+    // SDF for OCC(O)C(S)c1cccc(O)c1 — avoids CORS/PubChem fetch issues
+    const SDF_DATA = `
+     RDKit          3D
 
-<script>
-(function() {
-    // --------------------------------------------------------------
-    //  FULLY SELF-CONTAINED: no external PDB/CIF fetches.
-    //  All structures are generated inline (PDB strings, CIF, SDF).
-    // --------------------------------------------------------------
-
-    // ----- 1. shared small molecule SDF (DemoDiff) -----
-    const demoDiffSDF = `RDKit          3D
  20 21  0  0  0  0  0  0  0  0999 V2000
     3.7523   -0.2200    0.4463 O   0  0  0  0  0  0  0  0  0  0  0  0
     2.9167    0.7056   -0.2955 C   0  0  0  0  0  0  0  0  0  0  0  0
@@ -325,380 +301,635 @@
  12 24  1  0
  13 25  1  0
 M  END
-$$$$`;
+$$$$
+`;
 
-    // ----- 2. Crystal CIF data (fully embedded) -----
-    const cifManifold = `# ManifoldCache - high quality
-data_Tm2Te3
-_symmetry_space_group_name_H-M   'P 1'
-_cell_length_a   8.4180
-_cell_length_b   12.2869
-_cell_length_c   26.1612
-_cell_angle_alpha   90.0000
-_cell_angle_beta   90.0000
-_cell_angle_gamma   90.0000
-loop_
- _atom_site_type_symbol
- _atom_site_fract_x
- _atom_site_fract_y
- _atom_site_fract_z
-  Tm  0.1250  0.1250  0.3744
-  Tm  0.6250  0.1250  0.3756
-  Te  0.3716  0.1250  0.1250
-  Te  0.3784  0.6250  0.1250
-  Te  0.6284  0.8750  0.8750
-  Te  0.6216  0.3750  0.8750
-  Tm  0.8750  0.8750  0.6256
-  Tm  0.3750  0.8750  0.6244
-  Te  0.8716  0.1250  0.6250
-  Te  0.8784  0.6250  0.6250
-  Tm  0.1250  0.6250  0.8744
-  Tm  0.6250  0.6250  0.8756
-  Te  0.1284  0.8750  0.3750
-  Te  0.1216  0.3750  0.3750
-  Tm  0.8750  0.3750  0.1256
-  Tm  0.3750  0.3750  0.1244`;
+    window.addEventListener('load', function() {
+        const configs = [
+            { id: "mol-viewer-1", style: { stick: { radius: 0.15, colorscheme: "Jmol" } }, surface: false, bg: "#0a0a1a" },
+            { id: "mol-viewer-2", style: { stick: { radius: 0.15, colorscheme: "Jmol" } }, surface: false, bg: "#0a0a1a" },
+            { id: "mol-viewer-3", style: { stick: { radius: 0.15, colorscheme: "Jmol" } }, surface: false, bg: "#0a0a1a" },
+            { id: "mol-viewer-4", style: { stick: { radius: 0.15, colorscheme: "Jmol" } }, surface: false, bg: "#0a0a1a" },
+        ];
 
-    const cifDeepcache = `# DeepCache - less ordered
-data_Tm2Te3
-_symmetry_space_group_name_H-M   'P 1'
-_cell_length_a   8.2811
-_cell_length_b   12.1886
-_cell_length_c   26.2336
-loop_
- _atom_site_type_symbol
- _atom_site_fract_x
- _atom_site_fract_y
- _atom_site_fract_z
-  Tm  0.1250  0.1250  0.3736
-  Tm  0.6250  0.1250  0.3764
-  Te  0.8771  0.1250  0.1250
-  Te  0.8729  0.6250  0.1250
-  Te  0.1229  0.8750  0.8750
-  Te  0.1271  0.3750  0.8750
-  Tm  0.8750  0.8750  0.6264
-  Tm  0.3750  0.8750  0.6236
-  Te  0.3771  0.1250  0.6250
-  Te  0.3729  0.6250  0.6250
-  Tm  0.1250  0.6250  0.8736
-  Tm  0.6250  0.6250  0.8764
-  Te  0.6229  0.8750  0.3750
-  Te  0.6271  0.3750  0.3750
-  Tm  0.8750  0.3750  0.1264
-  Tm  0.3750  0.3750  0.1236`;
-
-    // ----- 3. Protein PDB generators (compact / scattered) -----
-    // Helper: generate simple alpha-helix PDB (CA only, but cartoon works)
-    function makeHelixPDB(chainId, startPos, length, offsetX, offsetY, offsetZ) {
-        let lines = [];
-        for (let i = 0; i < length; i++) {
-            let t = i * 1.5;
-            let x = offsetX + Math.cos(t * 0.9) * 1.2;
-            let y = offsetY + Math.sin(t * 0.9) * 1.2;
-            let z = offsetZ + i * 1.5;
-            let resName = 'ALA';
-            let resNum = i + 1;
-            let atomName = 'CA';
-            lines.push(`ATOM  ${(i+1).toString().padStart(5)}  CA  ${resName} ${chainId}${resNum.toString().padStart(4)}    ${x.toFixed(3)} ${y.toFixed(3)} ${z.toFixed(3)}  1.00 20.00           C  `);
-        }
-        lines.push('TER');
-        return lines.join('\n');
-    }
-
-    // Beta sheet mimic (strand)
-    function makeStrandPDB(chainId, length, offsetX, offsetY, offsetZ) {
-        let lines = [];
-        for (let i = 0; i < length; i++) {
-            let x = offsetX + (i % 2 === 0 ? 0.8 : -0.8);
-            let y = offsetY + i * 1.2;
-            let z = offsetZ + (i * 0.5);
-            lines.push(`ATOM  ${(i+1).toString().padStart(5)}  CA  ALA ${chainId}${(i+1).toString().padStart(4)}    ${x.toFixed(3)} ${y.toFixed(3)} ${z.toFixed(3)}  1.00 20.00           C  `);
-        }
-        lines.push('TER');
-        return lines.join('\n');
-    }
-
-    // scattered / random cloud PDB
-    function makeScatteredPDB(sequence, chainId) {
-        let lines = [];
-        const residues = sequence.split('');
-        for (let i = 0; i < residues.length; i++) {
-            let angle1 = i * 2.3;
-            let angle2 = i * 1.7;
-            let x = 15 * Math.sin(angle1) + (Math.random() - 0.5) * 4;
-            let y = 12 * Math.cos(angle2) + (Math.random() - 0.5) * 5;
-            let z = 18 * Math.sin(angle1 * 0.9) + (Math.random() - 0.5) * 6;
-            lines.push(`ATOM  ${(i+1).toString().padStart(5)}  CA  ${residues[i]} ${chainId}${(i+1).toString().padStart(4)}    ${x.toFixed(3)} ${y.toFixed(3)} ${z.toFixed(3)}  1.00 20.00           C  `);
-        }
-        lines.push('TER');
-        return lines.join('\n');
-    }
-
-    // UniMoMo specific: binder + receptor (chain A and B)
-    const uniSeqManifold = "KQILRESQEPDYSTPDNDENFQNFVR";
-    const uniSeqDeep = "VVQVVVTVVTVVVVQVVVVVVVVVVVV";
-    const uniSeqSmooth = "QVVFVQQVVFQVQQVQVVVVVFVFFVQ";
-    
-    function generateUniMoMoPDB(sequence, compactMode) {
-        let lines = [];
-        // Chain A (binder)
-        let len = sequence.length;
-        for (let i = 0; i < len; i++) {
-            let res = sequence[i];
-            let x, y, z;
-            if (compactMode) {
-                // tight helix near receptor (compact)
-                let t = i * 0.9;
-                x = Math.cos(t) * 1.2 + 2.5;
-                y = Math.sin(t) * 1.2 + 1.2;
-                z = i * 1.2 + 4.0;
-            } else {
-                // scattered: large spread across box
-                x = (i * 2.7) % 14 - 5;
-                y = Math.sin(i * 1.9) * 9;
-                z = Math.cos(i * 2.3) * 12;
+        configs.forEach(function(cfg) {
+            var el = document.getElementById(cfg.id);
+            if (!el) return;
+            var viewer = $3Dmol.createViewer(el, { backgroundColor: cfg.bg, antialias: true });
+            viewer.addModel(SDF_DATA, "sdf");
+            viewer.setStyle({}, cfg.style);
+            if (cfg.surface) {
+                viewer.addSurface($3Dmol.SurfaceType.VDW, { opacity: 0.45, color: "lightblue" });
             }
-            lines.push(`ATOM  ${(i+1).toString().padStart(5)}  CA  ${res} A${(i+1).toString().padStart(4)}    ${x.toFixed(3)} ${y.toFixed(3)} ${z.toFixed(3)}  1.00 20.00           C  `);
+            viewer.zoomTo();
+            viewer.spin("y", 1);
+            viewer.render();
+        });
+
+        // CIF A = ManifoldCache (Ours) — swapped to left panel
+        const CIF_A = `# generated using pymatgen
+data_Tm2Te3
+_symmetry_space_group_name_H-M   'P 1'
+_cell_length_a   8.41800785
+_cell_length_b   12.28686428
+_cell_length_c   26.16124153
+_cell_angle_alpha   90.00000000
+_cell_angle_beta   90.00000000
+_cell_angle_gamma   90.00000000
+_symmetry_Int_Tables_number   1
+_chemical_formula_structural   Tm2Te3
+_chemical_formula_sum   'Tm32 Te48'
+_cell_volume   2705.88127927
+_cell_formula_units_Z   16
+loop_
+ _symmetry_equiv_pos_site_id
+ _symmetry_equiv_pos_as_xyz
+  1  'x, y, z'
+loop_
+ _atom_site_type_symbol
+ _atom_site_label
+ _atom_site_symmetry_multiplicity
+ _atom_site_fract_x
+ _atom_site_fract_y
+ _atom_site_fract_z
+ _atom_site_occupancy
+  Tm  Tm0  1  0.12500000  0.12500000  0.37440002  1
+  Tm  Tm1  1  0.62500000  0.12500000  0.37559998  1
+  Tm  Tm2  1  0.87500000  0.87500000  0.62559998  1
+  Tm  Tm3  1  0.37500000  0.87500000  0.62440002  1
+  Tm  Tm4  1  0.12500000  0.62500000  0.87440002  1
+  Tm  Tm5  1  0.62500000  0.62500000  0.87559998  1
+  Tm  Tm6  1  0.87500000  0.37500000  0.12559998  1
+  Tm  Tm7  1  0.37500000  0.37500000  0.12440002  1
+  Tm  Tm8  1  0.62500000  0.12500000  0.87440002  1
+  Tm  Tm9  1  0.12500000  0.12500000  0.87559998  1
+  Tm  Tm10  1  0.37500000  0.87500000  0.12559998  1
+  Tm  Tm11  1  0.87500000  0.87500000  0.12440002  1
+  Tm  Tm12  1  0.62500000  0.62500000  0.37440002  1
+  Tm  Tm13  1  0.12500000  0.62500000  0.37559998  1
+  Tm  Tm14  1  0.37500000  0.37500000  0.62559998  1
+  Tm  Tm15  1  0.87500000  0.37500000  0.62440002  1
+  Tm  Tm16  1  0.12500000  0.12500000  0.70637721  1
+  Tm  Tm17  1  0.62500000  0.12500000  0.04362279  1
+  Tm  Tm18  1  0.87500000  0.87500000  0.29362279  1
+  Tm  Tm19  1  0.37500000  0.87500000  0.95637721  1
+  Tm  Tm20  1  0.12500000  0.62500000  0.20637727  1
+  Tm  Tm21  1  0.62500000  0.62500000  0.54362279  1
+  Tm  Tm22  1  0.87500000  0.37500000  0.79362279  1
+  Tm  Tm23  1  0.37500000  0.37500000  0.45637727  1
+  Tm  Tm24  1  0.62500000  0.12500000  0.20637727  1
+  Tm  Tm25  1  0.12500000  0.12500000  0.54362279  1
+  Tm  Tm26  1  0.37500000  0.87500000  0.79362279  1
+  Tm  Tm27  1  0.87500000  0.87500000  0.45637727  1
+  Tm  Tm28  1  0.62500000  0.62500000  0.70637721  1
+  Tm  Tm29  1  0.12500000  0.62500000  0.04362279  1
+  Tm  Tm30  1  0.37500000  0.37500000  0.29362279  1
+  Tm  Tm31  1  0.87500000  0.37500000  0.95637721  1
+  Te  Te32  1  0.37156805  0.12500000  0.12500000  1
+  Te  Te33  1  0.37843195  0.62500000  0.12500000  1
+  Te  Te34  1  0.62843192  0.87500000  0.87500000  1
+  Te  Te35  1  0.62156808  0.37500000  0.87500000  1
+  Te  Te36  1  0.37156805  0.62500000  0.62500000  1
+  Te  Te37  1  0.37843195  0.12500000  0.62500000  1
+  Te  Te38  1  0.62843192  0.37500000  0.37500000  1
+  Te  Te39  1  0.62156808  0.87500000  0.37500000  1
+  Te  Te40  1  0.87156808  0.12500000  0.62500000  1
+  Te  Te41  1  0.87843192  0.62500000  0.62500000  1
+  Te  Te42  1  0.12843195  0.87500000  0.37500000  1
+  Te  Te43  1  0.12156808  0.37500000  0.37500000  1
+  Te  Te44  1  0.87156808  0.62500000  0.12500000  1
+  Te  Te45  1  0.87843192  0.12500000  0.12500000  1
+  Te  Te46  1  0.12843195  0.37500000  0.87500000  1
+  Te  Te47  1  0.12156808  0.87500000  0.87500000  1
+  Te  Te48  1  0.62433749  0.87445092  0.04258493  1
+  Te  Te49  1  0.12566251  0.87554908  0.04258493  1
+  Te  Te50  1  0.12566251  0.87445092  0.70741504  1
+  Te  Te51  1  0.62433749  0.87554908  0.70741504  1
+  Te  Te52  1  0.37566251  0.12554908  0.95741504  1
+  Te  Te53  1  0.87433749  0.12445092  0.95741504  1
+  Te  Te54  1  0.87433749  0.12554908  0.29258493  1
+  Te  Te55  1  0.37566251  0.12445092  0.29258493  1
+  Te  Te56  1  0.62433749  0.37445092  0.54258496  1
+  Te  Te57  1  0.12566251  0.37554908  0.54258496  1
+  Te  Te58  1  0.12566251  0.37445092  0.20741510  1
+  Te  Te59  1  0.62433749  0.37554908  0.20741510  1
+  Te  Te60  1  0.37566251  0.62554908  0.45741507  1
+  Te  Te61  1  0.87433749  0.62445092  0.45741507  1
+  Te  Te62  1  0.87433749  0.62554908  0.79258496  1
+  Te  Te63  1  0.37566251  0.62445092  0.79258496  1
+  Te  Te64  1  0.12433743  0.87445092  0.54258496  1
+  Te  Te65  1  0.62566251  0.87554908  0.54258496  1
+  Te  Te66  1  0.62566251  0.87445092  0.20741510  1
+  Te  Te67  1  0.12433743  0.87554908  0.20741510  1
+  Te  Te68  1  0.87566251  0.12554908  0.45741507  1
+  Te  Te69  1  0.37433743  0.12445092  0.45741507  1
+  Te  Te70  1  0.37433743  0.12554908  0.79258496  1
+  Te  Te71  1  0.87566251  0.12445092  0.79258496  1
+  Te  Te72  1  0.12433743  0.37445092  0.04258493  1
+  Te  Te73  1  0.62566251  0.37554908  0.04258493  1
+  Te  Te74  1  0.62566251  0.37445092  0.70741504  1
+  Te  Te75  1  0.12433743  0.37554908  0.70741504  1
+  Te  Te76  1  0.87566251  0.62554908  0.95741504  1
+  Te  Te77  1  0.37433743  0.62445092  0.95741504  1
+  Te  Te78  1  0.37433743  0.62554908  0.29258493  1
+  Te  Te79  1  0.87566251  0.62445092  0.29258493  1`;
+
+        // CIF B = DeepCache — swapped to right panel
+        const CIF_B = `# generated using pymatgen
+data_Tm2Te3
+_symmetry_space_group_name_H-M   'P 1'
+_cell_length_a   8.28109646
+_cell_length_b   12.18861389
+_cell_length_c   26.23364067
+_cell_angle_alpha   90.00000000
+_cell_angle_beta   90.00000000
+_cell_angle_gamma   90.00000000
+_symmetry_Int_Tables_number   1
+_chemical_formula_structural   Tm2Te3
+_chemical_formula_sum   'Tm32 Te48'
+_cell_volume   2647.89481211
+_cell_formula_units_Z   16
+loop_
+ _symmetry_equiv_pos_site_id
+ _symmetry_equiv_pos_as_xyz
+  1  'x, y, z'
+loop_
+ _atom_site_type_symbol
+ _atom_site_label
+ _atom_site_symmetry_multiplicity
+ _atom_site_fract_x
+ _atom_site_fract_y
+ _atom_site_fract_z
+ _atom_site_occupancy
+  Tm  Tm0  1  0.12500000  0.12500000  0.37364611  1
+  Tm  Tm1  1  0.62500000  0.12500000  0.37635389  1
+  Tm  Tm2  1  0.87500000  0.87500000  0.62635386  1
+  Tm  Tm3  1  0.37500000  0.87500000  0.62364614  1
+  Tm  Tm4  1  0.12500000  0.62500000  0.87364614  1
+  Tm  Tm5  1  0.62500000  0.62500000  0.87635386  1
+  Tm  Tm6  1  0.87500000  0.37500000  0.12635389  1
+  Tm  Tm7  1  0.37500000  0.37500000  0.12364614  1
+  Tm  Tm8  1  0.62500000  0.12500000  0.87364614  1
+  Tm  Tm9  1  0.12500000  0.12500000  0.87635386  1
+  Tm  Tm10  1  0.37500000  0.87500000  0.12635389  1
+  Tm  Tm11  1  0.87500000  0.87500000  0.12364614  1
+  Tm  Tm12  1  0.62500000  0.62500000  0.37364611  1
+  Tm  Tm13  1  0.12500000  0.62500000  0.37635389  1
+  Tm  Tm14  1  0.37500000  0.37500000  0.62635386  1
+  Tm  Tm15  1  0.87500000  0.37500000  0.62364614  1
+  Tm  Tm16  1  0.12500000  0.12500000  0.54121011  1
+  Tm  Tm17  1  0.62500000  0.12500000  0.20878989  1
+  Tm  Tm18  1  0.87500000  0.87500000  0.45878989  1
+  Tm  Tm19  1  0.37500000  0.87500000  0.79121011  1
+  Tm  Tm20  1  0.12500000  0.62500000  0.04121017  1
+  Tm  Tm21  1  0.62500000  0.62500000  0.70878989  1
+  Tm  Tm22  1  0.87500000  0.37500000  0.95878989  1
+  Tm  Tm23  1  0.37500000  0.37500000  0.29121017  1
+  Tm  Tm24  1  0.62500000  0.12500000  0.04121017  1
+  Tm  Tm25  1  0.12500000  0.12500000  0.70878989  1
+  Tm  Tm26  1  0.37500000  0.87500000  0.95878989  1
+  Tm  Tm27  1  0.87500000  0.87500000  0.29121017  1
+  Tm  Tm28  1  0.62500000  0.62500000  0.54121011  1
+  Tm  Tm29  1  0.12500000  0.62500000  0.20878989  1
+  Tm  Tm30  1  0.37500000  0.37500000  0.45878989  1
+  Tm  Tm31  1  0.87500000  0.37500000  0.79121011  1
+  Te  Te32  1  0.87705350  0.12500000  0.12500000  1
+  Te  Te33  1  0.87294650  0.62500000  0.12500000  1
+  Te  Te34  1  0.12294650  0.87500000  0.87500000  1
+  Te  Te35  1  0.12705350  0.37500000  0.87500000  1
+  Te  Te36  1  0.87705350  0.62500000  0.62500000  1
+  Te  Te37  1  0.87294650  0.12500000  0.62500000  1
+  Te  Te38  1  0.12294650  0.37500000  0.37500000  1
+  Te  Te39  1  0.12705350  0.87500000  0.37500000  1
+  Te  Te40  1  0.37705350  0.12500000  0.62500000  1
+  Te  Te41  1  0.37294650  0.62500000  0.62500000  1
+  Te  Te42  1  0.62294650  0.87500000  0.37500000  1
+  Te  Te43  1  0.62705350  0.37500000  0.37500000  1
+  Te  Te44  1  0.37705350  0.62500000  0.12500000  1
+  Te  Te45  1  0.37294650  0.12500000  0.12500000  1
+  Te  Te46  1  0.62294650  0.37500000  0.87500000  1
+  Te  Te47  1  0.62705350  0.87500000  0.87500000  1
+  Te  Te48  1  0.12661564  0.87508708  0.70755130  1
+  Te  Te49  1  0.62338436  0.87491292  0.70755130  1
+  Te  Te50  1  0.62338436  0.87508708  0.04244870  1
+  Te  Te51  1  0.12661564  0.87491292  0.04244870  1
+  Te  Te52  1  0.87338436  0.12491292  0.29244870  1
+  Te  Te53  1  0.37661564  0.12508702  0.29244870  1
+  Te  Te54  1  0.37661564  0.12491292  0.95755130  1
+  Te  Te55  1  0.87338436  0.12508702  0.95755130  1
+  Te  Te56  1  0.12661564  0.37508702  0.20755124  1
+  Te  Te57  1  0.62338436  0.37491292  0.20755124  1
+  Te  Te58  1  0.62338436  0.37508702  0.54244870  1
+  Te  Te59  1  0.12661564  0.37491292  0.54244870  1
+  Te  Te60  1  0.87338436  0.62491292  0.79244870  1
+  Te  Te61  1  0.37661564  0.62508702  0.79244870  1
+  Te  Te62  1  0.37661564  0.62491292  0.45755124  1
+  Te  Te63  1  0.87338436  0.62508702  0.45755124  1
+  Te  Te64  1  0.62661564  0.87508708  0.20755124  1
+  Te  Te65  1  0.12338436  0.87491292  0.20755124  1
+  Te  Te66  1  0.12338436  0.87508708  0.54244870  1
+  Te  Te67  1  0.62661564  0.87491292  0.54244870  1
+  Te  Te68  1  0.37338436  0.12491292  0.79244870  1
+  Te  Te69  1  0.87661564  0.12508702  0.79244870  1
+  Te  Te70  1  0.87661564  0.12491292  0.45755124  1
+  Te  Te71  1  0.37338436  0.12508702  0.45755124  1
+  Te  Te72  1  0.62661564  0.37508702  0.70755130  1
+  Te  Te73  1  0.12338436  0.37491292  0.70755130  1
+  Te  Te74  1  0.12338436  0.37508702  0.04244870  1
+  Te  Te75  1  0.62661564  0.37491292  0.04244870  1
+  Te  Te76  1  0.37338436  0.62491292  0.29244870  1
+  Te  Te77  1  0.87661564  0.62508702  0.29244870  1
+  Te  Te78  1  0.87661564  0.62491292  0.95755130  1
+  Te  Te79  1  0.37338436  0.62508702  0.95755130  1`;
+
+        function loadCrystalViewer(containerId, filePath, fallbackCif, spinAxis) {
+            var el = document.getElementById(containerId);
+            if (!el) return;
+
+            var viewer = $3Dmol.createViewer(el, {
+                backgroundColor: "#060d1a",
+                antialias: true
+            });
+
+            function renderCif(cifText) {
+                viewer.addModel(cifText, "cif", { normalizeAssembly: true, duplicateAssemblyAtoms: true });
+                viewer.setStyle({}, {
+                    sphere: { scale: 0.32, colorscheme: "Jmol" }
+                });
+                viewer.addStyle({}, {
+                    stick: { radius: 0.08, colorscheme: "Jmol" }
+                });
+                viewer.addUnitCell({
+                    box: { color: "#38bdf8", linewidth: 1.5, opacity: 0.6 },
+                    astep: 5,
+                    bstep: 5,
+                    cstep: 5
+                });
+                viewer.zoomTo();
+                viewer.spin(spinAxis || "y", 0.8);
+                viewer.render();
+            }
+
+            fetch(filePath)
+                .then(function(resp) {
+                    if (!resp.ok) throw new Error("not found");
+                    return resp.text();
+                })
+                .then(function(text) { renderCif(text); })
+                .catch(function() { renderCif(fallbackCif); });
         }
-        // Chain B: receptor (dummy helix)
-        for (let i = 0; i < 28; i++) {
-            let x = Math.cos(i * 0.7) * 2.2 - 3.0;
-            let y = Math.sin(i * 0.7) * 2.2 + 1.5;
-            let z = i * 1.1 + 2.0;
-            lines.push(`ATOM  ${(i+101).toString().padStart(5)}  CA  GLY B${(i+1).toString().padStart(4)}    ${x.toFixed(3)} ${y.toFixed(3)} ${z.toFixed(3)}  1.00 20.00           C  `);
-        }
-        lines.push('TER');
-        return lines.join('\n');
-    }
 
-    // Proteina models
-    const protManifoldPDB = makeHelixPDB('A', 0, 42, 0, 0, 0) + "\n" + makeHelixPDB('B', 42, 38, 2.5, -1.2, 1.8);
-    const protForaPDB = makeStrandPDB('A', 55, -1.2, 0, 0) + "\n" + makeStrandPDB('B', 48, 1.5, 2.5, 1.2);
-    const protSmoothPDB = makeHelixPDB('A', 0, 30, 0, 0, 0) + "\n" + makeScatteredPDB("SMOOTHCACHE", 'B');
+        // Swapped: crystal-viewer-a = ManifoldCache (CIF_A), crystal-viewer-b = DeepCache (CIF_B)
+        loadCrystalViewer("crystal-viewer-a", "./manifoldcache.cif", CIF_A, "y");
+        loadCrystalViewer("crystal-viewer-b", "./deepcache.cif", CIF_B, "y");
+    });
+    </script>
 
-    // DiT-MC 3 conformers (enhanced slight variations but visually clear)
-    const ditmcSDFs = [
-        `RDKit          3D
- 19 20  0  0  0  0  0  0  0  0999 V2000
-   -0.6879   -1.3929   -1.4720 C   0  0  0  0  0  0  0  0  0  0  0  0
-   -0.2991   -0.3546   -0.4474 C   0  0  1  0  0  0  0  0  0  0  0  0
-   -0.6347    1.1086   -0.5314 C   0  0  1  0  0  0  0  0  0  0  0  0
-   -1.3264    0.2404    0.4840 C   0  0  2  0  0  0  0  0  0  0  0  0
-   -1.0658    0.4235    1.8415 O   0  0  0  0  0  0  0  0  0  0  0  0
-   -0.6782    1.2952    1.9581 H   0  0  0  0  0  0  0  0  0  0  0  0
-   -2.3642   -0.0312    0.3029 H   0  0  0  0  0  0  0  0  0  0  0  0
-   -1.1724    1.5707   -1.3507 H   0  0  0  0  0  0  0  0  0  0  0  0
-    0.4061    1.8966   -0.0369 O   0  0  0  0  0  0  0  0  0  0  0  0
-    1.4746    1.0635    0.3883 C   0  0  0  0  0  0  0  0  0  0  0  0
-    1.6748    1.2261    1.4538 H   0  0  0  0  0  0  0  0  0  0  0  0
-    2.3759    1.3597   -0.1596 H   0  0  0  0  0  0  0  0  0  0  0  0
-    1.1100   -0.4193    0.1402 C   0  0  1  0  0  0  0  0  0  0  0  0
-    1.2126   -1.2153    1.2893 O   0  0  0  0  0  0  0  0  0  0  0  0
-    0.5134   -0.9405    1.9013 H   0  0  0  0  0  0  0  0  0  0  0  0
-    1.7950   -0.8787   -0.5837 H   0  0  0  0  0  0  0  0  0  0  0  0
-   -0.0280   -1.3222   -2.3394 H   0  0  0  0  0  0  0  0  0  0  0  0
-   -0.5890   -2.3863   -1.0392 H   0  0  0  0  0  0  0  0  0  0  0  0
-   -1.7169   -1.2433   -1.7989 H   0  0  0  0  0  0  0  0  0  0  0  0
-  2  1  1  6
-  1 17  1  0
-  1 18  1  0
-  1 19  1  0
-  2  3  1  0
-  2  4  1  0
-  2 13  1  0
-  3  4  1  0
-  3  8  1  6
-  3  9  1  0
-  4  5  1  0
-  4  7  1  1
-  5  6  1  0
-  9 10  1  0
- 10 11  1  0
- 10 12  1  0
- 10 13  1  0
- 13 14  1  0
- 13 16  1  6
- 14 15  1  0
-M  END
-$$$$`,
-`RDKit          3D
- 19 20  0  0  0  0  0  0  0  0999 V2000
-   -2.0466    0.3278    0.0238 C   0  0  0  0  0  0  0  0  0  0  0  0
-   -0.5581    0.1304   -0.1007 C   0  0  1  0  0  0  0  0  0  0  0  0
-    0.1522   -0.3497   -1.3515 C   0  0  1  0  0  0  0  0  0  0  0  0
-    0.2786    1.0902   -0.9208 C   0  0  2  0  0  0  0  0  0  0  0  0
-    1.5111    1.5792   -0.4768 O   0  0  0  0  0  0  0  0  0  0  0  0
-    1.3589    2.4269   -0.0268 H   0  0  0  0  0  0  0  0  0  0  0  0
-   -0.2847    1.8015   -1.5215 H   0  0  0  0  0  0  0  0  0  0  0  0
-   -0.3692   -0.5797   -2.2739 H   0  0  0  0  0  0  0  0  0  0  0  0
-    1.1658   -1.2514   -1.0474 O   0  0  0  0  0  0  0  0  0  0  0  0
-    1.1132   -1.5769    0.3245 C   0  0  0  0  0  0  0  0  0  0  0  0
-    0.7216   -2.6008    0.4428 H   0  0  0  0  0  0  0  0  0  0  0  0
-    2.1166   -1.5433    0.7323 H   0  0  0  0  0  0  0  0  0  0  0  0
-    0.1873   -0.5605    1.0537 C   0  0  1  0  0  0  0  0  0  0  0  0
-    0.8748    0.3172    1.8999 O   0  0  0  0  0  0  0  0  0  0  0  0
-    1.5686    0.7429    1.3483 H   0  0  0  0  0  0  0  0  0  0  0  0
-   -0.5267   -1.0755    1.7040 H   0  0  0  0  0  0  0  0  0  0  0  0
-   -2.5428   -0.6357    0.1632 H   0  0  0  0  0  0  0  0  0  0  0  0
-   -2.2675    0.9558    0.8909 H   0  0  0  0  0  0  0  0  0  0  0  0
-   -2.4530    0.8016   -0.8640 H   0  0  0  0  0  0  0  0  0  0  0  0
-  2  1  1  6
-  1 17  1  0
-  1 18  1  0
-  1 19  1  0
-  2  3  1  0
-  2  4  1  0
-  2 13  1  0
-  3  4  1  0
-  3  8  1  6
-  3  9  1  0
-  4  5  1  0
-  4  7  1  6
-  5  6  1  0
-  9 10  1  0
- 10 11  1  0
- 10 12  1  0
- 10 13  1  0
- 13 14  1  0
- 13 16  1  1
- 14 15  1  0
-M  END
-$$$$`,
-`RDKit          3D
- 19 20  0  0  0  0  0  0  0  0999 V2000
-   -2.0483    0.2097    0.1449 C   0  0  0  0  0  0  0  0  0  0  0  0
-   -0.5581    0.1186   -0.0580 C   0  0  1  0  0  0  0  0  0  0  0  0
-    0.1174   -0.2428   -1.3681 C   0  0  1  0  0  0  0  0  0  0  0  0
-    0.1730    1.1756   -0.8581 C   0  0  2  0  0  0  0  0  0  0  0  0
-    1.3940    1.7227   -0.4515 O   0  0  0  0  0  0  0  0  0  0  0  0
-    1.2127    2.5051    0.0977 H   0  0  0  0  0  0  0  0  0  0  0  0
-   -0.4651    1.8792   -1.3890 H   0  0  0  0  0  0  0  0  0  0  0  0
-   -0.4341   -0.4540   -2.2767 H   0  0  0  0  0  0  0  0  0  0  0  0
-    1.2020   -1.0894   -1.1595 O   0  0  0  0  0  0  0  0  0  0  0  0
-    1.1646   -1.5602    0.1688 C   0  0  0  0  0  0  0  0  0  0  0  0
-    0.7397   -2.5793    0.1896 H   0  0  0  0  0  0  0  0  0  0  0  0
-    2.1802   -1.5994    0.5502 H   0  0  0  0  0  0  0  0  0  0  0  0
-    0.2826   -0.5979    1.0131 C   0  0  1  0  0  0  0  0  0  0  0  0
-    1.0175    0.2584    1.8414 O   0  0  0  0  0  0  0  0  0  0  0  0
-    1.6614    0.7211    1.2525 H   0  0  0  0  0  0  0  0  0  0  0  0
-   -0.3697   -1.1558    1.6927 H   0  0  0  0  0  0  0  0  0  0  0  0
-   -2.4748   -0.7892    0.2513 H   0  0  0  0  0  0  0  0  0  0  0  0
-   -2.2677    0.7747    1.0536 H   0  0  0  0  0  0  0  0  0  0  0  0
-   -2.5275    0.7031   -0.6949 H   0  0  0  0  0  0  0  0  0  0  0  0
-  2  1  1  6
-  1 17  1  0
-  1 18  1  0
-  1 19  1  0
-  2  3  1  0
-  2  4  1  0
-  2 13  1  0
-  3  4  1  0
-  3  8  1  6
-  3  9  1  0
-  4  5  1  0
-  4  7  1  6
-  5  6  1  0
-  9 10  1  0
- 10 11  1  0
- 10 12  1  0
- 10 13  1  0
- 13 14  1  0
- 13 16  1  1
- 14 15  1  0
-M  END
-$$$$`];
+    <!-- ROW: Proteina Protein Backbone Generation -->
+<div class="section-title">Proteina - foundation model for protein backbone generation</div>
+<div class="demo-container" style="grid-template-columns: repeat(3, 1fr);">
 
-    // ----- utility to init viewer with embedded data -----
-    function initViewer(containerId, modelStr, format, styleOpts = null) {
-        const element = document.getElementById(containerId);
-        if (!element) return;
-        element.innerHTML = '';
-        let viewer = $3Dmol.createViewer(element, {backgroundColor: '#060d1a'});
-        viewer.addModel(modelStr, format);
-        if (styleOpts) viewer.setStyle({}, styleOpts);
-        else viewer.setStyle({}, {stick: {radius:0.15, colorscheme:'Jmol'}, sphere: {scale:0.3}});
-        viewer.zoomTo();
-        viewer.spin(0.6);
-        viewer.render();
-        return viewer;
-    }
+    <div class="viewer-card">
+        <div class="canvas-wrapper" id="prot-viewer-1" style="min-height: 350px;"></div>
+        <div class="caption">ManifoldCache (Ours)</div>
+        <div class="sub-caption">manifoldcache.pdb | Drag to rotate, scroll to zoom</div>
+    </div>
 
-    function initProteinViewer(id, pdbStr) {
-        const el = document.getElementById(id);
+    <div class="viewer-card">
+        <div class="canvas-wrapper" id="prot-viewer-2" style="min-height: 350px;"></div>
+        <div class="caption">Fora</div>
+        <div class="sub-caption">fora.pdb | Drag to rotate, scroll to zoom</div>
+    </div>
+
+    <div class="viewer-card">
+        <div class="canvas-wrapper" id="prot-viewer-3" style="min-height: 350px;"></div>
+        <div class="caption">SmoothCache</div>
+        <div class="sub-caption">smoothcache.pdb | Drag to rotate, scroll to zoom</div>
+    </div>
+
+</div>
+
+<script>
+(function() {
+    var PROT_FILES = [
+        { id: "prot-viewer-1", file: "./manifoldcache.pdb" },
+        { id: "prot-viewer-2", file: "./fora.pdb" },
+        { id: "prot-viewer-3", file: "./smoothcache.pdb" },
+    ];
+
+    function initProtViewer(cfg) {
+        var el = document.getElementById(cfg.id);
         if (!el) return;
-        el.innerHTML = '';
-        let viewer = $3Dmol.createViewer(el, {backgroundColor: '#060d1a'});
-        viewer.addModel(pdbStr, 'pdb');
-        viewer.setStyle({}, {cartoon: {color:'spectrum', thickness:0.5}});
-        viewer.zoomTo();
-        viewer.spin(0.5);
-        viewer.render();
+        var viewer = $3Dmol.createViewer(el, { backgroundColor: "#060d1a", antialias: true });
+
+        fetch(cfg.file)
+            .then(function(r) { if (!r.ok) throw new Error(); return r.text(); })
+            .then(function(pdbText) {
+                viewer.addModel(pdbText, "pdb");
+                viewer.setStyle({}, { cartoon: { color: "spectrum", thickness: 0.4 } });
+                viewer.addStyle({ atom: ["CA", "N", "C", "O"] }, { stick: { radius: 0.08, colorscheme: "Jmol" } });
+                viewer.zoomTo();
+                viewer.spin("y", 0.8);
+                viewer.render();
+            })
+            .catch(function() { console.warn("PDB not found: " + cfg.file); });
     }
 
-    function initUniMoMoViewer(id, sequence, compact) {
-        const el = document.getElementById(id);
-        if (!el) return;
-        el.innerHTML = '';
-        let pdbStr = generateUniMoMoPDB(sequence, compact);
-        let viewer = $3Dmol.createViewer(el, {backgroundColor: '#030712'});
-        viewer.addModel(pdbStr, 'pdb');
-        if (compact) {
-            viewer.setStyle({chain:'A'}, {cartoon:{color:'#7dd3fc', thickness:0.4}, sphere:{scale:0.25, color:'#60a5fa'}});
-            viewer.setStyle({chain:'B'}, {cartoon:{color:'#94a3b8', opacity:0.5}});
-        } else {
-            viewer.setStyle({chain:'A'}, {sphere:{scale:0.5, color:'#facc15'}});
-            viewer.setStyle({chain:'B'}, {cartoon:{color:'#6b7280'}});
-            let warningDiv = document.createElement('div');
-            warningDiv.className = 'scatter-warning';
-            warningDiv.innerText = '⚠ scattered residues — low pmetric';
-            el.style.position = 'relative';
-            el.appendChild(warningDiv);
-        }
-        viewer.zoomTo();
-        viewer.spin(0.6);
-        viewer.render();
-    }
-
-    // render sequences for UniMoMo
-    function renderSeq(containerId, seq) {
-        const div = document.getElementById(containerId);
-        if (!div) return;
-        let html = '';
-        const aaClass = {K:'aa-pos',R:'aa-pos',D:'aa-neg',E:'aa-neg',N:'aa-pol',Q:'aa-pol',S:'aa-pol',T:'aa-pol',F:'aa-aro',Y:'aa-aro',W:'aa-aro',V:'aa-hph',I:'aa-hph',L:'aa-hph',M:'aa-hph',A:'aa-hph',G:'aa-spc',P:'aa-spc'};
-        for(let ch of seq) {
-            let cls = aaClass[ch] || 'aa-spc';
-            html += `<span class="${cls}" style="margin:0 1px;">${ch}</span>`;
-        }
-        div.innerHTML = html;
-    }
-
-    // Wait for 3Dmol and start all viewers
-    function startViewers() {
-        // DemoDiff (4 identical SDF)
-        for(let i=0;i<4;i++) initViewer(`mol-method${String.fromCharCode(65+i)}`, demoDiffSDF, 'sdf', {stick:{radius:0.12, colorscheme:'Jmol'}, sphere:{scale:0.25}});
-        // Crystals
-        initViewer('crystal-manifold', cifManifold, 'cif', {sphere:{scale:0.25, colorscheme:'Jmol'}, stick:{radius:0.07}});
-        initViewer('crystal-deepcache', cifDeepcache, 'cif', {sphere:{scale:0.25, colorscheme:'Jmol'}, stick:{radius:0.07}});
-        // Proteina
-        initProteinViewer('prot-manifold', protManifoldPDB);
-        initProteinViewer('prot-fora', protForaPDB);
-        initProteinViewer('prot-smoothcache', protSmoothPDB);
-        // UniMoMo
-        initUniMoMoViewer('unimomo-manifold', uniSeqManifold, true);
-        initUniMoMoViewer('unimomo-deepcache', uniSeqDeep, false);
-        initUniMoMoViewer('unimomo-smoothcache', uniSeqSmooth, false);
-        renderSeq('seq-manifold', uniSeqManifold);
-        renderSeq('seq-deepcache', uniSeqDeep);
-        renderSeq('seq-smoothcache', uniSeqSmooth);
-        // DiT-MC
-        initViewer('ditmc-ours', ditmcSDFs[0], 'sdf', {stick:{radius:0.13}, sphere:{scale:0.28, colorscheme:'Jmol'}});
-        initViewer('ditmc-pfabc', ditmcSDFs[1], 'sdf', {stick:{radius:0.13}, sphere:{scale:0.28}});
-        initViewer('ditmc-teacache', ditmcSDFs[2], 'sdf', {stick:{radius:0.13}, sphere:{scale:0.28}});
-    }
-
-    if (typeof $3Dmol !== 'undefined') startViewers();
-    else window.addEventListener('load', () => { setTimeout(startViewers, 200); });
+    window.addEventListener('load', function() {
+        PROT_FILES.forEach(initProtViewer);
+    });
 })();
 </script>
+
+
+
+         <!-- ============================================================ -->
+    <!-- ROW: UniMoMo Peptide Generation (PDB: 2hwl)                 -->
+    <!-- ============================================================ -->
+ 
+    <div class="section-title">
+        UniMoMo - Unified Generative Modeling of 3D Molecules for De Novo Binder Design
+        <!-- <span style="font-size:0.85rem; font-weight:400; color:#64748b; margin-left:8px;">
+            Peptide binder design · Target: 2hwl chain B
+        </span> -->
+    </div>
+ 
+    <div class="demo-container" style="grid-template-columns: repeat(3, 1fr);">
+ 
+        <div class="viewer-card">
+            <div class="canvas-wrapper" id="unimomo-manifold" style="min-height: 350px; position: relative;"></div>
+            <div class="caption">ManifoldCache (Ours)</div>
+            <div class="sub-caption">
+                <span class="pmetric-badge pmetric-good">pmetric: 1.3310</span>
+                <span class="compact-badge compact-good">Compact ✓</span>
+            </div>
+            <div class="seq-display" id="seq-manifold"></div>
+        </div>
+ 
+        <div class="viewer-card">
+            <div class="canvas-wrapper" id="unimomo-deepcache" style="min-height: 350px; position: relative;"></div>
+            <div class="caption">DeepCache</div>
+            <div class="sub-caption">
+                <span class="pmetric-badge pmetric-low">pmetric: 2.28 × 10⁻⁴</span>
+                <span class="compact-badge compact-bad">Scattered ✗</span>
+            </div>
+            <div class="seq-display" id="seq-deepcache"></div>
+        </div>
+ 
+        <div class="viewer-card">
+            <div class="canvas-wrapper" id="unimomo-smoothcache" style="min-height: 350px; position: relative;"></div>
+            <div class="caption">SmoothCache</div>
+            <div class="sub-caption">
+                <span class="pmetric-badge pmetric-low">pmetric: 1.89 × 10⁻³</span>
+                <span class="compact-badge compact-bad">Scattered ✗</span>
+            </div>
+            <div class="seq-display" id="seq-smoothcache"></div>
+        </div>
+ 
+    </div>
+ 
+    <script>
+    (function () {
+        var AA3 = {
+            A:'ALA',R:'ARG',N:'ASN',D:'ASP',C:'CYS',E:'GLU',Q:'GLN',
+            G:'GLY',H:'HIS',I:'ILE',L:'LEU',K:'LYS',M:'MET',F:'PHE',
+            P:'PRO',S:'SER',T:'THR',W:'TRP',Y:'TYR',V:'VAL'
+        };
+        var AA_CLASS = {
+            K:'aa-pos',R:'aa-pos',H:'aa-pos',
+            D:'aa-neg',E:'aa-neg',
+            N:'aa-pol',Q:'aa-pol',S:'aa-pol',T:'aa-pol',C:'aa-pol',
+            F:'aa-aro',W:'aa-aro',Y:'aa-aro',
+            A:'aa-hph',V:'aa-hph',I:'aa-hph',L:'aa-hph',M:'aa-hph',
+            G:'aa-spc',P:'aa-spc'
+        };
+        var AA_COLOR = {
+            K:'#3b82f6',R:'#3b82f6',H:'#60a5fa',
+            D:'#ef4444',E:'#f87171',
+            N:'#a3e635',Q:'#a3e635',S:'#4ade80',T:'#4ade80',C:'#fde047',
+            F:'#c084fc',W:'#a855f7',Y:'#9333ea',
+            A:'#fbbf24',V:'#f59e0b',I:'#d97706',L:'#b45309',M:'#92400e',
+            G:'#e5e7eb',P:'#d1d5db'
+        };
+ 
+        /* ── PDB NORMALIZER ─────────────────────────────────────────
+           Parses using strict PDB column positions (0-indexed):
+             chain = col 21
+             x     = cols 30-38
+             y     = cols 38-46
+             z     = cols 46-54
+           Translates chain A centroid → chain B centroid.
+           Returns clean PDB with well-formatted 8-char coordinate columns.
+        ──────────────────────────────────────────────────────────── */
+        function normalizePDB(pdbText) {
+            var lines = pdbText.split('\n');
+            var atomsA = [], atomsB = [];
+ 
+            lines.forEach(function(raw) {
+                var rec = raw.slice(0, 6).trim();
+                if (rec !== 'ATOM' && rec !== 'HETATM') return;
+                var chain = raw.length > 21 ? raw[21] : ' ';
+                var x = parseFloat(raw.slice(30, 38));
+                var y = parseFloat(raw.slice(38, 46));
+                var z = parseFloat(raw.slice(46, 54));
+                if (isNaN(x) || isNaN(y) || isNaN(z)) return;
+                var atom = { raw: raw, x: x, y: y, z: z };
+                if (chain === 'A') atomsA.push(atom);
+                else if (chain === 'B') atomsB.push(atom);
+            });
+ 
+            if (atomsA.length === 0 || atomsB.length === 0) return pdbText;
+ 
+            function centroid(arr) {
+                var sx=0,sy=0,sz=0;
+                arr.forEach(function(a){sx+=a.x;sy+=a.y;sz+=a.z;});
+                var n=arr.length;
+                return {x:sx/n,y:sy/n,z:sz/n};
+            }
+            var cA = centroid(atomsA);
+            var cB = centroid(atomsB);
+            var dx = cB.x - cA.x;
+            var dy = cB.y - cA.y;
+            var dz = cB.z - cA.z;
+ 
+            function fmtCoord(v) {
+                var s = v.toFixed(3);
+                while (s.length < 8) s = ' ' + s;
+                if (s.length > 8) s = s.slice(s.length - 8);
+                return s;
+            }
+ 
+            var out = [];
+            atomsA.forEach(function(a) {
+                out.push(a.raw.slice(0,30) + fmtCoord(a.x+dx) + fmtCoord(a.y+dy) + fmtCoord(a.z+dz) + a.raw.slice(54));
+            });
+            out.push('TER');
+            atomsB.forEach(function(a) { out.push(a.raw); });
+            out.push('END');
+            return out.join('\n');
+        }
+ 
+        /* ── SPREAD MEASUREMENT ─────────────────────────────────────
+           Returns max pairwise distance among chain A CA atoms
+           after normalization. Used to detect degenerate outputs.
+        ──────────────────────────────────────────────────────────── */
+        function measureSpread(pdbText) {
+            var pts = [];
+            pdbText.split('\n').forEach(function(line) {
+                var rec = line.slice(0,6).trim();
+                if (rec !== 'ATOM' && rec !== 'HETATM') return;
+                if (line[21] !== 'A') return;
+                if (line.slice(12,16).trim() !== 'CA') return;
+                var x = parseFloat(line.slice(30,38));
+                var y = parseFloat(line.slice(38,46));
+                var z = parseFloat(line.slice(46,54));
+                if (!isNaN(x)) pts.push([x,y,z]);
+            });
+            if (pts.length < 2) return 0;
+            var maxD = 0;
+            for (var i=0;i<pts.length;i++) {
+                for (var j=i+1;j<pts.length;j++) {
+                    var d = Math.sqrt(
+                        Math.pow(pts[i][0]-pts[j][0],2)+
+                        Math.pow(pts[i][1]-pts[j][1],2)+
+                        Math.pow(pts[i][2]-pts[j][2],2));
+                    if (d>maxD) maxD=d;
+                }
+            }
+            return maxD;
+        }
+ 
+        /* ── RENDER VIEWER ──────────────────────────────────────────
+           isCompact=true  → colored cartoon+sphere+stick on chain A,
+                              zoom to chain A (shows binding pose)
+           isCompact=false → sphere ONLY on chain A (no ribbon artifact
+                              from backbone connecting distant residues),
+                              zoom to chain B (shows target with scattered
+                              peptide residues — honest failure mode)
+        ──────────────────────────────────────────────────────────── */
+        function renderViewer(viewer, seq, isCompact) {
+            // Chain B: dim cartoon scaffold
+            viewer.setStyle(
+                { chain: 'B' },
+                { cartoon: { color: '#334155', thickness: 0.28, opacity: isCompact ? 0.35 : 0.55 } }
+            );
+ 
+            if (isCompact) {
+                // Compact peptide: full cartoon + sphere + stick, colored by AA
+                viewer.setStyle(
+                    { chain: 'A' },
+                    { sphere: { scale: 0.28, colorscheme: 'amino' },
+                      stick:  { radius: 0.14, colorscheme: 'amino' } }
+                );
+                for (var i=0; i<seq.length; i++) {
+                    var col = AA_COLOR[seq[i]] || '#9ca3af';
+                    viewer.setStyle(
+                        { chain: 'A', resi: i+1 },
+                        {
+                            cartoon: { color: col, thickness: 0.5, opacity: 0.9 },
+                            sphere:  { color: col, radius: 0.30, opacity: 0.9 },
+                            stick:   { color: col, radius: 0.12 }
+                        }
+                    );
+                }
+                viewer.zoomTo({ chain: 'A' });
+            } else {
+                // Scattered/degenerate: sphere ONLY — avoids the "orbital ribbon"
+                // artifact caused by 3Dmol cartoon connecting atoms 100s of Å apart.
+                // Each sphere sits at the actual (recentered) residue position,
+                // honestly showing that residues did not fold into a compact peptide.
+                for (var i=0; i<seq.length; i++) {
+                    var col = AA_COLOR[seq[i]] || '#9ca3af';
+                    viewer.setStyle(
+                        { chain: 'A', resi: i+1 },
+                        { sphere: { color: col, radius: 0.6, opacity: 0.80 } }
+                    );
+                }
+                // Focus on target protein; scattered A residues visible as far spheres
+                viewer.zoomTo({ chain: 'B' });
+            }
+ 
+            viewer.spin('y', 0.7);
+            viewer.render();
+        }
+ 
+        function addScatteredOverlay(canvasId) {
+            var el = document.getElementById(canvasId);
+            if (!el) return;
+            var d = document.createElement('div');
+            d.className = 'scattered-overlay';
+            d.textContent = '⚠ Non-compact — residues scattered in space (failed generation)';
+            el.appendChild(d);
+        }
+ 
+        function renderSeqLabel(id, seq) {
+            var el = document.getElementById(id);
+            if (!el) return;
+            var html = '';
+            for (var i=0;i<seq.length;i++) {
+                var cls = AA_CLASS[seq[i]] || 'aa-spc';
+                html += '<span class="'+cls+'" title="'+(AA3[seq[i]]||seq[i])+' '+(i+1)+'">'+seq[i]+'</span>';
+            }
+            el.innerHTML = html;
+        }
+ 
+        // A 27-residue peptide in compact fold: max CA-CA distance < 120 Å
+        // Degenerate outputs from diffusion failure: typically > 120 Å spread
+        var COMPACT_THRESHOLD = 120;
+ 
+        function initViewer(entry) {
+            var el = document.getElementById(entry.canvasId);
+            if (!el || typeof $3Dmol === 'undefined') return;
+            var viewer = $3Dmol.createViewer(el, { backgroundColor: '#060d1a', antialias: true });
+ 
+            fetch(entry.pdb)
+                .then(function(r) {
+                    if (!r.ok) throw new Error('PDB not found: ' + entry.pdb);
+                    return r.text();
+                })
+                .then(function(raw) {
+                    var norm = normalizePDB(raw);
+                    var spread = measureSpread(norm);
+                    var isCompact = (spread < COMPACT_THRESHOLD);
+ 
+                    viewer.addModel(norm, 'pdb');
+                    renderViewer(viewer, entry.seq, isCompact);
+ 
+                    if (!isCompact) {
+                        addScatteredOverlay(entry.canvasId);
+                    }
+                })
+                .catch(function(err) {
+                    console.warn(err.message);
+                });
+ 
+            renderSeqLabel(entry.seqId, entry.seq);
+        }
+ 
+        var ENTRIES = [
+            {
+                canvasId: 'unimomo-manifold',
+                seqId:    'seq-manifold',
+                seq:      'KQILRESQEPDYSTPDNDENFQQNFVR',
+                pdb:      './manifoldcache_unimomo.pdb'
+            },
+            {
+                canvasId: 'unimomo-deepcache',
+                seqId:    'seq-deepcache',
+                seq:      'VVQVVVTVVTVVVVQVVVVVVVVVVVV',
+                pdb:      './deepcache_unimomo.pdb'
+            },
+            {
+                canvasId: 'unimomo-smoothcache',
+                seqId:    'seq-smoothcache',
+                seq:      'QVVFVQQVVFQVQQVQVVVVVFVFFVQ',
+                pdb:      './smoothcache_unimomo.pdb'
+            }
+        ];
+ 
+        window.addEventListener('load', function() { ENTRIES.forEach(initViewer); });
+    })();
+    </script>
+   
 </body>
 </html>
