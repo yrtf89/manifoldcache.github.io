@@ -197,49 +197,6 @@
 <h1>ManifoldCache</h1>
 <div class="subtitle">Training-Free Diffusion Acceleration via Constraint Manifold Caching</div>
 
-<!-- ══════════════════════════════════════════════════════════════════════ -->
-<!-- ROW 1: 3D NIfTI Volumes                                               -->
-<!-- ══════════════════════════════════════════════════════════════════════ -->
-<div class="section-title">3D Brain MRI Synthesis Comparison (Med-DDPM)</div>
-<div class="demo-container">
-    <div class="viewer-card volume-height">
-        <div class="canvas-wrapper" id="canvas-manifold-wrap">
-            <canvas id="canvas-manifold"></canvas>
-            <div class="mobile-fallback">3D viewer requires desktop browser</div>
-        </div>
-        <div class="caption">ManifoldCache (Ours)</div>
-        <div class="sub-caption">File: manifoldcache_flair.nii.gz | Drag to rotate, scroll to zoom</div>
-    </div>
-    <div class="viewer-card volume-height">
-        <div class="canvas-wrapper" id="canvas-deepcache-wrap">
-            <canvas id="canvas-deepcache"></canvas>
-            <div class="mobile-fallback">3D viewer requires desktop browser</div>
-        </div>
-        <div class="caption">DeepCache</div>
-        <div class="sub-caption">File: deepcache_flair.nii.gz | Drag to rotate, scroll to zoom</div>
-    </div>
-</div>
-
-<!-- ══════════════════════════════════════════════════════════════════════ -->
-<!-- ROW 2: Video                                                           -->
-<!-- ══════════════════════════════════════════════════════════════════════ -->
-<div class="section-title">Lyra Multi-View Synthesis Comparison</div>
-<div class="demo-container">
-    <div class="viewer-card">
-        <div class="video-wrapper">
-            <video src="./manifoldcache_lyra.mp4" autoplay loop muted playsinline controls></video>
-        </div>
-        <div class="caption">ManifoldCache (Ours)</div>
-        <div class="sub-caption">File: manifoldcache_lyra.mp4</div>
-    </div>
-    <div class="viewer-card">
-        <div class="video-wrapper">
-            <video src="./PAB_lyra.mp4" autoplay loop muted playsinline controls></video>
-        </div>
-        <div class="caption">PAB</div>
-        <div class="sub-caption">File: PAB_lyra.mp4</div>
-    </div>
-</div>
 
 <!-- ══════════════════════════════════════════════════════════════════════ -->
 <!-- ROW 3: DemoDiff molecular                                              -->
@@ -386,40 +343,6 @@
 <!-- SCRIPTS                                                                -->
 <!-- ══════════════════════════════════════════════════════════════════════ -->
 
-<!-- NiiVue (MRI viewers – these are always visible, init immediately) -->
-<script type="module" async>
-    import { Niivue } from "https://unpkg.com/@niivue/niivue@0.57.0/dist/index.js";
-    const currentPath = window.location.pathname.substring(0, window.location.pathname.lastIndexOf('/'));
-    const rootUrl = `${window.location.origin}${currentPath}`;
-
-    const nvManifold = new Niivue({ isResizeCanvas: true });
-    nvManifold.setSliceType(nvManifold.sliceTypeRender);
-    await nvManifold.attachTo("canvas-manifold");
-    await nvManifold.loadVolumes([{ url: `${rootUrl}/manifoldcache_flair.nii.gz` }]);
-    nvManifold.scene.volScaleMultiplier = 1.3;
-    nvManifold.drawScene();
-
-    const nvDeepcache = new Niivue({ isResizeCanvas: true });
-    nvDeepcache.setSliceType(nvDeepcache.sliceTypeRender);
-    await nvDeepcache.attachTo("canvas-deepcache");
-    await nvDeepcache.loadVolumes([{ url: `${rootUrl}/deepcache_flair.nii.gz` }]);
-    nvDeepcache.scene.volScaleMultiplier = 1.3;
-    nvDeepcache.drawScene();
-
-    nvManifold.broadcastTo([nvDeepcache], { "2d": false, "3d": true });
-    nvDeepcache.broadcastTo([nvManifold], { "2d": false, "3d": true });
-
-    let angle = 0;
-    function rotateVolumes() {
-        angle += 0.3;
-        nvManifold.scene.renderAzimuth = angle;
-        nvDeepcache.scene.renderAzimuth = angle;
-        nvManifold.drawScene();
-        nvDeepcache.drawScene();
-        requestAnimationFrame(rotateVolumes);
-    }
-    rotateVolumes();
-</script>
 
 <!-- 3Dmol library -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/3Dmol/2.1.0/3Dmol-min.js"></script>
