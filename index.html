@@ -197,14 +197,14 @@
         nvManifold.setSliceType(nvManifold.sliceTypeRender);
         await nvManifold.attachTo("canvas-manifold");
         await nvManifold.loadVolumes(volumeManifold);
-        nvManifold.scene.volScaleMultiplier = 1.8;
+        nvManifold.scene.volScaleMultiplier = 1.3;
         nvManifold.drawScene();
 
         const nvDeepcache = new Niivue({ isResizeCanvas: true });
         nvDeepcache.setSliceType(nvDeepcache.sliceTypeRender);
         await nvDeepcache.attachTo("canvas-deepcache");
         await nvDeepcache.loadVolumes(volumeDeepcache);
-        nvDeepcache.scene.volScaleMultiplier = 1.8;
+        nvDeepcache.scene.volScaleMultiplier = 1.3;
         nvDeepcache.drawScene();
 
         nvManifold.broadcastTo([nvDeepcache], { "2d": false, "3d": true });
