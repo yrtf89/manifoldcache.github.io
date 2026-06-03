@@ -1152,23 +1152,36 @@ $$$$`;
             { id: 'ditmc-teacache', sdf: SDF_TEACACHE  },
         ];
  
-        window.addEventListener('load', function () {
-            VIEWERS.forEach(function (v) {
-                var el = document.getElementById(v.id);
-                if (!el || typeof $3Dmol === 'undefined') return;
-                var viewer = $3Dmol.createViewer(el, { backgroundColor: '#060d1a', antialias: true });
-                viewer.addModel(v.sdf, 'sdf');
-                viewer.setStyle({}, {
-                    stick:  { radius: 0.14, colorscheme: 'Jmol' },
-                    sphere: { scale: 0.26, colorscheme: 'Jmol' }
-                });
-                viewer.zoomTo();
-                viewer.spin('y', 0.8);
-                viewer.render();
-            });
+        function initViewer(v) {
+        var el = document.getElementById(v.id);
+        if (!el) return;
+        var viewer = $3Dmol.createViewer(el, { backgroundColor: '#060d1a', antialias: true });
+        viewer.addModel(v.sdf, 'sdf');
+        viewer.setStyle({}, {
+            stick:  { radius: 0.14, colorscheme: 'Jmol' },
+            sphere: { scale: 0.26, colorscheme: 'Jmol' }
         });
-    })();
-    </script>
+        viewer.zoomTo();
+        viewer.spin('y', 0.8);
+        viewer.render();
+    }
+
+    function waitFor3Dmol(callback, tries) {
+        tries = tries || 0;
+        if (typeof $3Dmol !== 'undefined') {
+            callback();
+        } else if (tries < 50) {
+            setTimeout(function () { waitFor3Dmol(callback, tries + 1); }, 100);
+        } else {
+            console.warn('3Dmol never loaded');
+        }
+    }
+
+    waitFor3Dmol(function () {
+        VIEWERS.forEach(initViewer);
+    });
+})();
+</script>
    
 </body>
 </html>
