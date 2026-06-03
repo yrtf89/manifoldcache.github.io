@@ -978,99 +978,74 @@ loop_
     })();
     </script>
 
-    <!-- ROW: DiT-MC Molecular Conformer Generation -->
-<div class="section-title">DiT-MC — Molecular Conformer Generation (GEOM-DRUGS Benchmark)</div>
-<div class="demo-container" style="grid-template-columns: repeat(3, 1fr);">
-
-    <div class="viewer-card">
-        <div class="canvas-wrapper" id="ditmc-manifold" style="min-height: 320px;"></div>
-        <div class="caption">ManifoldCache (Ours)</div>
-        <div class="sub-caption">ditmc_manifoldcache.sdf · Multiple conformers overlaid · Drag to rotate</div>
-    </div>
-
-    <div class="viewer-card">
-        <div class="canvas-wrapper" id="ditmc-pfabc" style="min-height: 320px;"></div>
-        <div class="caption">PF-ABC</div>
-        <div class="sub-caption">ditmc_pf_abc.sdf · Multiple conformers overlaid · Drag to rotate</div>
-    </div>
-
-    <div class="viewer-card">
-        <div class="canvas-wrapper" id="ditmc-teacache" style="min-height: 320px;"></div>
-        <div class="caption">TeaCache</div>
-        <div class="sub-caption">ditmc_teacache.sdf · Multiple conformers overlaid · Drag to rotate</div>
-    </div>
-
-</div>
-
-<script>
+    <script>
 (function () {
-    // Palette for overlaid conformers — each gets a distinct hue
     var CONF_COLORS = [
-        '#38bdf8', '#a78bfa', '#f472b6', '#34d399',
-        '#fb923c', '#facc15', '#60a5fa', '#f87171',
-        '#4ade80', '#e879f9'
+        '#38bdf8','#a78bfa','#f472b6','#34d399',
+        '#fb923c','#facc15','#60a5fa','#f87171','#4ade80','#e879f9'
     ];
 
-    function loadDitMCViewer(containerId, sdfPath) {
+    var BASE = window.location.origin + window.location.pathname.substring(0, window.location.pathname.lastIndexOf('/') + 1);
+
+    var VIEWERS = [
+        { id: 'ditmc-manifold',  file: 'ditmc_manifoldcache.sdf' },
+        { id: 'ditmc-pfabc',     file: 'ditmc_pf_abc.sdf' },
+        { id: 'ditmc-teacache',  file: 'ditmc_teacache.sdf' },
+    ];
+
+    function loadDitMCViewer(containerId, filename) {
         var el = document.getElementById(containerId);
         if (!el || typeof $3Dmol === 'undefined') return;
 
-        var viewer = $3Dmol.createViewer(el, {
-            backgroundColor: '#060d1a',
-            antialias: true
+        var viewer = $3Dmol.createViewer(el, { backgroundColor: '#060d1a', antialias: true });
+        var url = BASE + filename;
+
+        $3Dmol.download('url:' + url, viewer, { format: 'sdf', keepH: true }, function() {
+            // called once — but download loads all conformers as one model
+            // so re-do it manually via XHR for multi-model coloring
         });
 
-        fetch(sdfPath)
-            .then(function (r) {
-                if (!r.ok) throw new Error('SDF not found: ' + sdfPath);
-                return r.text();
-            })
-            .then(function (sdfText) {
-                // Split multi-conformer SDF on $$$$ delimiter
-                var blocks = sdfText.split('$$$$').map(function(b) {
-                    return b.trim();
-                }).filter(function(b) { return b.length > 0; });
+        // Use XHR directly — avoids fetch() CORS issues
+        var xhr = new XMLHttpRequest();
+        xhr.open('GET', url, true);
+        xhr.onload = function() {
+            if (xhr.status !== 200) {
+                el.innerHTML = '<div style="color:#64748b;font-size:0.8rem;padding:20px;text-align:center">SDF not yet available.<br><small>' + filename + '</small></div>';
+                return;
+            }
+            var sdfText = xhr.responseText;
+            var blocks = sdfText.split('$$$$').map(function(b){ return b.trim(); }).filter(function(b){ return b.length > 10; });
 
-                blocks.forEach(function (block, i) {
-                    var color = CONF_COLORS[i % CONF_COLORS.length];
-                    // Add each conformer as a separate model so they overlap
-                    viewer.addModel(block + '\n$$$$', 'sdf');
-                    viewer.setStyle(
-                        { model: i },
-                        {
-                            stick:  { radius: 0.10, color: color, opacity: 0.75 },
-                            sphere: { scale: 0.22, color: color, opacity: 0.75 }
-                        }
-                    );
+            // Re-create clean viewer (discard the $3Dmol.download one)
+            el.innerHTML = '';
+            var v2 = $3Dmol.createViewer(el, { backgroundColor: '#060d1a', antialias: true });
+
+            blocks.forEach(function(block, i) {
+                var color = CONF_COLORS[i % CONF_COLORS.length];
+                v2.addModel(block + '\n$$$$', 'sdf');
+                v2.setStyle({ model: i }, {
+                    stick:  { radius: 0.10, color: color, opacity: 0.82 },
+                    sphere: { scale: 0.22, color: color, opacity: 0.82 }
                 });
-
-                viewer.zoomTo();
-                viewer.spin('y', 0.8);
-                viewer.render();
-
-                // Label: show conformer count
-                var badge = document.createElement('div');
-                badge.style.cssText = [
-                    'position:absolute', 'top:8px', 'right:10px',
-                    'background:rgba(15,23,42,0.75)', 'color:#94a3b8',
-                    'font-size:0.72rem', 'padding:2px 7px',
-                    'border-radius:999px', 'border:1px solid #334155',
-                    'pointer-events:none'
-                ].join(';');
-                badge.textContent = blocks.length + ' conformers';
-                el.appendChild(badge);
-            })
-            .catch(function (err) {
-                console.warn(err.message);
-                el.innerHTML = '<div style="color:#64748b;font-size:0.8rem;padding:20px;text-align:center">' +
-                    'SDF file not found.<br><span style="font-size:0.7rem">' + sdfPath + '</span></div>';
             });
+
+            v2.zoomTo();
+            v2.spin('y', 0.8);
+            v2.render();
+
+            var badge = document.createElement('div');
+            badge.style.cssText = 'position:absolute;top:8px;right:10px;background:rgba(15,23,42,0.75);color:#94a3b8;font-size:0.72rem;padding:2px 7px;border-radius:999px;border:1px solid #334155;pointer-events:none';
+            badge.textContent = blocks.length + ' conformers';
+            el.appendChild(badge);
+        };
+        xhr.onerror = function() {
+            el.innerHTML = '<div style="color:#64748b;font-size:0.8rem;padding:20px;text-align:center">Network error loading SDF.<br><small>' + filename + '</small></div>';
+        };
+        xhr.send();
     }
 
-    window.addEventListener('load', function () {
-        loadDitMCViewer('ditmc-manifold', './ditmc_manifoldcache.sdf');
-        loadDitMCViewer('ditmc-pfabc',    './ditmc_pf_abc.sdf');
-        loadDitMCViewer('ditmc-teacache', './ditmc_teacache.sdf');
+    window.addEventListener('load', function() {
+        VIEWERS.forEach(function(v) { loadDitMCViewer(v.id, v.file); });
     });
 })();
 </script>
