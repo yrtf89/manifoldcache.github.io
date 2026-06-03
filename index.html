@@ -344,16 +344,33 @@ $$$$
             { id: "mol-viewer-4", style: { stick: { radius: 0.15, colorscheme: "Jmol" } }, bg: "#0a0a1a" },
         ];
 
+        /*
+         * FIX 1 — DemoDiff "Method A" white box
+         * ----------------------------------------
+         * Root cause: all 4 viewers were initialised simultaneously in a forEach
+         * loop. When $3Dmol.createViewer runs before the browser has painted the
+         * container, it measures 0×0 px, allocates a 0-size WebGL canvas, and the
+         * element falls back to a white rectangle.
+         *
+         * Fix: stagger each viewer with a 180 ms offset (idx * 180 ms), then call
+         * viewer.resize() + viewer.render() after another 100 ms so the canvas
+         * fills the now-painted container correctly.
+         */
         waitFor3Dmol(function() {
-            configs.forEach(function(cfg) {
-                var el = document.getElementById(cfg.id);
-                if (!el) return;
-                var viewer = $3Dmol.createViewer(el, { backgroundColor: cfg.bg, antialias: true });
-                viewer.addModel(SDF_DATA, "sdf");
-                viewer.setStyle({}, cfg.style);
-                viewer.zoomTo();
-                viewer.spin("y", 1);
-                viewer.render();
+            configs.forEach(function(cfg, idx) {
+                setTimeout(function() {
+                    var el = document.getElementById(cfg.id);
+                    if (!el) return;
+                    var viewer = $3Dmol.createViewer(el, { backgroundColor: cfg.bg, antialias: true });
+                    viewer.addModel(SDF_DATA, "sdf");
+                    viewer.setStyle({}, cfg.style);
+                    viewer.zoomTo();
+                    viewer.spin("y", 1);
+                    viewer.render();
+                    /* Force a resize pass so the WebGL canvas adopts the
+                       container's real pixel dimensions after layout settles. */
+                    setTimeout(function() { viewer.resize(); viewer.render(); }, 100);
+                }, idx * 180);
             });
         });
     })();
@@ -366,13 +383,13 @@ $$$$
         <div class="viewer-card">
             <div class="canvas-wrapper" id="crystal-viewer-a" style="min-height: 380px;"></div>
             <div class="caption">ManifoldCache (Ours)</div>
-            <div class="sub-caption">Tm₂Te₃ — Tm32 Te48 | Drag to rotate, scroll to zoom</div>
+            <div class="sub-caption">Tm&#8322;Te&#8323; — Tm32 Te48 | Drag to rotate, scroll to zoom</div>
         </div>
 
         <div class="viewer-card">
             <div class="canvas-wrapper" id="crystal-viewer-b" style="min-height: 380px;"></div>
             <div class="caption">DeepCache</div>
-            <div class="sub-caption">Tm₂Te₃ — Tm32 Te48 | Drag to rotate, scroll to zoom</div>
+            <div class="sub-caption">Tm&#8322;Te&#8323; — Tm32 Te48 | Drag to rotate, scroll to zoom</div>
         </div>
 
     </div>
@@ -1066,6 +1083,17 @@ $$$$`;
             { id: 'ditmc-teacache', sdf: SDF_TEACACHE  },
         ];
 
+        /*
+         * FIX 2 — DiT-MC PF-ABC and TeaCache black boxes
+         * ------------------------------------------------
+         * Root cause: same race condition as Fix 1. All three viewers were
+         * initialised at once; viewers 2 and 3 had 0×0 px containers at the
+         * moment $3Dmol tried to create their WebGL contexts.
+         *
+         * Fix A – stagger each viewer with a 220 ms offset per index.
+         * Fix B – call viewer.resize() + viewer.render() 120 ms after the first
+         *         render so the canvas adopts the container's real dimensions.
+         */
         function initViewer(v) {
             var el = document.getElementById(v.id);
             if (!el) return;
@@ -1078,10 +1106,13 @@ $$$$`;
             viewer.zoomTo();
             viewer.spin('y', 0.8);
             viewer.render();
+            setTimeout(function() { viewer.resize(); viewer.render(); }, 120);
         }
 
         waitFor3Dmol(function() {
-            VIEWERS.forEach(initViewer);
+            VIEWERS.forEach(function(v, idx) {
+                setTimeout(function() { initViewer(v); }, idx * 220);
+            });
         });
     })();
     </script>
