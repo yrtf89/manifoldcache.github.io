@@ -206,10 +206,18 @@
         await nvManifold.attachTo("canvas-manifold");
         await nvManifold.loadVolumes(volumeManifold);
 
+        // Zoom ONLY the brain rendering
+        nvManifold.scene.volScaleMultiplier = 1.8;
+        nvManifold.drawScene();
+
         const nvDeepcache = new Niivue({ isResizeCanvas: true });
         nvDeepcache.setSliceType(nvDeepcache.sliceTypeRender);
         await nvDeepcache.attachTo("canvas-deepcache");
         await nvDeepcache.loadVolumes(volumeDeepcache);
+
+        // Zoom ONLY the brain rendering
+        nvDeepcache.scene.volScaleMultiplier = 1.8;
+        nvDeepcache.drawScene();
 
         nvManifold.broadcastTo([nvDeepcache], { "2d": false, "3d": true });
         nvDeepcache.broadcastTo([nvManifold], { "2d": false, "3d": true });
