@@ -29,8 +29,6 @@
         body {
             margin: 0;
             padding: 20px;
-       
-            /* background-color: #0f172a; */
             background: linear-gradient(135deg, #0a0f1e 0%, #0f172a 50%, #0d1f3c 100%);
             color: #f8fafc;
             font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
@@ -46,7 +44,6 @@
             font-weight: 700;
             margin: 0 0 5px 0;
             text-align: center;
-            /* background: linear-gradient(to right, #38bdf8, #818cf8); */
             background: linear-gradient(to right, #22d3ee, #a78bfa, #f472b6);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
@@ -73,7 +70,6 @@
 
         .demo-container {
             display: grid;
-            /* grid-template-columns: repeat(auto-fit, minmax(45%, 1fr)); */
             grid-template-columns: repeat(auto-fit, minmax(min(45%, 300px), 1fr));
             gap: 25px;
             width: 100%;
@@ -81,7 +77,6 @@
         }
 
         .viewer-card {
-            /* background-color: #1e293b; */
             background: linear-gradient(145deg, #1a2744 0%, #1e293b 100%);
             border: 1px solid #2d4a7a;
             border-radius: 12px;
@@ -92,11 +87,8 @@
             flex-direction: column;
         }
 
-
         .viewer-card.volume-height {
-            /* height: 65vh; */
             height: clamp(280px, 50vw, 65vh);
-            /* height: clamp(500px, 60vw, 85vh); */
         }
 
         .canvas-wrapper, .video-wrapper {
@@ -205,8 +197,6 @@
         nvManifold.setSliceType(nvManifold.sliceTypeRender);
         await nvManifold.attachTo("canvas-manifold");
         await nvManifold.loadVolumes(volumeManifold);
-
-        // Zoom ONLY the brain rendering
         nvManifold.scene.volScaleMultiplier = 1.8;
         nvManifold.drawScene();
 
@@ -214,8 +204,6 @@
         nvDeepcache.setSliceType(nvDeepcache.sliceTypeRender);
         await nvDeepcache.attachTo("canvas-deepcache");
         await nvDeepcache.loadVolumes(volumeDeepcache);
-
-        // Zoom ONLY the brain rendering
         nvDeepcache.scene.volScaleMultiplier = 1.8;
         nvDeepcache.drawScene();
 
@@ -231,12 +219,31 @@
             nvDeepcache.drawScene();
             requestAnimationFrame(rotateVolumes);
         }
-        
         rotateVolumes();
-        
     </script>
 
-    <!-- ROW 3: 3D Molecular Visualization -->
+    <!-- Load 3Dmol ONCE, early, before any rows that use it -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/3Dmol/2.1.0/3Dmol-min.js"></script>
+
+    <!--
+        Shared helper: waitFor3Dmol(fn)
+        Retries every 100ms up to 5s, then calls fn() once $3Dmol is available.
+        Defined globally so every subsequent script block can reuse it.
+    -->
+    <script>
+    window.waitFor3Dmol = function(fn, tries) {
+        tries = tries || 0;
+        if (typeof $3Dmol !== 'undefined') {
+            fn();
+        } else if (tries < 50) {
+            setTimeout(function() { window.waitFor3Dmol(fn, tries + 1); }, 100);
+        } else {
+            console.warn('3Dmol never loaded after 5s');
+        }
+    };
+    </script>
+
+    <!-- ROW 3: 3D Molecular Visualization (DemoDiff) -->
     <div class="section-title">DemoDiff (molecular foundation model leveraging Graph Diffusion Transformer)</div>
     <div class="demo-container" style="grid-template-columns: repeat(4, 1fr);">
 
@@ -270,29 +277,9 @@
 
     </div>
 
-    <!-- ROW 4: 3D Crystal Structure Visualization (DiffCSP-PP) -->
-    <div class="section-title">DiffCSP++ Crystal Structure Prediction (Space Group Constrained Generation)</div>
-    <div class="demo-container">
-
-        <div class="viewer-card">
-            <div class="canvas-wrapper" id="crystal-viewer-a" style="min-height: 380px;"></div>
-            <div class="caption">ManifoldCache (Ours)</div>
-            <div class="sub-caption">Tm₂Te₃ — Tm32 Te48 | Drag to rotate, scroll to zoom</div>
-        </div>
-
-        <div class="viewer-card">
-            <div class="canvas-wrapper" id="crystal-viewer-b" style="min-height: 380px;"></div>
-            <div class="caption">DeepCache</div>
-            <div class="sub-caption">Tm₂Te₃ — Tm32 Te48 | Drag to rotate, scroll to zoom</div>
-        </div>
-
-    </div>
-
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/3Dmol/2.1.0/3Dmol-min.js"></script>
     <script>
-    // Fixed SDF for OCC(O)C(S)c1cccc(O)c1
-    // SDF for OCC(O)C(S)c1cccc(O)c1 — avoids CORS/PubChem fetch issues
-    const SDF_DATA = `
+    (function() {
+        var SDF_DATA = `
      RDKit          3D
 
  20 21  0  0  0  0  0  0  0  0999 V2000
@@ -350,30 +337,49 @@ M  END
 $$$$
 `;
 
-    window.addEventListener('load', function() {
-        const configs = [
-            { id: "mol-viewer-1", style: { stick: { radius: 0.15, colorscheme: "Jmol" } }, surface: false, bg: "#0a0a1a" },
-            { id: "mol-viewer-2", style: { stick: { radius: 0.15, colorscheme: "Jmol" } }, surface: false, bg: "#0a0a1a" },
-            { id: "mol-viewer-3", style: { stick: { radius: 0.15, colorscheme: "Jmol" } }, surface: false, bg: "#0a0a1a" },
-            { id: "mol-viewer-4", style: { stick: { radius: 0.15, colorscheme: "Jmol" } }, surface: false, bg: "#0a0a1a" },
+        var configs = [
+            { id: "mol-viewer-1", style: { stick: { radius: 0.15, colorscheme: "Jmol" } }, bg: "#0a0a1a" },
+            { id: "mol-viewer-2", style: { stick: { radius: 0.15, colorscheme: "Jmol" } }, bg: "#0a0a1a" },
+            { id: "mol-viewer-3", style: { stick: { radius: 0.15, colorscheme: "Jmol" } }, bg: "#0a0a1a" },
+            { id: "mol-viewer-4", style: { stick: { radius: 0.15, colorscheme: "Jmol" } }, bg: "#0a0a1a" },
         ];
 
-        configs.forEach(function(cfg) {
-            var el = document.getElementById(cfg.id);
-            if (!el) return;
-            var viewer = $3Dmol.createViewer(el, { backgroundColor: cfg.bg, antialias: true });
-            viewer.addModel(SDF_DATA, "sdf");
-            viewer.setStyle({}, cfg.style);
-            if (cfg.surface) {
-                viewer.addSurface($3Dmol.SurfaceType.VDW, { opacity: 0.45, color: "lightblue" });
-            }
-            viewer.zoomTo();
-            viewer.spin("y", 1);
-            viewer.render();
+        waitFor3Dmol(function() {
+            configs.forEach(function(cfg) {
+                var el = document.getElementById(cfg.id);
+                if (!el) return;
+                var viewer = $3Dmol.createViewer(el, { backgroundColor: cfg.bg, antialias: true });
+                viewer.addModel(SDF_DATA, "sdf");
+                viewer.setStyle({}, cfg.style);
+                viewer.zoomTo();
+                viewer.spin("y", 1);
+                viewer.render();
+            });
         });
+    })();
+    </script>
 
-        // CIF A = ManifoldCache (Ours) — swapped to left panel
-        const CIF_A = `# generated using pymatgen
+    <!-- ROW 4: 3D Crystal Structure Visualization (DiffCSP-PP) -->
+    <div class="section-title">DiffCSP++ Crystal Structure Prediction (Space Group Constrained Generation)</div>
+    <div class="demo-container">
+
+        <div class="viewer-card">
+            <div class="canvas-wrapper" id="crystal-viewer-a" style="min-height: 380px;"></div>
+            <div class="caption">ManifoldCache (Ours)</div>
+            <div class="sub-caption">Tm₂Te₃ — Tm32 Te48 | Drag to rotate, scroll to zoom</div>
+        </div>
+
+        <div class="viewer-card">
+            <div class="canvas-wrapper" id="crystal-viewer-b" style="min-height: 380px;"></div>
+            <div class="caption">DeepCache</div>
+            <div class="sub-caption">Tm₂Te₃ — Tm32 Te48 | Drag to rotate, scroll to zoom</div>
+        </div>
+
+    </div>
+
+    <script>
+    (function() {
+        var CIF_A = `# generated using pymatgen
 data_Tm2Te3
 _symmetry_space_group_name_H-M   'P 1'
 _cell_length_a   8.41800785
@@ -480,8 +486,7 @@ loop_
   Te  Te78  1  0.37433743  0.62554908  0.29258493  1
   Te  Te79  1  0.87566251  0.62445092  0.29258493  1`;
 
-        // CIF B = DeepCache — swapped to right panel
-        const CIF_B = `# generated using pymatgen
+        var CIF_B = `# generated using pymatgen
 data_Tm2Te3
 _symmetry_space_group_name_H-M   'P 1'
 _cell_length_a   8.28109646
@@ -591,25 +596,15 @@ loop_
         function loadCrystalViewer(containerId, filePath, fallbackCif, spinAxis) {
             var el = document.getElementById(containerId);
             if (!el) return;
-
-            var viewer = $3Dmol.createViewer(el, {
-                backgroundColor: "#060d1a",
-                antialias: true
-            });
+            var viewer = $3Dmol.createViewer(el, { backgroundColor: "#060d1a", antialias: true });
 
             function renderCif(cifText) {
                 viewer.addModel(cifText, "cif", { normalizeAssembly: true, duplicateAssemblyAtoms: true });
-                viewer.setStyle({}, {
-                    sphere: { scale: 0.32, colorscheme: "Jmol" }
-                });
-                viewer.addStyle({}, {
-                    stick: { radius: 0.08, colorscheme: "Jmol" }
-                });
+                viewer.setStyle({}, { sphere: { scale: 0.32, colorscheme: "Jmol" } });
+                viewer.addStyle({}, { stick: { radius: 0.08, colorscheme: "Jmol" } });
                 viewer.addUnitCell({
                     box: { color: "#38bdf8", linewidth: 1.5, opacity: 0.6 },
-                    astep: 5,
-                    bstep: 5,
-                    cstep: 5
+                    astep: 5, bstep: 5, cstep: 5
                 });
                 viewer.zoomTo();
                 viewer.zoom(1.4);
@@ -626,83 +621,75 @@ loop_
                 .catch(function() { renderCif(fallbackCif); });
         }
 
-        // Swapped: crystal-viewer-a = ManifoldCache (CIF_A), crystal-viewer-b = DeepCache (CIF_B)
-        loadCrystalViewer("crystal-viewer-a", "./manifoldcache.cif", CIF_A, "y");
-        loadCrystalViewer("crystal-viewer-b", "./deepcache.cif", CIF_B, "y");
-    });
+        waitFor3Dmol(function() {
+            loadCrystalViewer("crystal-viewer-a", "./manifoldcache.cif", CIF_A, "y");
+            loadCrystalViewer("crystal-viewer-b", "./deepcache.cif", CIF_B, "y");
+        });
+    })();
     </script>
 
     <!-- ROW: Proteina Protein Backbone Generation -->
-<div class="section-title">Proteina - foundation model for protein backbone generation</div>
-<div class="demo-container" style="grid-template-columns: repeat(3, 1fr);">
+    <div class="section-title">Proteina - foundation model for protein backbone generation</div>
+    <div class="demo-container" style="grid-template-columns: repeat(3, 1fr);">
 
-    <div class="viewer-card">
-        <div class="canvas-wrapper" id="prot-viewer-1" style="min-height: 350px;"></div>
-        <div class="caption">ManifoldCache (Ours)</div>
-        <div class="sub-caption">manifoldcache.pdb | Drag to rotate, scroll to zoom</div>
+        <div class="viewer-card">
+            <div class="canvas-wrapper" id="prot-viewer-1" style="min-height: 350px;"></div>
+            <div class="caption">ManifoldCache (Ours)</div>
+            <div class="sub-caption">manifoldcache.pdb | Drag to rotate, scroll to zoom</div>
+        </div>
+
+        <div class="viewer-card">
+            <div class="canvas-wrapper" id="prot-viewer-2" style="min-height: 350px;"></div>
+            <div class="caption">Fora</div>
+            <div class="sub-caption">fora.pdb | Drag to rotate, scroll to zoom</div>
+        </div>
+
+        <div class="viewer-card">
+            <div class="canvas-wrapper" id="prot-viewer-3" style="min-height: 350px;"></div>
+            <div class="caption">SmoothCache</div>
+            <div class="sub-caption">smoothcache.pdb | Drag to rotate, scroll to zoom</div>
+        </div>
+
     </div>
 
-    <div class="viewer-card">
-        <div class="canvas-wrapper" id="prot-viewer-2" style="min-height: 350px;"></div>
-        <div class="caption">Fora</div>
-        <div class="sub-caption">fora.pdb | Drag to rotate, scroll to zoom</div>
-    </div>
+    <script>
+    (function() {
+        var PROT_FILES = [
+            { id: "prot-viewer-1", file: "./manifoldcache.pdb" },
+            { id: "prot-viewer-2", file: "./fora.pdb" },
+            { id: "prot-viewer-3", file: "./smoothcache.pdb" },
+        ];
 
-    <div class="viewer-card">
-        <div class="canvas-wrapper" id="prot-viewer-3" style="min-height: 350px;"></div>
-        <div class="caption">SmoothCache</div>
-        <div class="sub-caption">smoothcache.pdb | Drag to rotate, scroll to zoom</div>
-    </div>
+        function initProtViewer(cfg) {
+            var el = document.getElementById(cfg.id);
+            if (!el) return;
+            var viewer = $3Dmol.createViewer(el, { backgroundColor: "#060d1a", antialias: true });
+            fetch(cfg.file)
+                .then(function(r) { if (!r.ok) throw new Error(); return r.text(); })
+                .then(function(pdbText) {
+                    viewer.addModel(pdbText, "pdb");
+                    viewer.setStyle({}, { cartoon: { color: "spectrum", thickness: 0.4 } });
+                    viewer.addStyle({ atom: ["CA", "N", "C", "O"] }, { stick: { radius: 0.08, colorscheme: "Jmol" } });
+                    viewer.zoomTo();
+                    viewer.spin("y", 0.8);
+                    viewer.render();
+                })
+                .catch(function() { console.warn("PDB not found: " + cfg.file); });
+        }
 
-</div>
+        waitFor3Dmol(function() {
+            PROT_FILES.forEach(initProtViewer);
+        });
+    })();
+    </script>
 
-<script>
-(function() {
-    var PROT_FILES = [
-        { id: "prot-viewer-1", file: "./manifoldcache.pdb" },
-        { id: "prot-viewer-2", file: "./fora.pdb" },
-        { id: "prot-viewer-3", file: "./smoothcache.pdb" },
-    ];
-
-    function initProtViewer(cfg) {
-        var el = document.getElementById(cfg.id);
-        if (!el) return;
-        var viewer = $3Dmol.createViewer(el, { backgroundColor: "#060d1a", antialias: true });
-
-        fetch(cfg.file)
-            .then(function(r) { if (!r.ok) throw new Error(); return r.text(); })
-            .then(function(pdbText) {
-                viewer.addModel(pdbText, "pdb");
-                viewer.setStyle({}, { cartoon: { color: "spectrum", thickness: 0.4 } });
-                viewer.addStyle({ atom: ["CA", "N", "C", "O"] }, { stick: { radius: 0.08, colorscheme: "Jmol" } });
-                viewer.zoomTo();
-                viewer.spin("y", 0.8);
-                viewer.render();
-            })
-            .catch(function() { console.warn("PDB not found: " + cfg.file); });
-    }
-
-    window.addEventListener('load', function() {
-        PROT_FILES.forEach(initProtViewer);
-    });
-})();
-</script>
-
-
-
-         <!-- ============================================================ -->
-    <!-- ROW: UniMoMo Peptide Generation (PDB: 2hwl)                 -->
-    <!-- ============================================================ -->
- 
+    <!-- ROW: UniMoMo Peptide Generation -->
     <div class="section-title">
         UniMoMo - Unified Generative Modeling of 3D Molecules for De Novo Binder Design
-        <!-- <span style="font-size:0.85rem; font-weight:400; color:#64748b; margin-left:8px;">
-            Peptide binder design · Target: 2hwl chain B
-        </span> -->
     </div>
- 
+
     <div class="demo-container" style="grid-template-columns: repeat(3, 1fr);">
- 
+
         <div class="viewer-card">
             <div class="canvas-wrapper" id="unimomo-manifold" style="min-height: 350px; position: relative;"></div>
             <div class="caption">ManifoldCache (Ours)</div>
@@ -712,7 +699,7 @@ loop_
             </div>
             <div class="seq-display" id="seq-manifold"></div>
         </div>
- 
+
         <div class="viewer-card">
             <div class="canvas-wrapper" id="unimomo-deepcache" style="min-height: 350px; position: relative;"></div>
             <div class="caption">DeepCache</div>
@@ -722,7 +709,7 @@ loop_
             </div>
             <div class="seq-display" id="seq-deepcache"></div>
         </div>
- 
+
         <div class="viewer-card">
             <div class="canvas-wrapper" id="unimomo-smoothcache" style="min-height: 350px; position: relative;"></div>
             <div class="caption">SmoothCache</div>
@@ -732,9 +719,9 @@ loop_
             </div>
             <div class="seq-display" id="seq-smoothcache"></div>
         </div>
- 
+
     </div>
- 
+
     <script>
     (function () {
         var AA3 = {
@@ -758,20 +745,10 @@ loop_
             A:'#fbbf24',V:'#f59e0b',I:'#d97706',L:'#b45309',M:'#92400e',
             G:'#e5e7eb',P:'#d1d5db'
         };
- 
-        /* ── PDB NORMALIZER ─────────────────────────────────────────
-           Parses using strict PDB column positions (0-indexed):
-             chain = col 21
-             x     = cols 30-38
-             y     = cols 38-46
-             z     = cols 46-54
-           Translates chain A centroid → chain B centroid.
-           Returns clean PDB with well-formatted 8-char coordinate columns.
-        ──────────────────────────────────────────────────────────── */
+
         function normalizePDB(pdbText) {
             var lines = pdbText.split('\n');
             var atomsA = [], atomsB = [];
- 
             lines.forEach(function(raw) {
                 var rec = raw.slice(0, 6).trim();
                 if (rec !== 'ATOM' && rec !== 'HETATM') return;
@@ -784,28 +761,20 @@ loop_
                 if (chain === 'A') atomsA.push(atom);
                 else if (chain === 'B') atomsB.push(atom);
             });
- 
             if (atomsA.length === 0 || atomsB.length === 0) return pdbText;
- 
             function centroid(arr) {
                 var sx=0,sy=0,sz=0;
                 arr.forEach(function(a){sx+=a.x;sy+=a.y;sz+=a.z;});
-                var n=arr.length;
-                return {x:sx/n,y:sy/n,z:sz/n};
+                return {x:sx/arr.length,y:sy/arr.length,z:sz/arr.length};
             }
-            var cA = centroid(atomsA);
-            var cB = centroid(atomsB);
-            var dx = cB.x - cA.x;
-            var dy = cB.y - cA.y;
-            var dz = cB.z - cA.z;
- 
+            var cA = centroid(atomsA), cB = centroid(atomsB);
+            var dx = cB.x-cA.x, dy = cB.y-cA.y, dz = cB.z-cA.z;
             function fmtCoord(v) {
                 var s = v.toFixed(3);
                 while (s.length < 8) s = ' ' + s;
                 if (s.length > 8) s = s.slice(s.length - 8);
                 return s;
             }
- 
             var out = [];
             atomsA.forEach(function(a) {
                 out.push(a.raw.slice(0,30) + fmtCoord(a.x+dx) + fmtCoord(a.y+dy) + fmtCoord(a.z+dz) + a.raw.slice(54));
@@ -815,11 +784,7 @@ loop_
             out.push('END');
             return out.join('\n');
         }
- 
-        /* ── SPREAD MEASUREMENT ─────────────────────────────────────
-           Returns max pairwise distance among chain A CA atoms
-           after normalization. Used to detect degenerate outputs.
-        ──────────────────────────────────────────────────────────── */
+
         function measureSpread(pdbText) {
             var pts = [];
             pdbText.split('\n').forEach(function(line) {
@@ -845,61 +810,39 @@ loop_
             }
             return maxD;
         }
- 
-        /* ── RENDER VIEWER ──────────────────────────────────────────
-           isCompact=true  → colored cartoon+sphere+stick on chain A,
-                              zoom to chain A (shows binding pose)
-           isCompact=false → sphere ONLY on chain A (no ribbon artifact
-                              from backbone connecting distant residues),
-                              zoom to chain B (shows target with scattered
-                              peptide residues — honest failure mode)
-        ──────────────────────────────────────────────────────────── */
+
         function renderViewer(viewer, seq, isCompact) {
-            // Chain B: dim cartoon scaffold
             viewer.setStyle(
                 { chain: 'B' },
                 { cartoon: { color: '#334155', thickness: 0.28, opacity: isCompact ? 0.35 : 0.55 } }
             );
- 
             if (isCompact) {
-                // Compact peptide: full cartoon + sphere + stick, colored by AA
-                viewer.setStyle(
-                    { chain: 'A' },
-                    { sphere: { scale: 0.28, colorscheme: 'amino' },
-                      stick:  { radius: 0.14, colorscheme: 'amino' } }
-                );
+                viewer.setStyle({ chain: 'A' }, {
+                    sphere: { scale: 0.28, colorscheme: 'amino' },
+                    stick:  { radius: 0.14, colorscheme: 'amino' }
+                });
                 for (var i=0; i<seq.length; i++) {
                     var col = AA_COLOR[seq[i]] || '#9ca3af';
-                    viewer.setStyle(
-                        { chain: 'A', resi: i+1 },
-                        {
-                            cartoon: { color: col, thickness: 0.5, opacity: 0.9 },
-                            sphere:  { color: col, radius: 0.30, opacity: 0.9 },
-                            stick:   { color: col, radius: 0.12 }
-                        }
-                    );
+                    viewer.setStyle({ chain: 'A', resi: i+1 }, {
+                        cartoon: { color: col, thickness: 0.5, opacity: 0.9 },
+                        sphere:  { color: col, radius: 0.30, opacity: 0.9 },
+                        stick:   { color: col, radius: 0.12 }
+                    });
                 }
                 viewer.zoomTo({ chain: 'A' });
             } else {
-                // Scattered/degenerate: sphere ONLY — avoids the "orbital ribbon"
-                // artifact caused by 3Dmol cartoon connecting atoms 100s of Å apart.
-                // Each sphere sits at the actual (recentered) residue position,
-                // honestly showing that residues did not fold into a compact peptide.
                 for (var i=0; i<seq.length; i++) {
                     var col = AA_COLOR[seq[i]] || '#9ca3af';
-                    viewer.setStyle(
-                        { chain: 'A', resi: i+1 },
-                        { sphere: { color: col, radius: 0.6, opacity: 0.80 } }
-                    );
+                    viewer.setStyle({ chain: 'A', resi: i+1 }, {
+                        sphere: { color: col, radius: 0.6, opacity: 0.80 }
+                    });
                 }
-                // Focus on target protein; scattered A residues visible as far spheres
                 viewer.zoomTo({ chain: 'B' });
             }
- 
             viewer.spin('y', 0.7);
             viewer.render();
         }
- 
+
         function addScatteredOverlay(canvasId) {
             var el = document.getElementById(canvasId);
             if (!el) return;
@@ -908,7 +851,7 @@ loop_
             d.textContent = '⚠ Non-compact — residues scattered in space (failed generation)';
             el.appendChild(d);
         }
- 
+
         function renderSeqLabel(id, seq) {
             var el = document.getElementById(id);
             if (!el) return;
@@ -919,16 +862,13 @@ loop_
             }
             el.innerHTML = html;
         }
- 
-        // A 27-residue peptide in compact fold: max CA-CA distance < 120 Å
-        // Degenerate outputs from diffusion failure: typically > 120 Å spread
+
         var COMPACT_THRESHOLD = 120;
- 
-        function initViewer(entry) {
+
+        function initUniMoMoViewer(entry) {
             var el = document.getElementById(entry.canvasId);
-            if (!el || typeof $3Dmol === 'undefined') return;
+            if (!el) return;
             var viewer = $3Dmol.createViewer(el, { backgroundColor: '#060d1a', antialias: true });
- 
             fetch(entry.pdb)
                 .then(function(r) {
                     if (!r.ok) throw new Error('PDB not found: ' + entry.pdb);
@@ -938,81 +878,55 @@ loop_
                     var norm = normalizePDB(raw);
                     var spread = measureSpread(norm);
                     var isCompact = (spread < COMPACT_THRESHOLD);
- 
                     viewer.addModel(norm, 'pdb');
                     renderViewer(viewer, entry.seq, isCompact);
- 
-                    if (!isCompact) {
-                        addScatteredOverlay(entry.canvasId);
-                    }
+                    if (!isCompact) addScatteredOverlay(entry.canvasId);
                 })
-                .catch(function(err) {
-                    console.warn(err.message);
-                });
- 
+                .catch(function(err) { console.warn(err.message); });
             renderSeqLabel(entry.seqId, entry.seq);
         }
- 
+
         var ENTRIES = [
-            {
-                canvasId: 'unimomo-manifold',
-                seqId:    'seq-manifold',
-                seq:      'KQILRESQEPDYSTPDNDENFQQNFVR',
-                pdb:      './manifoldcache_unimomo.pdb'
-            },
-            {
-                canvasId: 'unimomo-deepcache',
-                seqId:    'seq-deepcache',
-                seq:      'VVQVVVTVVTVVVVQVVVVVVVVVVVV',
-                pdb:      './deepcache_unimomo.pdb'
-            },
-            {
-                canvasId: 'unimomo-smoothcache',
-                seqId:    'seq-smoothcache',
-                seq:      'QVVFVQQVVFQVQQVQVVVVVFVFFVQ',
-                pdb:      './smoothcache_unimomo.pdb'
-            }
+            { canvasId: 'unimomo-manifold',   seqId: 'seq-manifold',   seq: 'KQILRESQEPDYSTPDNDENFQQNFVR', pdb: './manifoldcache_unimomo.pdb' },
+            { canvasId: 'unimomo-deepcache',  seqId: 'seq-deepcache',  seq: 'VVQVVVTVVTVVVVQVVVVVVVVVVVV', pdb: './deepcache_unimomo.pdb'     },
+            { canvasId: 'unimomo-smoothcache',seqId: 'seq-smoothcache',seq: 'QVVFVQQVVFQVQQVQVVVVVFVFFVQ', pdb: './smoothcache_unimomo.pdb'    }
         ];
- 
-        window.addEventListener('load', function() { ENTRIES.forEach(initViewer); });
+
+        waitFor3Dmol(function() {
+            ENTRIES.forEach(initUniMoMoViewer);
+        });
     })();
     </script>
 
-    <!-- ============================================================ -->
-    <!-- ROW: DiT-MC Molecular Conformer Generation                  -->
-    <!-- ============================================================ -->
+    <!-- ROW: DiT-MC Molecular Conformer Generation -->
     <div class="section-title">DiT-MC — Molecular Conformer Generation (GEOM-DRUGS Benchmark)</div>
     <div class="demo-container" style="grid-template-columns: repeat(3, 1fr);">
- 
+
         <div class="viewer-card">
             <div class="canvas-wrapper" id="ditmc-manifold" style="min-height: 320px;"></div>
             <div class="caption">ManifoldCache (Ours)</div>
             <div class="sub-caption">C[C@@]12[C@H](O)CO[C@@H]1[C@@H]2O · conformer 1 · Drag to rotate, scroll to zoom</div>
         </div>
- 
+
         <div class="viewer-card">
             <div class="canvas-wrapper" id="ditmc-pfabc" style="min-height: 320px;"></div>
             <div class="caption">PF-ABC</div>
             <div class="sub-caption">C[C@@]12[C@H](O)CO[C@@H]1[C@@H]2O · conformer 1 · Drag to rotate, scroll to zoom</div>
         </div>
- 
+
         <div class="viewer-card">
             <div class="canvas-wrapper" id="ditmc-teacache" style="min-height: 320px;"></div>
             <div class="caption">TeaCache</div>
             <div class="sub-caption">C[C@@]12[C@H](O)CO[C@@H]1[C@@H]2O · conformer 1 · Drag to rotate, scroll to zoom</div>
         </div>
- 
+
     </div>
- 
+
     <script>
     (function () {
-        // One conformer per method — embedded directly (no fetch/CORS issues)
-        // Molecule: C[C@@]12[C@H](O)CO[C@@H]1[C@@H]2O
-        // Conformer coords differ per method (extracted from pred_mols.pkl)
- 
         var SDF_MANIFOLD = `
      RDKit          3D
- 
+
  19 20  0  0  0  0  0  0  0  0999 V2000
    -0.6879   -1.3929   -1.4720 C   0  0  0  0  0  0  0  0  0  0  0  0
    -0.2991   -0.3546   -0.4474 C   0  0  1  0  0  0  0  0  0  0  0  0
@@ -1055,7 +969,7 @@ loop_
  14 15  1  0
 M  END
 $$$$`;
- 
+
         var SDF_PFABC = `
      RDKit          3D
  19 20  0  0  0  0  0  0  0  0999 V2000
@@ -1100,7 +1014,7 @@ $$$$`;
  14 15  1  0
 M  END
 $$$$`;
- 
+
         var SDF_TEACACHE = `
      RDKit          3D
  19 20  0  0  0  0  0  0  0  0999 V2000
@@ -1145,43 +1059,32 @@ $$$$`;
  14 15  1  0
 M  END
 $$$$`;
- 
+
         var VIEWERS = [
             { id: 'ditmc-manifold', sdf: SDF_MANIFOLD },
             { id: 'ditmc-pfabc',    sdf: SDF_PFABC    },
             { id: 'ditmc-teacache', sdf: SDF_TEACACHE  },
         ];
- 
+
         function initViewer(v) {
-        var el = document.getElementById(v.id);
-        if (!el) return;
-        var viewer = $3Dmol.createViewer(el, { backgroundColor: '#060d1a', antialias: true });
-        viewer.addModel(v.sdf, 'sdf');
-        viewer.setStyle({}, {
-            stick:  { radius: 0.14, colorscheme: 'Jmol' },
-            sphere: { scale: 0.26, colorscheme: 'Jmol' }
-        });
-        viewer.zoomTo();
-        viewer.spin('y', 0.8);
-        viewer.render();
-    }
-
-    function waitFor3Dmol(callback, tries) {
-        tries = tries || 0;
-        if (typeof $3Dmol !== 'undefined') {
-            callback();
-        } else if (tries < 50) {
-            setTimeout(function () { waitFor3Dmol(callback, tries + 1); }, 100);
-        } else {
-            console.warn('3Dmol never loaded');
+            var el = document.getElementById(v.id);
+            if (!el) return;
+            var viewer = $3Dmol.createViewer(el, { backgroundColor: '#060d1a', antialias: true });
+            viewer.addModel(v.sdf, 'sdf');
+            viewer.setStyle({}, {
+                stick:  { radius: 0.14, colorscheme: 'Jmol' },
+                sphere: { scale: 0.26, colorscheme: 'Jmol' }
+            });
+            viewer.zoomTo();
+            viewer.spin('y', 0.8);
+            viewer.render();
         }
-    }
 
-    waitFor3Dmol(function () {
-        VIEWERS.forEach(initViewer);
-    });
-})();
-</script>
-   
+        waitFor3Dmol(function() {
+            VIEWERS.forEach(initViewer);
+        });
+    })();
+    </script>
+
 </body>
 </html>
