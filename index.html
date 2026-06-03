@@ -212,8 +212,6 @@
 
         nvManifold.broadcastTo([nvDeepcache], { "2d": false, "3d": true });
         nvDeepcache.broadcastTo([nvManifold], { "2d": false, "3d": true });
-        nvManifold.setZoom(1.5);
-        nvDeepcache.setZoom(1.5);
 
         let angle = 0;
         function rotateVolumes() {
@@ -225,6 +223,8 @@
             requestAnimationFrame(rotateVolumes);
         }
         rotateVolumes();
+        nvManifold.setZoom(1.5);
+        nvDeepcache.setZoom(1.5);
     </script>
 
     <!-- ROW 3: 3D Molecular Visualization -->
