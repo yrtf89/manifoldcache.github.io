@@ -173,11 +173,15 @@
         nvManifold.setSliceType(nvManifold.sliceTypeRender);
         await nvManifold.attachTo("canvas-manifold");
         await nvManifold.loadVolumes(volumeManifold);
+        nvManifold.scene.volScaleMultiplier = 1.6;
+        nvManifold.drawScene();
 
         const nvDeepcache = new Niivue({ isResizeCanvas: true });
         nvDeepcache.setSliceType(nvDeepcache.sliceTypeRender);
         await nvDeepcache.attachTo("canvas-deepcache");
         await nvDeepcache.loadVolumes(volumeDeepcache);
+        nvDeepcache.scene.volScaleMultiplier = 1.6;
+        nvDeepcache.drawScene();
 
         nvManifold.broadcastTo([nvDeepcache], { "2d": false, "3d": true });
         nvDeepcache.broadcastTo([nvManifold], { "2d": false, "3d": true });
