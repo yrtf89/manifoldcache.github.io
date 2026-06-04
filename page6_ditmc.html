@@ -1,1 +1,229 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ManifoldCache — 6: DiT-MC</title>
+    <style>
+        canvas{will-change:transform;transform:translateZ(0);}*{box-sizing:border-box;}
+        body{margin:0;padding:20px;background:#0f172a;color:#f8fafc;font-family:system-ui,-apple-system,sans-serif;display:flex;flex-direction:column;align-items:center;min-height:100vh;}
+        h1{font-size:2.2rem;font-weight:700;margin:0 0 5px 0;text-align:center;background:linear-gradient(to right,#38bdf8,#818cf8);-webkit-background-clip:text;-webkit-text-fill-color:transparent;}
+        .subtitle{font-size:1.1rem;color:#94a3b8;margin-bottom:14px;text-align:center;}
+        .nav-bar{display:flex;gap:6px;margin-bottom:24px;align-items:center;flex-wrap:wrap;justify-content:center;background:#1e293b;border:1px solid #334155;padding:8px 14px;border-radius:10px;max-width:1400px;width:100%;}
+        .nav-btn{display:flex;align-items:center;gap:5px;background:transparent;border:1px solid transparent;color:#64748b;padding:5px 11px;border-radius:6px;font-size:0.78rem;cursor:pointer;text-decoration:none;transition:all .18s;white-space:nowrap;}
+        .nav-btn.active{background:#1e3a5f;color:#38bdf8;border-color:#38bdf8;cursor:default;}
+        .nav-btn:not(.active):hover{color:#38bdf8;border-color:#38bdf8;background:#162032;}
+        .nav-divider{width:1px;height:20px;background:#334155;flex-shrink:0;}
+        .section-title{font-size:1.15rem;font-weight:600;margin:20px 0 12px 0;color:#38bdf8;width:100%;max-width:1400px;border-bottom:1px solid #334155;padding-bottom:5px;}
+        .demo-container{display:grid;grid-template-columns:repeat(3,1fr);gap:20px;width:100%;max-width:1400px;}
+        .viewer-card{background:#1e293b;border-radius:12px;padding:15px;box-shadow:0 10px 15px -3px rgba(0,0,0,.3);border:1px solid #334155;display:flex;flex-direction:column;}
+        .canvas-wrapper{flex-grow:1;width:100%;position:relative;background:#000;border-radius:8px;overflow:hidden;}
+        canvas{width:100%!important;height:100%!important;display:block;}
+        .caption{margin-top:12px;text-align:center;font-size:1rem;font-weight:600;color:#e2e8f0;}
+        .sub-caption{font-size:.82rem;color:#64748b;margin-top:3px;text-align:center;}
+        .page-footer-nav{display:flex;justify-content:space-between;align-items:center;width:100%;max-width:1400px;margin:32px 0 12px 0;gap:12px;}
+        .footer-nav-btn{display:flex;align-items:center;gap:8px;background:#1e293b;border:1px solid #334155;color:#64748b;padding:10px 20px;border-radius:8px;font-size:.88rem;font-weight:600;text-decoration:none;transition:all .18s;}
+        .footer-nav-btn:hover{border-color:#38bdf8;color:#38bdf8;background:#162032;}
+        .footer-nav-btn.next{background:#1e3a5f;border-color:#38bdf8;color:#38bdf8;}
+        .footer-nav-btn.next:hover{background:#1e4a80;}
+        @media(max-width:900px){.demo-container{grid-template-columns:1fr;}}
+    </style>
+</head>
+<body>
+<h1>ManifoldCache</h1>
+<div class="subtitle">Training-Free Diffusion Acceleration via Constraint Manifold Caching</div>
+<nav class="nav-bar">
+    <a class="nav-btn" href="index.html">1 · 🧠 Brain &amp; Lyra</a>
+    <div class="nav-divider"></div>
+    <a class="nav-btn" href="page2_molecules.html">2 · ⚗️ Molecules</a>
+    <div class="nav-divider"></div>
+    <a class="nav-btn" href="page3_crystals.html">3 · 💎 Crystals</a>
+    <div class="nav-divider"></div>
+    <a class="nav-btn" href="page4_proteins.html">4 · 🧬 Proteins</a>
+    <div class="nav-divider"></div>
+    <a class="nav-btn" href="page5_unimomo.html">5 · 🔬 UniMoMo</a>
+    <div class="nav-divider"></div>
+    <span class="nav-btn active">6 · ⚙️ DiT-MC</span>
+</nav>
 
+<div class="section-title">DiT-MC — Molecular Conformer Generation with Diffusion Transformer</div>
+<div class="demo-container">
+    <div class="viewer-card">
+        <div class="canvas-wrapper" id="ditmc-0" style="min-height:360px;"></div>
+        <div class="caption">ManifoldCache (Ours)</div>
+        <div class="sub-caption">High-fidelity geometric optimization · Drag to rotate, scroll to zoom</div>
+    </div>
+    <div class="viewer-card">
+        <div class="canvas-wrapper" id="ditmc-1" style="min-height:360px;"></div>
+        <div class="caption">PF_ABC</div>
+        <div class="sub-caption">Standard approximation sampling · Drag to rotate, scroll to zoom</div>
+    </div>
+    <div class="viewer-card">
+        <div class="canvas-wrapper" id="ditmc-2" style="min-height:360px;"></div>
+        <div class="caption">TeaCache</div>
+        <div class="sub-caption">Mismatched trajectory cache baseline · Drag to rotate, scroll to zoom</div>
+    </div>
+</div>
+
+<div class="page-footer-nav">
+    <a class="footer-nav-btn" href="page5_unimomo.html"><span style="font-size:1.1em">‹</span> 5 · UniMoMo</a>
+    <a class="footer-nav-btn next" href="index.html">↩ Back to Start</a>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/3Dmol/2.1.0/3Dmol-min.js"></script>
+<script>
+const SDFS = [
+`
+ RDKit          3D
+
+ 19 20  0  0  0  0  0  0  0  0999 V2000
+   -0.6879   -1.3929   -1.4720 C   0  0  0  0  0  0  0  0  0  0  0  0
+   -0.2991   -0.3546   -0.4474 C   0  0  1  0  0  0  0  0  0  0  0  0
+   -0.6347    1.1086   -0.5314 C   0  0  1  0  0  0  0  0  0  0  0  0
+   -1.3264    0.2404    0.4840 C   0  0  2  0  0  0  0  0  0  0  0  0
+   -1.0658    0.4235    1.8415 O   0  0  0  0  0  0  0  0  0  0  0  0
+   -0.6782    1.2952    1.9581 H   0  0  0  0  0  0  0  0  0  0  0  0
+   -2.3642   -0.0312    0.3029 H   0  0  0  0  0  0  0  0  0  0  0  0
+   -1.1724    1.5707   -1.3507 H   0  0  0  0  0  0  0  0  0  0  0  0
+    0.4061    1.8966   -0.0369 O   0  0  0  0  0  0  0  0  0  0  0  0
+    1.4746    1.0635    0.3883 C   0  0  0  0  0  0  0  0  0  0  0  0
+    1.6748    1.2261    1.4538 H   0  0  0  0  0  0  0  0  0  0  0  0
+    2.3759    1.3597   -0.1596 H   0  0  0  0  0  0  0  0  0  0  0  0
+    1.1100   -0.4193    0.1402 C   0  0  1  0  0  0  0  0  0  0  0  0
+    1.2126   -1.2153    1.2893 O   0  0  0  0  0  0  0  0  0  0  0  0
+    0.5134   -0.9405    1.9013 H   0  0  0  0  0  0  0  0  0  0  0  0
+    1.7950   -0.8787   -0.5837 H   0  0  0  0  0  0  0  0  0  0  0  0
+   -0.0280   -1.3222   -2.3394 H   0  0  0  0  0  0  0  0  0  0  0  0
+   -0.5890   -2.3863   -1.0392 H   0  0  0  0  0  0  0  0  0  0  0  0
+   -1.7169   -1.2433   -1.7989 H   0  0  0  0  0  0  0  0  0  0  0  0
+  2  1  1  6
+  1 17  1  0
+  1 18  1  0
+  1 19  1  0
+  2  3  1  0
+  2  4  1  0
+  2 13  1  0
+  3  4  1  0
+  3  8  1  6
+  3  9  1  0
+  4  5  1  0
+  4  7  1  1
+  5  6  1  0
+  9 10  1  0
+ 10 11  1  0
+ 10 12  1  0
+ 10 13  1  0
+ 13 14  1  0
+ 13 16  1  6
+ 14 15  1  0
+M  END
+$$$$`,
+`
+ RDKit          3D
+
+ 19 20  0  0  0  0  0  0  0  0999 V2000
+   -2.0466    0.3278    0.0238 C   0  0  0  0  0  0  0  0  0  0  0  0
+   -0.5581    0.1304   -0.1007 C   0  0  1  0  0  0  0  0  0  0  0  0
+    0.1522   -0.3497   -1.3515 C   0  0  1  0  0  0  0  0  0  0  0  0
+    0.2786    1.0902   -0.9208 C   0  0  2  0  0  0  0  0  0  0  0  0
+    1.5111    1.5792   -0.4768 O   0  0  0  0  0  0  0  0  0  0  0  0
+    1.3589    2.4269   -0.0268 H   0  0  0  0  0  0  0  0  0  0  0  0
+   -0.2847    1.8015   -1.5215 H   0  0  0  0  0  0  0  0  0  0  0  0
+   -0.3692   -0.5797   -2.2739 H   0  0  0  0  0  0  0  0  0  0  0  0
+    1.1658   -1.2514   -1.0474 O   0  0  0  0  0  0  0  0  0  0  0  0
+    1.1132   -1.5769    0.3245 C   0  0  0  0  0  0  0  0  0  0  0  0
+    0.7216   -2.6008    0.4428 H   0  0  0  0  0  0  0  0  0  0  0  0
+    2.1166   -1.5433    0.7323 H   0  0  0  0  0  0  0  0  0  0  0  0
+    0.1873   -0.5605    1.0537 C   0  0  1  0  0  0  0  0  0  0  0  0
+    0.8748    0.3172    1.8999 O   0  0  0  0  0  0  0  0  0  0  0  0
+    1.5686    0.7429    1.3483 H   0  0  0  0  0  0  0  0  0  0  0  0
+   -0.5267   -1.0755    1.7040 H   0  0  0  0  0  0  0  0  0  0  0  0
+   -2.5428   -0.6357    0.1632 H   0  0  0  0  0  0  0  0  0  0  0  0
+   -2.2675    0.9558    0.8909 H   0  0  0  0  0  0  0  0  0  0  0  0
+   -2.4530    0.8016   -0.8640 H   0  0  0  0  0  0  0  0  0  0  0  0
+  2  1  1  6
+  1 17  1  0
+  1 18  1  0
+  1 19  1  0
+  2  3  1  0
+  2  4  1  0
+  2 13  1  0
+  3  4  1  0
+  3  8  1  6
+  3  9  1  0
+  4  5  1  0
+  4  7  1  6
+  5  6  1  0
+  9 10  1  0
+ 10 11  1  0
+ 10 12  1  0
+ 10 13  1  0
+ 13 14  1  0
+ 13 16  1  1
+ 14 15  1  0
+M  END
+$$$$`,
+`
+ RDKit          3D
+
+ 19 20  0  0  0  0  0  0  0  0999 V2000
+   -2.0483    0.2097    0.1449 C   0  0  0  0  0  0  0  0  0  0  0  0
+   -0.5581    0.1186   -0.0580 C   0  0  1  0  0  0  0  0  0  0  0  0
+    0.1174   -0.2428   -1.3681 C   0  0  1  0  0  0  0  0  0  0  0  0
+    0.1730    1.1756   -0.8581 C   0  0  2  0  0  0  0  0  0  0  0  0
+    1.3940    1.7227   -0.4515 O   0  0  0  0  0  0  0  0  0  0  0  0
+    1.2127    2.5051    0.0977 H   0  0  0  0  0  0  0  0  0  0  0  0
+   -0.4651    1.8792   -1.3890 H   0  0  0  0  0  0  0  0  0  0  0  0
+   -0.4341   -0.4540   -2.2767 H   0  0  0  0  0  0  0  0  0  0  0  0
+    1.2020   -1.0894   -1.1595 O   0  0  0  0  0  0  0  0  0  0  0  0
+    1.1646   -1.5602    0.1688 C   0  0  0  0  0  0  0  0  0  0  0  0
+    0.7397   -2.5793    0.1896 H   0  0  0  0  0  0  0  0  0  0  0  0
+    2.1802   -1.5994    0.5502 H   0  0  0  0  0  0  0  0  0  0  0  0
+    0.2826   -0.5979    1.0131 C   0  0  1  0  0  0  0  0  0  0  0  0
+    1.0175    0.2584    1.8414 O   0  0  0  0  0  0  0  0  0  0  0  0
+    1.6614    0.7211    1.2525 H   0  0  0  0  0  0  0  0  0  0  0  0
+   -0.3697   -1.1558    1.6927 H   0  0  0  0  0  0  0  0  0  0  0  0
+   -2.4748   -0.7892    0.2513 H   0  0  0  0  0  0  0  0  0  0  0  0
+   -2.2677    0.7747    1.0536 H   0  0  0  0  0  0  0  0  0  0  0  0
+   -2.5275    0.7031   -0.6949 H   0  0  0  0  0  0  0  0  0  0  0  0
+  2  1  1  6
+  1 17  1  0
+  1 18  1  0
+  1 19  1  0
+  2  3  1  0
+  2  4  1  0
+  2 13  1  0
+  3  4  1  0
+  3  8  1  6
+  3  9  1  0
+  4  5  1  0
+  4  7  1  6
+  5  6  1  0
+  9 10  1  0
+ 10 11  1  0
+ 10 12  1  0
+ 10 13  1  0
+ 13 14  1  0
+ 13 16  1  1
+ 14 15  1  0
+M  END
+$$$$`
+];
+
+function wait3Dmol(cb,n=0){if(typeof $3Dmol!=='undefined')return cb();if(n>50)return;setTimeout(()=>wait3Dmol(cb,n+1),200);}
+
+function initDitmc(idx){
+    wait3Dmol(()=>{
+        const el=document.getElementById('ditmc-'+idx);
+        const v=$3Dmol.createViewer(el,{backgroundColor:'#060d1a',antialias:true});
+        v.addModel(SDFS[idx],'sdf');
+        v.setStyle({},{stick:{radius:0.15,colorscheme:'Jmol'},sphere:{radius:0.42,colorscheme:'Jmol'}});
+        v.zoomTo();v.spin('y',0.3);v.render();
+    });
+}
+
+setTimeout(()=>initDitmc(0), 100);
+setTimeout(()=>initDitmc(1), 500);
+setTimeout(()=>initDitmc(2), 900);
+</script>
+</body></html>
