@@ -1,1 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ManifoldCache — 4: Proteina Proteins</title>
+    <style>
+        canvas{will-change:transform;transform:translateZ(0);}*{box-sizing:border-box;}
+        body{margin:0;padding:20px;background:#0f172a;color:#f8fafc;font-family:system-ui,-apple-system,sans-serif;display:flex;flex-direction:column;align-items:center;min-height:100vh;}
+        h1{font-size:2.2rem;font-weight:700;margin:0 0 5px 0;text-align:center;background:linear-gradient(to right,#38bdf8,#818cf8);-webkit-background-clip:text;-webkit-text-fill-color:transparent;}
+        .subtitle{font-size:1.1rem;color:#94a3b8;margin-bottom:14px;text-align:center;}
+        .nav-bar{display:flex;gap:6px;margin-bottom:24px;align-items:center;flex-wrap:wrap;justify-content:center;background:#1e293b;border:1px solid #334155;padding:8px 14px;border-radius:10px;max-width:1400px;width:100%;}
+        .nav-btn{display:flex;align-items:center;gap:5px;background:transparent;border:1px solid transparent;color:#64748b;padding:5px 11px;border-radius:6px;font-size:0.78rem;cursor:pointer;text-decoration:none;transition:all .18s;white-space:nowrap;}
+        .nav-btn.active{background:#1e3a5f;color:#38bdf8;border-color:#38bdf8;cursor:default;}
+        .nav-btn:not(.active):hover{color:#38bdf8;border-color:#38bdf8;background:#162032;}
+        .nav-divider{width:1px;height:20px;background:#334155;flex-shrink:0;}
+        .section-title{font-size:1.15rem;font-weight:600;margin:20px 0 12px 0;color:#38bdf8;width:100%;max-width:1400px;border-bottom:1px solid #334155;padding-bottom:5px;}
+        .demo-container{display:grid;grid-template-columns:repeat(3,1fr);gap:20px;width:100%;max-width:1400px;}
+        .viewer-card{background:#1e293b;border-radius:12px;padding:15px;box-shadow:0 10px 15px -3px rgba(0,0,0,.3);border:1px solid #334155;display:flex;flex-direction:column;}
+        .canvas-wrapper{flex-grow:1;width:100%;position:relative;background:#000;border-radius:8px;overflow:hidden;}
+        canvas{width:100%!important;height:100%!important;display:block;}
+        .caption{margin-top:12px;text-align:center;font-size:1rem;font-weight:600;color:#e2e8f0;}
+        .sub-caption{font-size:.82rem;color:#64748b;margin-top:3px;text-align:center;}
+        .page-footer-nav{display:flex;justify-content:space-between;align-items:center;width:100%;max-width:1400px;margin:32px 0 12px 0;gap:12px;}
+        .footer-nav-btn{display:flex;align-items:center;gap:8px;background:#1e293b;border:1px solid #334155;color:#64748b;padding:10px 20px;border-radius:8px;font-size:.88rem;font-weight:600;text-decoration:none;transition:all .18s;}
+        .footer-nav-btn:hover{border-color:#38bdf8;color:#38bdf8;background:#162032;}
+        .footer-nav-btn.next{background:#1e3a5f;border-color:#38bdf8;color:#38bdf8;}
+        .footer-nav-btn.next:hover{background:#1e4a80;}
+        @media(max-width:900px){.demo-container{grid-template-columns:1fr;}}
+    </style>
+</head>
+<body>
+<h1>ManifoldCache</h1>
+<div class="subtitle">Training-Free Diffusion Acceleration via Constraint Manifold Caching</div>
+<nav class="nav-bar">
+    <a class="nav-btn" href="index.html">1 · 🧠 Brain &amp; Lyra</a>
+    <div class="nav-divider"></div>
+    <a class="nav-btn" href="page2_molecules.html">2 · ⚗️ Molecules</a>
+    <div class="nav-divider"></div>
+    <a class="nav-btn" href="page3_crystals.html">3 · 💎 Crystals</a>
+    <div class="nav-divider"></div>
+    <span class="nav-btn active">4 · 🧬 Proteins</span>
+    <div class="nav-divider"></div>
+    <a class="nav-btn" href="page5_unimomo.html">5 · 🔬 UniMoMo</a>
+    <div class="nav-divider"></div>
+    <a class="nav-btn" href="page6_ditmc.html">6 · ⚙️ DiT-MC</a>
+</nav>
 
+<div class="section-title">Proteina — Foundation Model for Protein Backbone Generation</div>
+<div class="demo-container">
+    <div class="viewer-card">
+        <div class="canvas-wrapper" id="prot-1" data-file="./manifoldcache.pdb" style="min-height:360px;"></div>
+        <div class="caption">ManifoldCache (Ours)</div>
+        <div class="sub-caption">manifoldcache.pdb · Drag to rotate, scroll to zoom</div>
+    </div>
+    <div class="viewer-card">
+        <div class="canvas-wrapper" id="prot-2" data-file="./fora.pdb" style="min-height:360px;"></div>
+        <div class="caption">Fora</div>
+        <div class="sub-caption">fora.pdb · Drag to rotate, scroll to zoom</div>
+    </div>
+    <div class="viewer-card">
+        <div class="canvas-wrapper" id="prot-3" data-file="./smoothcache.pdb" style="min-height:360px;"></div>
+        <div class="caption">SmoothCache</div>
+        <div class="sub-caption">smoothcache.pdb · Drag to rotate, scroll to zoom</div>
+    </div>
+</div>
+
+<div class="page-footer-nav">
+    <a class="footer-nav-btn" href="page3_crystals.html"><span style="font-size:1.1em">‹</span> 3 · Crystals</a>
+    <a class="footer-nav-btn next" href="page5_unimomo.html">5 · UniMoMo <span style="font-size:1.1em">›</span></a>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/3Dmol/2.1.0/3Dmol-min.js"></script>
+<script>
+function wait3Dmol(cb,n=0){if(typeof $3Dmol!=='undefined')return cb();if(n>50)return;setTimeout(()=>wait3Dmol(cb,n+1),200);}
+
+function initProt(id){
+    const el=document.getElementById(id);
+    const file=el.dataset.file;
+    wait3Dmol(()=>{
+        const v=$3Dmol.createViewer(el,{backgroundColor:'#060d1a',antialias:true});
+        fetch(file)
+            .then(r=>{if(!r.ok)throw 0;return r.text();})
+            .then(pdb=>{
+                v.addModel(pdb,'pdb');
+                v.setStyle({},{cartoon:{color:'spectrum',thickness:0.4}});
+                v.addStyle({atom:['CA','N','C','O']},{stick:{radius:0.08,colorscheme:'Jmol'}});
+                v.zoomTo();v.spin('y',0.3);v.render();
+            }).catch(()=>{});
+    });
+}
+
+setTimeout(()=>initProt('prot-1'), 100);
+setTimeout(()=>initProt('prot-2'), 500);
+setTimeout(()=>initProt('prot-3'), 900);
+</script>
+</body></html>
