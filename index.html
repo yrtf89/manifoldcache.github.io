@@ -6,12 +6,13 @@
     <title>ManifoldCache — Part 1: Brain & Lyra</title>
     <style>
         canvas { will-change: transform; transform: translateZ(0); }
+        * { box-sizing: border-box; }
         body {
             margin: 0; padding: 20px;
             background-color: #0f172a; color: #f8fafc;
             font-family: system-ui, -apple-system, sans-serif;
             display: flex; flex-direction: column; align-items: center;
-            min-height: 100vh; box-sizing: border-box;
+            min-height: 100vh;
         }
         h1 {
             font-size: 2.2rem; font-weight: 700; margin: 0 0 5px 0;
@@ -19,19 +20,34 @@
             background: linear-gradient(to right, #38bdf8, #818cf8);
             -webkit-background-clip: text; -webkit-text-fill-color: transparent;
         }
-        .subtitle { font-size: 1.1rem; color: #94a3b8; margin-bottom: 10px; text-align: center; }
+        .subtitle { font-size: 1.1rem; color: #94a3b8; margin-bottom: 14px; text-align: center; }
+
+        /* ── Nav bar ── */
         .nav-bar {
-            display: flex; gap: 12px; margin-bottom: 24px;
+            display: flex; gap: 10px; margin-bottom: 24px; align-items: center;
+            background: #1e293b; border: 1px solid #334155;
+            padding: 8px 16px; border-radius: 10px;
         }
         .nav-btn {
-            background: #1e293b; border: 1px solid #334155; color: #94a3b8;
-            padding: 7px 18px; border-radius: 6px; font-size: 0.85rem;
-            cursor: pointer; text-decoration: none; transition: all 0.2s;
+            display: flex; align-items: center; gap: 6px;
+            background: transparent; border: 1px solid transparent;
+            color: #64748b; padding: 6px 14px; border-radius: 6px;
+            font-size: 0.85rem; cursor: pointer; text-decoration: none;
+            transition: all 0.18s; white-space: nowrap;
         }
-        .nav-btn.active { background: #1e3a5f; color: #38bdf8; border-color: #38bdf8; }
-        .nav-btn:hover { color: #38bdf8; border-color: #38bdf8; }
+        .nav-btn.active {
+            background: #1e3a5f; color: #38bdf8; border-color: #38bdf8;
+            cursor: default;
+        }
+        .nav-btn:not(.active):hover { color: #38bdf8; border-color: #38bdf8; background: #162032; }
+        .nav-divider { width: 1px; height: 24px; background: #334155; }
+        .nav-pill {
+            font-size: 0.72rem; background: #0f172a; color: #475569;
+            border-radius: 20px; padding: 2px 8px; border: 1px solid #1e293b;
+        }
+
         .section-title {
-            font-size: 1.2rem; font-weight: 600; margin: 24px 0 12px 0;
+            font-size: 1.15rem; font-weight: 600; margin: 22px 0 12px 0;
             color: #38bdf8; width: 100%; max-width: 1400px;
             border-bottom: 1px solid #334155; padding-bottom: 5px;
         }
@@ -66,12 +82,12 @@
         }
         @keyframes spin { to { transform: rotate(360deg); } }
 
-        /* ── Stride chart section ── */
+        /* ── Stride section ── */
         .stride-section {
             width: 100%; max-width: 1400px;
             display: grid; grid-template-columns: 1fr 1fr; gap: 20px;
             background-color: #1e293b; padding: 20px; border-radius: 12px;
-            border: 1px solid #334155; box-sizing: border-box;
+            border: 1px solid #334155;
         }
         .chart-card {
             background: #0f172a; border-radius: 8px; padding: 14px;
@@ -89,10 +105,28 @@
         tbody td { padding: 6px 8px; font-size: 0.8rem; border-bottom: 1px solid #1e293b; }
         tbody tr:hover { background: #1e293b; }
 
+        /* ── Page footer nav ── */
+        .page-footer-nav {
+            display: flex; justify-content: flex-end;
+            width: 100%; max-width: 1400px;
+            margin: 32px 0 12px 0;
+        }
+        .footer-nav-btn {
+            display: flex; align-items: center; gap: 8px;
+            background: #1e3a5f; border: 1px solid #38bdf8;
+            color: #38bdf8; padding: 10px 20px; border-radius: 8px;
+            font-size: 0.9rem; font-weight: 600; text-decoration: none;
+            transition: background 0.18s;
+        }
+        .footer-nav-btn:hover { background: #1e4a80; }
+        .footer-nav-btn.prev { background: #1e293b; border-color: #334155; color: #64748b; }
+        .footer-nav-btn.prev:hover { border-color: #38bdf8; color: #38bdf8; }
+
         @media (max-width: 900px) {
             .demo-container { grid-template-columns: 1fr; }
             .stride-section { grid-template-columns: 1fr; }
             .viewer-card.volume-height { height: 55vw; min-height: 280px; }
+            .nav-bar { flex-wrap: wrap; }
         }
     </style>
 </head>
@@ -102,13 +136,16 @@
 <div class="subtitle">Training-Free Diffusion Acceleration via Constraint Manifold Caching</div>
 
 <nav class="nav-bar">
-    <span class="nav-btn active">Part 1 — Brain · Lyra · Table</span>
-    <a class="nav-btn" href="page2_molecules.html">Part 2 — Molecules · Crystals · Proteins ›</a>
+    <span class="nav-pill">Page 1 of 2</span>
+    <div class="nav-divider"></div>
+    <span class="nav-btn active">🧠 Brain · Lyra · Stride</span>
+    <div class="nav-divider"></div>
+    <a class="nav-btn" href="page2_molecules.html">⚗️ Molecules · Crystals · Proteins ›</a>
 </nav>
 
-<!-- ══════════════════════ ROW 1: Brain MRI ══════════════════════ -->
+<!-- ═══════════════════ ROW 1: Brain MRI ═══════════════════ -->
 <div class="section-title">3D Brain MRI Synthesis Comparison (Med-DDPM)</div>
-<div class="demo-container">
+<div class="demo-container" id="nii-section">
     <div class="viewer-card volume-height">
         <div class="canvas-wrapper" id="nii-wrapper-manifold">
             <div class="viewer-loading" id="nii-load-manifold"><div class="spinner"></div></div>
@@ -127,7 +164,7 @@
     </div>
 </div>
 
-<!-- ══════════════════════ ROW 2: Lyra Videos ══════════════════════ -->
+<!-- ═══════════════════ ROW 2: Lyra ═══════════════════ -->
 <div class="section-title">Lyra Multi-View Synthesis Comparison</div>
 <div class="demo-container">
     <div class="viewer-card">
@@ -146,15 +183,15 @@
     </div>
 </div>
 
-<!-- ══════════════════════ ROW 3: Stride Chart ══════════════════════ -->
-<div class="section-title">Med-DDPM Cache Stride Profile (ManifoldCache)</div>
+<!-- ═══════════════════ ROW 3: Stride Chart ═══════════════════ -->
+<div class="section-title">Med-DDPM Cache Stride Profile (ManifoldCache) — sorted by depth</div>
 <div class="stride-section">
     <div class="chart-card">
-        <div style="position:relative; width:100%; height:520px;">
-            <canvas id="strideChart" role="img" aria-label="Bar chart of cache stride per UNet block"></canvas>
+        <div style="position:relative; width:100%; height:560px;">
+            <canvas id="strideChart" role="img" aria-label="Bar chart of cache stride per UNet block, sorted by depth"></canvas>
         </div>
         <div class="caption" style="font-size:0.95rem; margin-top:8px;">Visual Stride Spectrum</div>
-        <div class="sub-caption">Deeper feature mappings receive heavier stride caching allocations</div>
+        <div class="sub-caption">Sorted by depth metric · Deeper mappings receive heavier stride allocations</div>
     </div>
     <div class="table-card">
         <table>
@@ -170,18 +207,19 @@
     </div>
 </div>
 
-<!-- ══════════════════════════════════════════════════════════════ -->
-<!-- SCRIPTS                                                        -->
-<!-- ══════════════════════════════════════════════════════════════ -->
+<!-- ═══════════════════ Footer Nav ═══════════════════ -->
+<div class="page-footer-nav">
+    <a class="footer-nav-btn" href="page2_molecules.html">
+        ⚗️ Part 2: Molecules · Crystals · Proteins
+        <span style="font-size:1.1em;">›</span>
+    </a>
+</div>
+
+<!-- ════════════════════════ SCRIPTS ════════════════════════ -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js" defer></script>
 
 <script type="module">
-/* ================================================================
-   NIIVUE — Brain MRI
-   - 15 fps cap (was 20)
-   - 0.12°/frame rotation (was 0.15–0.3)
-   - Pause when tab hidden OR section off-screen
-================================================================ */
+/* ── NiiVue brain MRI ── */
 import { Niivue } from "https://unpkg.com/@niivue/niivue@0.57.0/dist/index.js";
 
 const currentPath = window.location.pathname.substring(0, window.location.pathname.lastIndexOf('/'));
@@ -189,7 +227,6 @@ const rootUrl = `${window.location.origin}${currentPath}`;
 
 const nvM = new Niivue({ isResizeCanvas: true });
 const nvD = new Niivue({ isResizeCanvas: true });
-
 nvM.setSliceType(nvM.sliceTypeRender);
 nvD.setSliceType(nvD.sliceTypeRender);
 
@@ -207,15 +244,12 @@ nvD.broadcastTo([nvM], { "2d": false, "3d": true });
 document.getElementById("nii-load-manifold").style.display = "none";
 document.getElementById("nii-load-deepcache").style.display = "none";
 
-const TARGET_FPS = 15;          // ← reduced from 20
+const TARGET_FPS = 15;
 const FRAME_MS   = 1000 / TARGET_FPS;
-const ROT_STEP   = 0.12;        // ← slower than before
-let   angle      = 0;
-let   lastTime   = 0;
-let   rafId      = null;
-let   niiVisible = false;
+const ROT_STEP   = 0.12;
+let   angle = 0, lastTime = 0, rafId = null, niiVisible = false;
 
-const niiSection = document.querySelector(".demo-container");
+const niiSection = document.getElementById("nii-section");
 const niiObs = new IntersectionObserver(entries => {
     niiVisible = entries[0].isIntersecting;
     if (niiVisible && !rafId) scheduleFrame();
@@ -256,7 +290,7 @@ document.addEventListener("DOMContentLoaded", () => {
     document.querySelectorAll("video[data-src]").forEach(v => vObs.observe(v));
 });
 
-/* ── Stride chart ── */
+/* ── Stride chart — SORTED BY DEPTH ── */
 document.addEventListener("DOMContentLoaded", () => {
     function waitChart(cb, n=0) {
         if (typeof Chart !== 'undefined') return cb();
@@ -264,31 +298,62 @@ document.addEventListener("DOMContentLoaded", () => {
         setTimeout(() => waitChart(cb, n+1), 200);
     }
     waitChart(() => {
+        /* Raw block list with explicit depth values */
         const blocks = [
-            {name:"enc_0 init",depth:0/14},{name:"enc_1 res",depth:1/14},{name:"enc_2 res",depth:2/14},
-            {name:"enc_3 down",depth:3/14},{name:"enc_4 res",depth:4/14},{name:"enc_5 res",depth:5/14},
-            {name:"enc_6 down",depth:6/14},{name:"enc_7 res",depth:7/14},{name:"enc_8 res",depth:8/14},
-            {name:"enc_9 down",depth:9/14},{name:"enc_10 res",depth:10/14},{name:"enc_11 res",depth:11/14},
-            {name:"enc_12 down",depth:12/14},{name:"enc_13 res",depth:13/14},{name:"enc_14 res",depth:14/14},
-            {name:"middle",depth:1.0},
-            {name:"dec_14 res+up",depth:0/14},{name:"dec_13 res",depth:1/14},{name:"dec_12 res",depth:2/14},
-            {name:"dec_11 res+up",depth:3/14},{name:"dec_10 res",depth:4/14},{name:"dec_9 res",depth:5/14},
-            {name:"dec_8 res+up",depth:6/14},{name:"dec_7 res",depth:7/14},{name:"dec_6 res",depth:8/14},
-            {name:"dec_5 res+up",depth:9/14},{name:"dec_4 res",depth:10/14},{name:"dec_3 res",depth:11/14},
-            {name:"dec_2 res",depth:12/14},{name:"dec_1 res",depth:13/14},{name:"dec_0 res",depth:14/14},
+            {name:"enc_0 init",  depth:0/14},
+            {name:"enc_1 res",   depth:1/14},
+            {name:"enc_2 res",   depth:2/14},
+            {name:"enc_3 down",  depth:3/14},
+            {name:"enc_4 res",   depth:4/14},
+            {name:"enc_5 res",   depth:5/14},
+            {name:"enc_6 down",  depth:6/14},
+            {name:"enc_7 res",   depth:7/14},
+            {name:"enc_8 res",   depth:8/14},
+            {name:"enc_9 down",  depth:9/14},
+            {name:"enc_10 res",  depth:10/14},
+            {name:"enc_11 res",  depth:11/14},
+            {name:"enc_12 down", depth:12/14},
+            {name:"enc_13 res",  depth:13/14},
+            {name:"enc_14 res",  depth:14/14},
+            {name:"middle",      depth:1.0},
+            /* decoder: depth runs 0→14 (shallowest to deepest as blocks count up) */
+            {name:"dec_14 res+up", depth:0/14},
+            {name:"dec_13 res",    depth:1/14},
+            {name:"dec_12 res",    depth:2/14},
+            {name:"dec_11 res+up", depth:3/14},
+            {name:"dec_10 res",    depth:4/14},
+            {name:"dec_9 res",     depth:5/14},
+            {name:"dec_8 res+up",  depth:6/14},
+            {name:"dec_7 res",     depth:7/14},
+            {name:"dec_6 res",     depth:8/14},
+            {name:"dec_5 res+up",  depth:9/14},
+            {name:"dec_4 res",     depth:10/14},
+            {name:"dec_3 res",     depth:11/14},
+            {name:"dec_2 res",     depth:12/14},
+            {name:"dec_1 res",     depth:13/14},
+            {name:"dec_0 res",     depth:14/14},
         ];
-        const shallow=2, deep=5;
-        blocks.forEach(b => { b.stride = Math.max(1, Math.floor(shallow + (deep-shallow)*b.depth)); });
 
+        const shallow = 2, deep = 5;
+        blocks.forEach(b => {
+            b.stride = Math.max(1, Math.floor(shallow + (deep - shallow) * b.depth));
+        });
+
+        /* ── Sort ascending by depth, then by name for ties ── */
+        blocks.sort((a, b) => a.depth - b.depth || a.name.localeCompare(b.name));
+
+        /* ── Populate table ── */
         const tbody = document.getElementById("stride-table-rows");
         blocks.forEach(b => {
             const tr = document.createElement("tr");
-            tr.innerHTML = `<td style="font-family:monospace;color:#e2e8f0;">${b.name}</td>
-                            <td style="text-align:right;color:#64748b;font-family:monospace;">${b.depth.toFixed(3)}</td>
-                            <td style="text-align:right;font-weight:600;color:${b.stride>=4?'#818cf8':'#38bdf8'};">${b.stride}</td>`;
+            tr.innerHTML = `
+                <td style="font-family:monospace;color:#e2e8f0;">${b.name}</td>
+                <td style="text-align:right;color:#64748b;font-family:monospace;">${b.depth.toFixed(3)}</td>
+                <td style="text-align:right;font-weight:600;color:${b.stride>=4?'#818cf8':'#38bdf8'};">${b.stride}</td>`;
             tbody.appendChild(tr);
         });
 
+        /* ── Bar chart (y-axis order matches the sorted array) ── */
         const colorFor = s => s>=5?"#818cf8":s>=4?"#6366f1":s>=3?"#3b82f6":"#38bdf8";
         new Chart(document.getElementById("strideChart"), {
             type: "bar",
@@ -301,19 +366,29 @@ document.addEventListener("DOMContentLoaded", () => {
                 }]
             },
             options: {
-                indexAxis: "y", responsive: true, maintainAspectRatio: false,
-                animation: false,   // ← disable animation to reduce CPU on load
+                indexAxis: "y",
+                responsive: true,
+                maintainAspectRatio: false,
+                animation: false,
                 plugins: {
                     legend: { display: false },
                     tooltip: {
-                        backgroundColor:'#1e293b', titleColor:'#38bdf8', bodyColor:'#f8fafc',
-                        borderColor:'#334155', borderWidth:1,
-                        callbacks: { label: c => " Stride: " + c.parsed.x }
+                        backgroundColor:'#1e293b', titleColor:'#38bdf8',
+                        bodyColor:'#f8fafc', borderColor:'#334155', borderWidth:1,
+                        callbacks: { label: c => ` Stride: ${c.parsed.x}` }
                     }
                 },
                 scales: {
-                    x: { beginAtZero:true, ticks:{stepSize:1,color:"#94a3b8"}, grid:{color:"rgba(51,65,85,0.4)"}, title:{display:true,text:"Cache Stride (S)",color:"#94a3b8"} },
-                    y: { ticks:{color:"#94a3b8",font:{size:10,family:"monospace"}}, grid:{display:false} }
+                    x: {
+                        beginAtZero: true,
+                        ticks: { stepSize:1, color:"#94a3b8" },
+                        grid: { color:"rgba(51,65,85,0.4)" },
+                        title: { display:true, text:"Cache Stride (S)", color:"#94a3b8" }
+                    },
+                    y: {
+                        ticks: { color:"#94a3b8", font:{ size:10, family:"monospace" } },
+                        grid: { display:false }
+                    }
                 }
             }
         });
