@@ -8,9 +8,9 @@
         canvas{will-change:transform;transform:translateZ(0);}*{box-sizing:border-box;}
         body{margin:0;padding:20px;background:#0f172a;color:#f8fafc;font-family:system-ui,-apple-system,sans-serif;display:flex;flex-direction:column;align-items:center;min-height:100vh;}
         h1{font-size:2.2rem;font-weight:700;margin:0 0 5px 0;text-align:center;background:linear-gradient(to right,#38bdf8,#818cf8);-webkit-background-clip:text;-webkit-text-fill-color:transparent;}
-        .subtitle{font-size:1.1rem;color:#94a3b8;margin-bottom:14px;text-align:center;}
+        .subtitle{font-size:1.6rem;color:#94a3b8;margin-bottom:14px;text-align:center;}
         .nav-bar{display:flex;gap:6px;margin-bottom:24px;align-items:center;flex-wrap:wrap;justify-content:center;background:#1e293b;border:1px solid #334155;padding:8px 14px;border-radius:10px;max-width:1400px;width:100%;}
-        .nav-btn{display:flex;align-items:center;gap:5px;background:transparent;border:1px solid transparent;color:#64748b;padding:5px 11px;border-radius:6px;font-size:0.78rem;cursor:pointer;text-decoration:none;transition:all .18s;white-space:nowrap;}
+        .nav-btn{display:flex;align-items:center;gap:5px;background:transparent;border:1px solid transparent;color:#64748b;padding:5px 11px;border-radius:6px;font-size:0.98rem;cursor:pointer;text-decoration:none;transition:all .18s;white-space:nowrap;}
         .nav-btn.active{background:#1e3a5f;color:#38bdf8;border-color:#38bdf8;cursor:default;}
         .nav-btn:not(.active):hover{color:#38bdf8;border-color:#38bdf8;background:#162032;}
         .nav-divider{width:1px;height:20px;background:#334155;flex-shrink:0;}
@@ -20,7 +20,7 @@
         .canvas-wrapper{flex-grow:1;width:100%;position:relative;background:#000;border-radius:8px;overflow:hidden;}
         canvas{width:100%!important;height:100%!important;display:block;}
         .caption{margin-top:12px;text-align:center;font-size:1rem;font-weight:600;color:#e2e8f0;}
-        .sub-caption{font-size:.82rem;color:#64748b;margin-top:3px;text-align:center;}
+        .sub-caption{font-size:1.12rem;color:#64748b;margin-top:3px;text-align:center;}
         .page-footer-nav{display:flex;justify-content:space-between;align-items:center;width:100%;max-width:1400px;margin:32px 0 12px 0;gap:12px;}
         .footer-nav-btn{display:flex;align-items:center;gap:8px;background:#1e293b;border:1px solid #334155;color:#64748b;padding:10px 20px;border-radius:8px;font-size:.88rem;font-weight:600;text-decoration:none;transition:all .18s;}
         .footer-nav-btn:hover{border-color:#38bdf8;color:#38bdf8;background:#162032;}
@@ -33,7 +33,7 @@
 <h1>ManifoldCache</h1>
 <div class="subtitle">Training-Free Diffusion Acceleration via Constraint Manifold Caching</div>
 <nav class="nav-bar">
-    <a class="nav-btn" href="index.html">1 · 🧠 Brain &amp; Lyra</a>
+    <a class="nav-btn" href="index.html">1 · 🧠 3D Brain MRI &amp; Lyra</a>
     <div class="nav-divider"></div>
     <span class="nav-btn active">2 · ⚗️ Molecules</span>
     <div class="nav-divider"></div>
@@ -50,18 +50,18 @@
 <div class="demo-container">
     <div class="viewer-card">
         <div class="canvas-wrapper" id="mol-1" style="min-height:320px;"></div>
-        <div class="caption">Method A</div>
-        <div class="sub-caption">OCC(O)C(S)c1cccc(O)c1 · Drag to rotate, scroll to zoom</div>
+        <div class="caption">ManifoldCache</div>
+        <div class="sub-caption">Score: 0.7170 (↑) · Consistency Score: 0.1480 (↑) · Time: 886 secs (↓) · Drag to rotate, scroll to zoom</div>
     </div>
     <div class="viewer-card">
         <div class="canvas-wrapper" id="mol-2" style="min-height:320px;"></div>
-        <div class="caption">Method C</div>
-        <div class="sub-caption">OCC(O)C(S)c1cccc(O)c1 · Drag to rotate, scroll to zoom</div>
+        <div class="caption">FORA</div>
+        <div class="sub-caption">Score: 0.5970 (↑) · Consistency Score: 0.0799 (↑) · Time: 867 secs (↓) · Drag to rotate, scroll to zoom</div>
     </div>
     <div class="viewer-card">
         <div class="canvas-wrapper" id="mol-3" style="min-height:320px;"></div>
-        <div class="caption">Method D</div>
-        <div class="sub-caption">OCC(O)C(S)c1cccc(O)c1 · Drag to rotate, scroll to zoom</div>
+        <div class="caption">ToCa</div>
+        <div class="sub-caption">Score: 0.6118 (↑) · Consistency Score: 0.1237 (↑) · Time: 976 secs (↓) · Drag to rotate, scroll to zoom</div>
     </div>
 </div>
 
