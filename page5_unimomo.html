@@ -1,1 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ManifoldCache — 5: UniMoMo</title>
+    <style>
+        canvas{will-change:transform;transform:translateZ(0);}*{box-sizing:border-box;}
+        body{margin:0;padding:20px;background:#0f172a;color:#f8fafc;font-family:system-ui,-apple-system,sans-serif;display:flex;flex-direction:column;align-items:center;min-height:100vh;}
+        h1{font-size:2.2rem;font-weight:700;margin:0 0 5px 0;text-align:center;background:linear-gradient(to right,#38bdf8,#818cf8);-webkit-background-clip:text;-webkit-text-fill-color:transparent;}
+        .subtitle{font-size:1.1rem;color:#94a3b8;margin-bottom:14px;text-align:center;}
+        .nav-bar{display:flex;gap:6px;margin-bottom:24px;align-items:center;flex-wrap:wrap;justify-content:center;background:#1e293b;border:1px solid #334155;padding:8px 14px;border-radius:10px;max-width:1400px;width:100%;}
+        .nav-btn{display:flex;align-items:center;gap:5px;background:transparent;border:1px solid transparent;color:#64748b;padding:5px 11px;border-radius:6px;font-size:0.78rem;cursor:pointer;text-decoration:none;transition:all .18s;white-space:nowrap;}
+        .nav-btn.active{background:#1e3a5f;color:#38bdf8;border-color:#38bdf8;cursor:default;}
+        .nav-btn:not(.active):hover{color:#38bdf8;border-color:#38bdf8;background:#162032;}
+        .nav-divider{width:1px;height:20px;background:#334155;flex-shrink:0;}
+        .section-title{font-size:1.15rem;font-weight:600;margin:20px 0 12px 0;color:#38bdf8;width:100%;max-width:1400px;border-bottom:1px solid #334155;padding-bottom:5px;}
+        .demo-container{display:grid;grid-template-columns:repeat(3,1fr);gap:20px;width:100%;max-width:1400px;}
+        .viewer-card{background:#1e293b;border-radius:12px;padding:15px;box-shadow:0 10px 15px -3px rgba(0,0,0,.3);border:1px solid #334155;display:flex;flex-direction:column;}
+        .canvas-wrapper{flex-grow:1;width:100%;position:relative;background:#000;border-radius:8px;overflow:hidden;}
+        canvas{width:100%!important;height:100%!important;display:block;}
+        .caption{margin-top:12px;text-align:center;font-size:1rem;font-weight:600;color:#e2e8f0;}
+        .sub-caption{font-size:.82rem;color:#64748b;margin-top:3px;text-align:center;}
+        .pmetric-badge,.compact-badge{display:inline-block;border-radius:4px;padding:2px 7px;font-size:.78rem;font-weight:600;margin:2px 3px;}
+        .pmetric-good{background:#14532d;color:#4ade80;} .pmetric-low{background:#451a1a;color:#f87171;}
+        .compact-good{background:#14532d;color:#4ade80;} .compact-bad{background:#451a1a;color:#f87171;}
+        .seq-display{font-size:.72rem;text-align:center;margin-top:6px;letter-spacing:1px;}
+        .aa-pos{color:#3b82f6}.aa-neg{color:#ef4444}.aa-pol{color:#a3e635}.aa-aro{color:#c084fc}.aa-hph{color:#fbbf24}.aa-spc{color:#e5e7eb}
+        .scattered-overlay{position:absolute;bottom:0;left:0;right:0;background:rgba(127,29,29,.85);color:#fca5a5;font-size:.72rem;padding:6px 10px;text-align:center;z-index:30;}
+        .page-footer-nav{display:flex;justify-content:space-between;align-items:center;width:100%;max-width:1400px;margin:32px 0 12px 0;gap:12px;}
+        .footer-nav-btn{display:flex;align-items:center;gap:8px;background:#1e293b;border:1px solid #334155;color:#64748b;padding:10px 20px;border-radius:8px;font-size:.88rem;font-weight:600;text-decoration:none;transition:all .18s;}
+        .footer-nav-btn:hover{border-color:#38bdf8;color:#38bdf8;background:#162032;}
+        .footer-nav-btn.next{background:#1e3a5f;border-color:#38bdf8;color:#38bdf8;}
+        .footer-nav-btn.next:hover{background:#1e4a80;}
+        @media(max-width:900px){.demo-container{grid-template-columns:1fr;}}
+    </style>
+</head>
+<body>
+<h1>ManifoldCache</h1>
+<div class="subtitle">Training-Free Diffusion Acceleration via Constraint Manifold Caching</div>
+<nav class="nav-bar">
+    <a class="nav-btn" href="index.html">1 · 🧠 Brain &amp; Lyra</a>
+    <div class="nav-divider"></div>
+    <a class="nav-btn" href="page2_molecules.html">2 · ⚗️ Molecules</a>
+    <div class="nav-divider"></div>
+    <a class="nav-btn" href="page3_crystals.html">3 · 💎 Crystals</a>
+    <div class="nav-divider"></div>
+    <a class="nav-btn" href="page4_proteins.html">4 · 🧬 Proteins</a>
+    <div class="nav-divider"></div>
+    <span class="nav-btn active">5 · 🔬 UniMoMo</span>
+    <div class="nav-divider"></div>
+    <a class="nav-btn" href="page6_ditmc.html">6 · ⚙️ DiT-MC</a>
+</nav>
 
+<div class="section-title">UniMoMo — Unified Generative Modeling of 3D Molecules for De Novo Binder Design</div>
+<div class="demo-container">
+    <div class="viewer-card">
+        <div class="canvas-wrapper" id="u-0" data-pdb="./manifoldcache_unimomo.pdb" data-seq="KQILRESQEPDYSTPDNDENFQQNFVR" style="min-height:360px;position:relative;"></div>
+        <div class="caption">ManifoldCache (Ours)</div>
+        <div class="sub-caption">
+            <span class="pmetric-badge pmetric-good">pmetric: 1.3310</span>
+            <span class="compact-badge compact-good">Compact ✓</span>
+        </div>
+        <div class="seq-display" id="seq-0"></div>
+    </div>
+    <div class="viewer-card">
+        <div class="canvas-wrapper" id="u-1" data-pdb="./deepcache_unimomo.pdb" data-seq="VVQVVVTVVTVVVVQVVVVVVVVVVVV" style="min-height:360px;position:relative;"></div>
+        <div class="caption">DeepCache</div>
+        <div class="sub-caption">
+            <span class="pmetric-badge pmetric-low">pmetric: 2.28 × 10⁻⁴</span>
+            <span class="compact-badge compact-bad">Scattered ✗</span>
+        </div>
+        <div class="seq-display" id="seq-1"></div>
+    </div>
+    <div class="viewer-card">
+        <div class="canvas-wrapper" id="u-2" data-pdb="./smoothcache_unimomo.pdb" data-seq="QVVFVQQVVFQVQQVQVVVVVFVFFVQ" style="min-height:360px;position:relative;"></div>
+        <div class="caption">SmoothCache</div>
+        <div class="sub-caption">
+            <span class="pmetric-badge pmetric-low">pmetric: 1.89 × 10⁻³</span>
+            <span class="compact-badge compact-bad">Scattered ✗</span>
+        </div>
+        <div class="seq-display" id="seq-2"></div>
+    </div>
+</div>
+
+<div class="page-footer-nav">
+    <a class="footer-nav-btn" href="page4_proteins.html"><span style="font-size:1.1em">‹</span> 4 · Proteins</a>
+    <a class="footer-nav-btn next" href="page6_ditmc.html">6 · DiT-MC <span style="font-size:1.1em">›</span></a>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/3Dmol/2.1.0/3Dmol-min.js"></script>
+<script>
+const AA3={A:'ALA',R:'ARG',N:'ASN',D:'ASP',C:'CYS',E:'GLU',Q:'GLN',G:'GLY',H:'HIS',I:'ILE',L:'LEU',K:'LYS',M:'MET',F:'PHE',P:'PRO',S:'SER',T:'THR',W:'TRP',Y:'TYR',V:'VAL'};
+const AA_CLASS={K:'aa-pos',R:'aa-pos',H:'aa-pos',D:'aa-neg',E:'aa-neg',N:'aa-pol',Q:'aa-pol',S:'aa-pol',T:'aa-pol',C:'aa-pol',F:'aa-aro',W:'aa-aro',Y:'aa-aro',A:'aa-hph',V:'aa-hph',I:'aa-hph',L:'aa-hph',M:'aa-hph',G:'aa-spc',P:'aa-spc'};
+const AA_COLOR={K:'#3b82f6',R:'#3b82f6',H:'#60a5fa',D:'#ef4444',E:'#f87171',N:'#a3e635',Q:'#a3e635',S:'#4ade80',T:'#4ade80',C:'#fde047',F:'#c084fc',W:'#a855f7',Y:'#9333ea',A:'#fbbf24',V:'#f59e0b',I:'#d97706',L:'#b45309',M:'#92400e',G:'#e5e7eb',P:'#d1d5db'};
+
+function wait3Dmol(cb,n=0){if(typeof $3Dmol!=='undefined')return cb();if(n>50)return;setTimeout(()=>wait3Dmol(cb,n+1),200);}
+
+function normalizePDB(pdbText){
+    const lines=pdbText.split('\n'),aA=[],aB=[];
+    lines.forEach(r=>{const rec=r.slice(0,6).trim();if(rec!=='ATOM'&&rec!=='HETATM')return;const ch=r.length>21?r[21]:' ';const x=parseFloat(r.slice(30,38)),y=parseFloat(r.slice(38,46)),z=parseFloat(r.slice(46,54));if(isNaN(x))return;if(ch==='A')aA.push({r,x,y,z});else if(ch==='B')aB.push({r,x,y,z});});
+    if(!aA.length||!aB.length)return pdbText;
+    function ctr(a){let sx=0,sy=0,sz=0;a.forEach(v=>{sx+=v.x;sy+=v.y;sz+=v.z;});const n=a.length;return{x:sx/n,y:sy/n,z:sz/n};}
+    const cA=ctr(aA),cB=ctr(aB),dx=cB.x-cA.x,dy=cB.y-cA.y,dz=cB.z-cA.z;
+    function fmt(v){let s=v.toFixed(3);while(s.length<8)s=' '+s;if(s.length>8)s=s.slice(s.length-8);return s;}
+    const out=[];
+    aA.forEach(a=>out.push(a.r.slice(0,30)+fmt(a.x+dx)+fmt(a.y+dy)+fmt(a.z+dz)+a.r.slice(54)));
+    out.push('TER');aB.forEach(a=>out.push(a.r));out.push('END');
+    return out.join('\n');
+}
+function measureSpread(pdbText){
+    const pts=[];pdbText.split('\n').forEach(l=>{const rec=l.slice(0,6).trim();if(rec!=='ATOM'&&rec!=='HETATM')return;if(l[21]!=='A')return;if(l.slice(12,16).trim()!=='CA')return;const x=parseFloat(l.slice(30,38)),y=parseFloat(l.slice(38,46)),z=parseFloat(l.slice(46,54));if(!isNaN(x))pts.push([x,y,z]);});
+    if(pts.length<2)return 0;let m=0;for(let i=0;i<pts.length;i++)for(let j=i+1;j<pts.length;j++){const d=Math.sqrt((pts[i][0]-pts[j][0])**2+(pts[i][1]-pts[j][1])**2+(pts[i][2]-pts[j][2])**2);if(d>m)m=d;}return m;
+}
+
+function initUnimomo(idx){
+    const el=document.getElementById('u-'+idx);
+    const seq=el.dataset.seq, pdb=el.dataset.pdb;
+    const seqEl=document.getElementById('seq-'+idx);
+    if(seqEl)seqEl.innerHTML=seq.split('').map(c=>`<span class="${AA_CLASS[c]||'aa-spc'}" title="${AA3[c]||c}">${c}</span>`).join('');
+    wait3Dmol(()=>{
+        const v=$3Dmol.createViewer(el,{backgroundColor:'#060d1a',antialias:true});
+        fetch(pdb).then(r=>{if(!r.ok)throw 0;return r.text();}).then(raw=>{
+            const norm=normalizePDB(raw),spread=measureSpread(norm),compact=(spread<120);
+            v.addModel(norm,'pdb');
+            v.setStyle({chain:'B'},{cartoon:{color:'#334155',thickness:0.28,opacity:compact?0.35:0.55}});
+            if(compact){
+                seq.split('').forEach((c,i)=>{const col=AA_COLOR[c]||'#9ca3af';v.setStyle({chain:'A',resi:i+1},{cartoon:{color:col,thickness:0.5,opacity:0.9},sphere:{color:col,radius:0.30,opacity:0.9},stick:{color:col,radius:0.12}});});
+                v.zoomTo({chain:'A'});
+            }else{
+                seq.split('').forEach((c,i)=>{const col=AA_COLOR[c]||'#9ca3af';v.setStyle({chain:'A',resi:i+1},{sphere:{color:col,radius:0.6,opacity:0.80}});});
+                v.zoomTo({chain:'B'});
+                const d=document.createElement('div');d.className='scattered-overlay';d.textContent='⚠ Non-compact — residues scattered in space (failed generation)';el.appendChild(d);
+            }
+            v.spin('y',0.3);v.render();
+        }).catch(()=>{});
+    });
+}
+
+setTimeout(()=>initUnimomo(0), 100);
+setTimeout(()=>initUnimomo(1), 500);
+setTimeout(()=>initUnimomo(2), 900);
+</script>
+</body></html>
