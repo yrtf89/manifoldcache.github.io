@@ -1,1 +1,304 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ManifoldCache — 3: DiffCSP++ Crystals</title>
+    <style>
+        canvas{will-change:transform;transform:translateZ(0);}*{box-sizing:border-box;}
+        body{margin:0;padding:20px;background:#0f172a;color:#f8fafc;font-family:system-ui,-apple-system,sans-serif;display:flex;flex-direction:column;align-items:center;min-height:100vh;}
+        h1{font-size:2.2rem;font-weight:700;margin:0 0 5px 0;text-align:center;background:linear-gradient(to right,#38bdf8,#818cf8);-webkit-background-clip:text;-webkit-text-fill-color:transparent;}
+        .subtitle{font-size:1.1rem;color:#94a3b8;margin-bottom:14px;text-align:center;}
+        .nav-bar{display:flex;gap:6px;margin-bottom:24px;align-items:center;flex-wrap:wrap;justify-content:center;background:#1e293b;border:1px solid #334155;padding:8px 14px;border-radius:10px;max-width:1400px;width:100%;}
+        .nav-btn{display:flex;align-items:center;gap:5px;background:transparent;border:1px solid transparent;color:#64748b;padding:5px 11px;border-radius:6px;font-size:0.78rem;cursor:pointer;text-decoration:none;transition:all .18s;white-space:nowrap;}
+        .nav-btn.active{background:#1e3a5f;color:#38bdf8;border-color:#38bdf8;cursor:default;}
+        .nav-btn:not(.active):hover{color:#38bdf8;border-color:#38bdf8;background:#162032;}
+        .nav-divider{width:1px;height:20px;background:#334155;flex-shrink:0;}
+        .section-title{font-size:1.15rem;font-weight:600;margin:20px 0 12px 0;color:#38bdf8;width:100%;max-width:1400px;border-bottom:1px solid #334155;padding-bottom:5px;}
+        .demo-container{display:grid;grid-template-columns:repeat(auto-fit,minmax(45%,1fr));gap:20px;width:100%;max-width:1400px;}
+        .viewer-card{background:#1e293b;border-radius:12px;padding:15px;box-shadow:0 10px 15px -3px rgba(0,0,0,.3);border:1px solid #334155;display:flex;flex-direction:column;}
+        .canvas-wrapper{flex-grow:1;width:100%;position:relative;background:#000;border-radius:8px;overflow:hidden;}
+        canvas{width:100%!important;height:100%!important;display:block;}
+        .caption{margin-top:12px;text-align:center;font-size:1rem;font-weight:600;color:#e2e8f0;}
+        .sub-caption{font-size:.82rem;color:#64748b;margin-top:3px;text-align:center;}
+        .page-footer-nav{display:flex;justify-content:space-between;align-items:center;width:100%;max-width:1400px;margin:32px 0 12px 0;gap:12px;}
+        .footer-nav-btn{display:flex;align-items:center;gap:8px;background:#1e293b;border:1px solid #334155;color:#64748b;padding:10px 20px;border-radius:8px;font-size:.88rem;font-weight:600;text-decoration:none;transition:all .18s;}
+        .footer-nav-btn:hover{border-color:#38bdf8;color:#38bdf8;background:#162032;}
+        .footer-nav-btn.next{background:#1e3a5f;border-color:#38bdf8;color:#38bdf8;}
+        .footer-nav-btn.next:hover{background:#1e4a80;}
+        @media(max-width:900px){.demo-container{grid-template-columns:1fr;}}
+    </style>
+</head>
+<body>
+<h1>ManifoldCache</h1>
+<div class="subtitle">Training-Free Diffusion Acceleration via Constraint Manifold Caching</div>
+<nav class="nav-bar">
+    <a class="nav-btn" href="index.html">1 · 🧠 Brain &amp; Lyra</a>
+    <div class="nav-divider"></div>
+    <a class="nav-btn" href="page2_molecules.html">2 · ⚗️ Molecules</a>
+    <div class="nav-divider"></div>
+    <span class="nav-btn active">3 · 💎 Crystals</span>
+    <div class="nav-divider"></div>
+    <a class="nav-btn" href="page4_proteins.html">4 · 🧬 Proteins</a>
+    <div class="nav-divider"></div>
+    <a class="nav-btn" href="page5_unimomo.html">5 · 🔬 UniMoMo</a>
+    <div class="nav-divider"></div>
+    <a class="nav-btn" href="page6_ditmc.html">6 · ⚙️ DiT-MC</a>
+</nav>
 
+<div class="section-title">DiffCSP++ — Crystal Structure Prediction (Space Group Constrained Generation)</div>
+<div class="demo-container">
+    <div class="viewer-card">
+        <div class="canvas-wrapper" id="crystal-a" style="min-height:400px;"></div>
+        <div class="caption">ManifoldCache (Ours)</div>
+        <div class="sub-caption">Tm₂Te₃ — Tm32 Te48 · Drag to rotate, scroll to zoom</div>
+    </div>
+    <div class="viewer-card">
+        <div class="canvas-wrapper" id="crystal-b" style="min-height:400px;"></div>
+        <div class="caption">DeepCache</div>
+        <div class="sub-caption">Tm₂Te₃ — Tm32 Te48 · Drag to rotate, scroll to zoom</div>
+    </div>
+</div>
+
+<div class="page-footer-nav">
+    <a class="footer-nav-btn" href="page2_molecules.html"><span style="font-size:1.1em">‹</span> 2 · Molecules</a>
+    <a class="footer-nav-btn next" href="page4_proteins.html">4 · Proteins <span style="font-size:1.1em">›</span></a>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/3Dmol/2.1.0/3Dmol-min.js"></script>
+<script>
+const CIF_A = `# generated using pymatgen
+data_Tm2Te3
+_symmetry_space_group_name_H-M   'P 1'
+_cell_length_a   8.41800785
+_cell_length_b   12.28686428
+_cell_length_c   26.16124153
+_cell_angle_alpha   90.00000000
+_cell_angle_beta   90.00000000
+_cell_angle_gamma   90.00000000
+_symmetry_Int_Tables_number   1
+_chemical_formula_structural   Tm2Te3
+_chemical_formula_sum   'Tm32 Te48'
+_cell_volume   2705.88127927
+_cell_formula_units_Z   16
+loop_
+ _symmetry_equiv_pos_site_id
+ _symmetry_equiv_pos_as_xyz
+  1  'x, y, z'
+loop_
+ _atom_site_type_symbol
+ _atom_site_label
+ _atom_site_symmetry_multiplicity
+ _atom_site_fract_x
+ _atom_site_fract_y
+ _atom_site_fract_z
+ _atom_site_occupancy
+  Tm  Tm0  1  0.12500000  0.12500000  0.37440002  1
+  Tm  Tm1  1  0.62500000  0.12500000  0.37559998  1
+  Tm  Tm2  1  0.87500000  0.87500000  0.62559998  1
+  Tm  Tm3  1  0.37500000  0.87500000  0.62440002  1
+  Tm  Tm4  1  0.12500000  0.62500000  0.87440002  1
+  Tm  Tm5  1  0.62500000  0.62500000  0.87559998  1
+  Tm  Tm6  1  0.87500000  0.37500000  0.12559998  1
+  Tm  Tm7  1  0.37500000  0.37500000  0.12440002  1
+  Tm  Tm8  1  0.62500000  0.12500000  0.87440002  1
+  Tm  Tm9  1  0.12500000  0.12500000  0.87559998  1
+  Tm  Tm10  1  0.37500000  0.87500000  0.12559998  1
+  Tm  Tm11  1  0.87500000  0.87500000  0.12440002  1
+  Tm  Tm12  1  0.62500000  0.62500000  0.37440002  1
+  Tm  Tm13  1  0.12500000  0.62500000  0.37559998  1
+  Tm  Tm14  1  0.37500000  0.37500000  0.62559998  1
+  Tm  Tm15  1  0.87500000  0.37500000  0.62440002  1
+  Tm  Tm16  1  0.12500000  0.12500000  0.70637721  1
+  Tm  Tm17  1  0.62500000  0.12500000  0.04362279  1
+  Tm  Tm18  1  0.87500000  0.87500000  0.29362279  1
+  Tm  Tm19  1  0.37500000  0.87500000  0.95637721  1
+  Tm  Tm20  1  0.12500000  0.62500000  0.20637727  1
+  Tm  Tm21  1  0.62500000  0.62500000  0.54362279  1
+  Tm  Tm22  1  0.87500000  0.37500000  0.79362279  1
+  Tm  Tm23  1  0.37500000  0.37500000  0.45637727  1
+  Tm  Tm24  1  0.62500000  0.12500000  0.20637727  1
+  Tm  Tm25  1  0.12500000  0.12500000  0.54362279  1
+  Tm  Tm26  1  0.37500000  0.87500000  0.79362279  1
+  Tm  Tm27  1  0.87500000  0.87500000  0.45637727  1
+  Tm  Tm28  1  0.62500000  0.62500000  0.70637721  1
+  Tm  Tm29  1  0.12500000  0.62500000  0.04362279  1
+  Tm  Tm30  1  0.37500000  0.37500000  0.29362279  1
+  Tm  Tm31  1  0.87500000  0.37500000  0.95637721  1
+  Te  Te32  1  0.37156805  0.12500000  0.12500000  1
+  Te  Te33  1  0.37843195  0.62500000  0.12500000  1
+  Te  Te34  1  0.62843192  0.87500000  0.87500000  1
+  Te  Te35  1  0.62156808  0.37500000  0.87500000  1
+  Te  Te36  1  0.37156805  0.62500000  0.62500000  1
+  Te  Te37  1  0.37843195  0.12500000  0.62500000  1
+  Te  Te38  1  0.62843192  0.37500000  0.37500000  1
+  Te  Te39  1  0.62156808  0.87500000  0.37500000  1
+  Te  Te40  1  0.87156808  0.12500000  0.62500000  1
+  Te  Te41  1  0.87843192  0.62500000  0.62500000  1
+  Te  Te42  1  0.12843195  0.87500000  0.37500000  1
+  Te  Te43  1  0.12156808  0.37500000  0.37500000  1
+  Te  Te44  1  0.87156808  0.62500000  0.12500000  1
+  Te  Te45  1  0.87843192  0.12500000  0.12500000  1
+  Te  Te46  1  0.12843195  0.37500000  0.87500000  1
+  Te  Te47  1  0.12156808  0.87500000  0.87500000  1
+  Te  Te48  1  0.62433749  0.87445092  0.04258493  1
+  Te  Te49  1  0.12566251  0.87554908  0.04258493  1
+  Te  Te50  1  0.12566251  0.87445092  0.70741504  1
+  Te  Te51  1  0.62433749  0.87554908  0.70741504  1
+  Te  Te52  1  0.37566251  0.12554908  0.95741504  1
+  Te  Te53  1  0.87433749  0.12445092  0.95741504  1
+  Te  Te54  1  0.87433749  0.12554908  0.29258493  1
+  Te  Te55  1  0.37566251  0.12445092  0.29258493  1
+  Te  Te56  1  0.62433749  0.37445092  0.54258496  1
+  Te  Te57  1  0.12566251  0.37554908  0.54258496  1
+  Te  Te58  1  0.12566251  0.37445092  0.20741510  1
+  Te  Te59  1  0.62433749  0.37554908  0.20741510  1
+  Te  Te60  1  0.37566251  0.62554908  0.45741507  1
+  Te  Te61  1  0.87433749  0.62445092  0.45741507  1
+  Te  Te62  1  0.87433749  0.62554908  0.79258496  1
+  Te  Te63  1  0.37566251  0.62445092  0.79258496  1
+  Te  Te64  1  0.12433743  0.87445092  0.54258496  1
+  Te  Te65  1  0.62566251  0.87554908  0.54258496  1
+  Te  Te66  1  0.62566251  0.87445092  0.20741510  1
+  Te  Te67  1  0.12433743  0.87554908  0.20741510  1
+  Te  Te68  1  0.37338436  0.12491292  0.79244870  1
+  Te  Te69  1  0.87661564  0.12508702  0.79244870  1
+  Te  Te70  1  0.87661564  0.12491292  0.45755124  1
+  Te  Te71  1  0.37338436  0.12508702  0.45755124  1
+  Te  Te72  1  0.12433743  0.37445092  0.04258493  1
+  Te  Te73  1  0.62566251  0.37554908  0.04258493  1
+  Te  Te74  1  0.62566251  0.37445092  0.70741504  1
+  Te  Te75  1  0.12433743  0.37554908  0.70741504  1
+  Te  Te76  1  0.87566251  0.62554908  0.95741504  1
+  Te  Te77  1  0.37433743  0.62445092  0.95741504  1
+  Te  Te78  1  0.37433743  0.62554908  0.29258493  1
+  Te  Te79  1  0.87566251  0.62445092  0.29258493  1`;
+
+const CIF_B = `# generated using pymatgen
+data_Tm2Te3
+_symmetry_space_group_name_H-M   'P 1'
+_cell_length_a   8.28109646
+_cell_length_b   12.18861389
+_cell_length_c   26.23364067
+_cell_angle_alpha   90.00000000
+_cell_angle_beta   90.00000000
+_cell_angle_gamma   90.00000000
+_symmetry_Int_Tables_number   1
+_chemical_formula_structural   Tm2Te3
+_chemical_formula_sum   'Tm32 Te48'
+_cell_volume   2647.89481211
+_cell_formula_units_Z   16
+loop_
+ _symmetry_equiv_pos_site_id
+ _symmetry_equiv_pos_as_xyz
+  1  'x, y, z'
+loop_
+ _atom_site_type_symbol
+ _atom_site_label
+ _atom_site_symmetry_multiplicity
+ _atom_site_fract_x
+ _atom_site_fract_y
+ _atom_site_fract_z
+ _atom_site_occupancy
+  Tm  Tm0  1  0.12500000  0.12500000  0.37364611  1
+  Tm  Tm1  1  0.62500000  0.12500000  0.37635389  1
+  Tm  Tm2  1  0.87500000  0.87500000  0.62635386  1
+  Tm  Tm3  1  0.37500000  0.87500000  0.62364614  1
+  Tm  Tm4  1  0.12500000  0.62500000  0.87364614  1
+  Tm  Tm5  1  0.62500000  0.62500000  0.87635386  1
+  Tm  Tm6  1  0.87500000  0.37500000  0.12635389  1
+  Tm  Tm7  1  0.37500000  0.37500000  0.12364614  1
+  Tm  Tm8  1  0.62500000  0.12500000  0.87364614  1
+  Tm  Tm9  1  0.12500000  0.12500000  0.87635386  1
+  Tm  Tm10  1  0.37500000  0.87500000  0.12635389  1
+  Tm  Tm11  1  0.87500000  0.87500000  0.12364614  1
+  Tm  Tm12  1  0.62500000  0.62500000  0.37364611  1
+  Tm  Tm13  1  0.12500000  0.62500000  0.37635389  1
+  Tm  Tm14  1  0.37500000  0.37500000  0.62635386  1
+  Tm  Tm15  1  0.87500000  0.37500000  0.62364614  1
+  Tm  Tm16  1  0.12500000  0.12500000  0.54121011  1
+  Tm  Tm17  1  0.62500000  0.12500000  0.20878989  1
+  Tm  Tm18  1  0.87500000  0.87500000  0.45878989  1
+  Tm  Tm19  1  0.37500000  0.87500000  0.79121011  1
+  Tm  Tm20  1  0.12500000  0.62500000  0.04121017  1
+  Tm  Tm21  1  0.62500000  0.62500000  0.70878989  1
+  Tm  Tm22  1  0.87500000  0.37500000  0.95878989  1
+  Tm  Tm23  1  0.37500000  0.37500000  0.29121017  1
+  Tm  Tm24  1  0.62500000  0.12500000  0.04121017  1
+  Tm  Tm25  1  0.12500000  0.12500000  0.70878989  1
+  Tm  Tm26  1  0.37500000  0.87500000  0.95878989  1
+  Tm  Tm27  1  0.87500000  0.87500000  0.29121017  1
+  Tm  Tm28  1  0.62500000  0.62500000  0.54121011  1
+  Tm  Tm29  1  0.12500000  0.62500000  0.20878989  1
+  Tm  Tm30  1  0.37500000  0.37500000  0.45878989  1
+  Tm  Tm31  1  0.87500000  0.37500000  0.79121011  1
+  Te  Te32  1  0.87705350  0.12500000  0.12500000  1
+  Te  Te33  1  0.87294650  0.62500000  0.12500000  1
+  Te  Te34  1  0.12294650  0.87500000  0.87500000  1
+  Te  Te35  1  0.12705350  0.37500000  0.87500000  1
+  Te  Te36  1  0.87705350  0.62500000  0.62500000  1
+  Te  Te37  1  0.87294650  0.12500000  0.62500000  1
+  Te  Te38  1  0.12294650  0.37500000  0.37500000  1
+  Te  Te39  1  0.12705350  0.87500000  0.37500000  1
+  Te  Te40  1  0.37705350  0.12500000  0.62500000  1
+  Te  Te41  1  0.37294650  0.62500000  0.62500000  1
+  Te  Te42  1  0.62294650  0.87500000  0.37500000  1
+  Te  Te43  1  0.62705350  0.37500000  0.37500000  1
+  Te  Te44  1  0.37705350  0.62500000  0.12500000  1
+  Te  Te45  1  0.37294650  0.12500000  0.12500000  1
+  Te  Te46  1  0.62294650  0.37500000  0.87500000  1
+  Te  Te47  1  0.62705350  0.87500000  0.87500000  1
+  Te  Te48  1  0.12661564  0.87508708  0.70755130  1
+  Te  Te49  1  0.62338436  0.87491292  0.70755130  1
+  Te  Te50  1  0.62338436  0.87508708  0.04244870  1
+  Te  Te51  1  0.12661564  0.87491292  0.04244870  1
+  Te  Te52  1  0.87338436  0.12491292  0.29244870  1
+  Te  Te53  1  0.37661564  0.12508702  0.29244870  1
+  Te  Te54  1  0.37661564  0.12491292  0.95755130  1
+  Te  Te55  1  0.87338436  0.12508702  0.95755130  1
+  Te  Te56  1  0.12661564  0.37508702  0.20755124  1
+  Te  Te57  1  0.62338436  0.37491292  0.20755124  1
+  Te  Te58  1  0.62338436  0.37508702  0.54244870  1
+  Te  Te59  1  0.12661564  0.37491292  0.54244870  1
+  Te  Te60  1  0.87338436  0.62491292  0.79244870  1
+  Te  Te61  1  0.37661564  0.62508702  0.79244870  1
+  Te  Te62  1  0.37661564  0.62491292  0.45755124  1
+  Te  Te63  1  0.87338436  0.62508702  0.45755124  1
+  Te  Te64  1  0.62661564  0.87508708  0.20755124  1
+  Te  Te65  1  0.12338436  0.87491292  0.20755124  1
+  Te  Te66  1  0.12338436  0.87508708  0.54244870  1
+  Te  Te67  1  0.62661564  0.87491292  0.54244870  1
+  Te  Te68  1  0.37338436  0.12491292  0.79244870  1
+  Te  Te69  1  0.87661564  0.12508702  0.79244870  1
+  Te  Te70  1  0.87661564  0.12491292  0.45755124  1
+  Te  Te71  1  0.37338436  0.12508702  0.45755124  1
+  Te  Te72  1  0.62661564  0.37508702  0.70755130  1
+  Te  Te73  1  0.12338436  0.37491292  0.70755130  1
+  Te  Te74  1  0.12338436  0.37508702  0.04244870  1
+  Te  Te75  1  0.62661564  0.37491292  0.04244870  1
+  Te  Te76  1  0.37338436  0.62491292  0.29244870  1
+  Te  Te77  1  0.87661564  0.62508702  0.29244870  1
+  Te  Te78  1  0.87661564  0.62491292  0.95755130  1
+  Te  Te79  1  0.37338436  0.62508702  0.95755130  1`;
+
+function wait3Dmol(cb,n=0){if(typeof $3Dmol!=='undefined')return cb();if(n>50)return;setTimeout(()=>wait3Dmol(cb,n+1),200);}
+
+function initCrystal(id, cifFallback, filePath){
+    wait3Dmol(()=>{
+        const el=document.getElementById(id);
+        const v=$3Dmol.createViewer(el,{backgroundColor:'#060d1a',antialias:true});
+        function renderCif(txt){
+            v.addModel(txt,'cif',{normalizeAssembly:true,duplicateAssemblyAtoms:true});
+            v.setStyle({},{sphere:{scale:0.32,colorscheme:'Jmol'}});
+            v.addStyle({},{stick:{radius:0.08,colorscheme:'Jmol'}});
+            v.addUnitCell({box:{color:'#38bdf8',linewidth:1.5,opacity:0.6},astep:5,bstep:5,cstep:5});
+            v.zoomTo();v.zoom(1.4);v.spin('y',0.3);v.render();
+        }
+        fetch(filePath).then(r=>{if(!r.ok)throw 0;return r.text();}).then(renderCif).catch(()=>renderCif(cifFallback));
+    });
+}
+
+setTimeout(()=>initCrystal('crystal-a', CIF_A, './manifoldcache.cif'), 100);
+setTimeout(()=>initCrystal('crystal-b', CIF_B, './deepcache.cif'),     600);
+</script>
+</body></html>
