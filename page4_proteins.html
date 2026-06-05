@@ -70,8 +70,42 @@
     <a class="footer-nav-btn next" href="page5_unimomo.html">5 · UniMoMo <span style="font-size:1.1em">›</span></a>
 </div>
 
+<div class="viewer-card" style="grid-column: 1 / -1;">
+    <div class="canvas-wrapper" id="prot-super" style="min-height:400px;"></div>
+    <div class="caption">Superimposed Comparison</div>
+    <div class="sub-caption">
+        <span style="color:#38bdf8">■ ManifoldCache 2.02Å</span> &nbsp;
+        <span style="color:#f87171">■ Fora 2.31Å</span> &nbsp;
+        <span style="color:#4ade80">■ SmoothCache 2.11Å</span>
+    </div>
+</div>
+
 <script src="https://cdnjs.cloudflare.com/ajax/libs/3Dmol/2.1.0/3Dmol-min.js"></script>
 <script>
+
+function initSuperimposed(id) {
+    const el = document.getElementById(id);
+    wait3Dmol(() => {
+        const v = $3Dmol.createViewer(el, {backgroundColor:'#060d1a', antialias:true});
+        
+        Promise.all([
+            fetch('./manifoldcache.pdb').then(r => r.text()),
+            fetch('./fora.pdb').then(r => r.text()),
+            fetch('./smoothcache.pdb').then(r => r.text())
+        ]).then(([pdb1, pdb2, pdb3]) => {
+            v.addModel(pdb1, 'pdb');
+            v.setStyle({model:0}, {cartoon:{color:'#38bdf8', thickness:0.4}}); // blue - ManifoldCache
+
+            v.addModel(pdb2, 'pdb');
+            v.setStyle({model:1}, {cartoon:{color:'#f87171', thickness:0.4}}); // red - Fora
+
+            v.addModel(pdb3, 'pdb');
+            v.setStyle({model:2}, {cartoon:{color:'#4ade80', thickness:0.4}}); // green - SmoothCache
+
+            v.zoomTo(); v.spin('y', 0.3); v.render();
+        });
+    });
+}    
 function wait3Dmol(cb,n=0){if(typeof $3Dmol!=='undefined')return cb();if(n>50)return;setTimeout(()=>wait3Dmol(cb,n+1),200);}
 
 function initProt(id){
@@ -95,5 +129,6 @@ function initProt(id){
 setTimeout(()=>initProt('prot-1'), 100);
 setTimeout(()=>initProt('prot-2'), 500);
 setTimeout(()=>initProt('prot-3'), 900);
+setTimeout(() => initSuperimposed('prot-super'), 1200);
 </script>
 </body></html>
