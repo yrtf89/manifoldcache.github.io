@@ -115,9 +115,10 @@ function measureSpread(pdbText){
 
 function initUnimomo(idx){
     const el=document.getElementById('u-'+idx);
-    const seq=el.dataset.seq, pdb=el.dataset.pdb;
+    // const seq=el.dataset.seq, pdb=el.dataset.pdb;
+    const seq=el.dataset.seq||'', pdb=el.dataset.pdb;
     const seqEl=document.getElementById('seq-'+idx);
-    if(seqEl)seqEl.innerHTML=seq.split('').map(c=>`<span class="${AA_CLASS[c]||'aa-spc'}" title="${AA3[c]||c}">${c}</span>`).join('');
+    if(seqEl&&seq)seqEl.innerHTML=seq.split('').map(c=>`<span class="${AA_CLASS[c]||'aa-spc'}" title="${AA3[c]||c}">${c}</span>`).join('');
     wait3Dmol(()=>{
         const v=$3Dmol.createViewer(el,{backgroundColor:'#060d1a',antialias:true});
         fetch(pdb).then(r=>{if(!r.ok)throw 0;return r.text();}).then(raw=>{
@@ -125,10 +126,12 @@ function initUnimomo(idx){
             v.addModel(norm,'pdb');
             v.setStyle({chain:'B'},{cartoon:{color:'#334155',thickness:0.28,opacity:compact?0.35:0.55}});
             if(compact){
-                seq.split('').forEach((c,i)=>{const col=AA_COLOR[c]||'#9ca3af';v.setStyle({chain:'A',resi:i+1},{cartoon:{color:col,thickness:0.5,opacity:0.9},sphere:{color:col,radius:0.30,opacity:0.9},stick:{color:col,radius:0.12}});});
+                // seq.split('').forEach((c,i)=>{const col=AA_COLOR[c]||'#9ca3af';v.setStyle({chain:'A',resi:i+1},{cartoon:{color:col,thickness:0.5,opacity:0.9},sphere:{color:col,radius:0.30,opacity:0.9},stick:{color:col,radius:0.12}});});
+                v.setStyle({chain:'A'},{cartoon:{color:'spectrum',thickness:0.5,opacity:0.9},sphere:{radius:0.30,opacity:0.9},stick:{radius:0.12}});
                 v.zoomTo({chain:'A'});
             }else{
-                seq.split('').forEach((c,i)=>{const col=AA_COLOR[c]||'#9ca3af';v.setStyle({chain:'A',resi:i+1},{sphere:{color:col,radius:0.6,opacity:0.80}});});
+                // seq.split('').forEach((c,i)=>{const col=AA_COLOR[c]||'#9ca3af';v.setStyle({chain:'A',resi:i+1},{sphere:{color:col,radius:0.6,opacity:0.80}});});
+                v.setStyle({chain:'A'},{sphere:{radius:0.6,opacity:0.80}});
                 v.zoomTo({chain:'B'});
                 const d=document.createElement('div');d.className='scattered-overlay';d.textContent='⚠ Non-compact — residues scattered in space (failed generation)';el.appendChild(d);
             }
