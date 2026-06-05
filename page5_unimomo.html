@@ -133,7 +133,7 @@ function initUnimomo(idx){
                 // seq.split('').forEach((c,i)=>{const col=AA_COLOR[c]||'#9ca3af';v.setStyle({chain:'A',resi:i+1},{sphere:{color:col,radius:0.6,opacity:0.80}});});
                 v.setStyle({chain:'A'},{sphere:{radius:0.6,opacity:0.80}});
                 v.zoomTo({chain:'B'});
-                const d=document.createElement('div');d.className='scattered-overlay';d.textContent='⚠ Non-compact — residues scattered in space (failed generation)';el.appendChild(d);
+                const d=document.createElement('div');d.className='scattered-overlay';d.textContent='⚠ Failed generation — binder not compact';el.appendChild(d);
             }
             v.spin('y',0.3);v.render();
         }).catch(()=>{});
