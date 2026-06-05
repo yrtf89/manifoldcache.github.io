@@ -84,7 +84,9 @@ function initProt(id){
             .then(pdb=>{
                 v.addModel(pdb,'pdb');
                 v.setStyle({},{cartoon:{color:'spectrum',thickness:0.4}});
-                v.addStyle({atom:['CA','N','C','O']},{stick:{radius:0.08,colorscheme:'Jmol'}});
+                // v.addStyle({atom:['CA','N','C','O']},{stick:{radius:0.08,colorscheme:'Jmol'}});
+                v.addStyle({},{stick:{radius:0.12,colorscheme:'Jmol'}});
+                v.addStyle({},{sphere:{radius:0.25,colorscheme:'Jmol'}});
                 v.zoomTo();v.spin('y',0.3);v.render();
             }).catch(()=>{});
     });
