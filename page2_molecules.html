@@ -15,12 +15,17 @@
         .nav-btn:not(.active):hover{color:#38bdf8;border-color:#38bdf8;background:#162032;}
         .nav-divider{width:1px;height:20px;background:#334155;flex-shrink:0;}
         .section-title{font-size:1.15rem;font-weight:600;margin:20px 0 12px 0;color:#38bdf8;width:100%;max-width:1400px;border-bottom:1px solid #334155;padding-bottom:5px;}
-        .demo-container{display:grid;grid-template-columns:repeat(3,1fr);gap:20px;width:100%;max-width:1400px;}
+        .demo-container{display:grid;grid-template-columns:repeat(2,1fr);gap:20px;width:100%;max-width:1400px;}
         .viewer-card{background:#1e293b;border-radius:12px;padding:15px;box-shadow:0 10px 15px -3px rgba(0,0,0,.3);border:1px solid #334155;display:flex;flex-direction:column;}
+        .viewer-card.reference{border-color:#f59e0b;box-shadow:0 0 18px 2px rgba(245,158,11,0.18);}
         .canvas-wrapper{flex-grow:1;width:100%;position:relative;background:#000;border-radius:8px;overflow:hidden;}
         canvas{width:100%!important;height:100%!important;display:block;}
         .caption{margin-top:12px;text-align:center;font-size:1rem;font-weight:600;color:#e2e8f0;}
         .sub-caption{font-size:1.12rem;color:#64748b;margin-top:3px;text-align:center;}
+        .badge{display:inline-block;padding:2px 8px;border-radius:4px;font-size:0.82rem;font-weight:700;margin-bottom:4px;}
+        .badge-ref{background:#78350f;color:#fde68a;}
+        .badge-best{background:#14532d;color:#86efac;}
+        .smiles{font-size:0.78rem;color:#475569;margin-top:4px;font-family:monospace;text-align:center;word-break:break-all;}
         .page-footer-nav{display:flex;justify-content:space-between;align-items:center;width:100%;max-width:1400px;margin:32px 0 12px 0;gap:12px;}
         .footer-nav-btn{display:flex;align-items:center;gap:8px;background:#1e293b;border:1px solid #334155;color:#64748b;padding:10px 20px;border-radius:8px;font-size:.98rem;font-weight:600;text-decoration:none;transition:all .18s;}
         .footer-nav-btn:hover{border-color:#38bdf8;color:#38bdf8;background:#162032;}
@@ -46,107 +51,483 @@
     <a class="nav-btn" href="page6_ditmc.html">6 · ⚙️ DiT-MC</a>
 </nav>
 
-<!-- <div class="section-title">DemoDiff — Molecular Foundation Model for in-context molecular design (Graph Diffusion Transformer)</div> -->
 <div class="section-title">
-    <a href="https://openreview.net/pdf?id=lJ87GN5zJc" target="_blank" style="color:#38bdf8;text-decoration:underline;">DemoDiff</a> — Molecular Foundation Model for in-context molecular design (Graph Diffusion Transformer)
+    <a href="https://openreview.net/pdf?id=lJ87GN5zJc" target="_blank" style="color:#38bdf8;text-decoration:underline;">DemoDiff</a>
+    — Albuterol Similarity Task · Generated molecules vs. Reference (Drag to rotate, scroll to zoom)
 </div>
+
 <div class="demo-container">
-    <div class="viewer-card">
-        <div class="canvas-wrapper" id="mol-1" style="min-height:320px;"></div>
-        <div class="caption">ManifoldCache (Ours)</div>
-        <div class="sub-caption">Score: <span style="color:#38bdf8">0.7170</span> (↑) · Consistency Score: <span style="color:#38bdf8">0.1480</span> (↑) · Time: 886 secs (↓) · Drag to rotate, scroll to zoom</div>
+
+    <!-- Albuterol Reference -->
+    <div class="viewer-card reference">
+        <div class="canvas-wrapper" id="mol-albuterol" style="min-height:320px;"></div>
+        <div class="caption">
+            <span class="badge badge-ref">🎯 Reference</span><br>
+            Albuterol (Ground Truth)
+        </div>
+        <div class="sub-caption">
+            Formula: C₁₃H₂₁NO₃ · Target Score: 1.000
+        </div>
+        <div class="smiles">CC(C)(C)NCC(O)c1ccc(O)c(CO)c1</div>
     </div>
+
+    <!-- ManifoldCache -->
     <div class="viewer-card">
-        <div class="canvas-wrapper" id="mol-2" style="min-height:320px;"></div>
+        <div class="canvas-wrapper" id="mol-manifold" style="min-height:320px;"></div>
+        <div class="caption">
+            <span class="badge badge-best">🏆 Best</span><br>
+            ManifoldCache (Ours)
+        </div>
+        <div class="sub-caption">
+            Score: <span style="color:#38bdf8">0.7170</span> ↑ &nbsp;·&nbsp;
+            Consistency: <span style="color:#38bdf8">0.1480</span> ↑ &nbsp;·&nbsp;
+            Time: 886s ↓
+        </div>
+        <div class="smiles">CC(C)(C)NCC(O)c1ccc(O)c(O)c1</div>
+    </div>
+
+    <!-- FORA -->
+    <div class="viewer-card">
+        <div class="canvas-wrapper" id="mol-fora" style="min-height:320px;"></div>
         <div class="caption">FORA</div>
-        <div class="sub-caption">Score: 0.5970 (↑) · Consistency Score: 0.0799 (↑) · Time: <span style="color:#38bdf8">867 secs</span> (↓) · Drag to rotate, scroll to zoom</div>
+        <div class="sub-caption">
+            Score: 0.5970 ↑ &nbsp;·&nbsp;
+            Consistency: 0.0799 ↑ &nbsp;·&nbsp;
+            Time: <span style="color:#38bdf8">867s</span> ↓
+        </div>
+        <div class="smiles">CCCC(OCCN)c1ccc(O)c(C(C)CC)c1</div>
     </div>
+
+    <!-- ToCa -->
     <div class="viewer-card">
-        <div class="canvas-wrapper" id="mol-3" style="min-height:320px;"></div>
+        <div class="canvas-wrapper" id="mol-toca" style="min-height:320px;"></div>
         <div class="caption">ToCa</div>
-        <div class="sub-caption">Score: 0.6118 (↑) · Consistency Score: 0.1237 (↑) · Time: 976 secs (↓) · Drag to rotate, scroll to zoom</div>
+        <div class="sub-caption">
+            Score: 0.6118 ↑ &nbsp;·&nbsp;
+            Consistency: 0.1237 ↑ &nbsp;·&nbsp;
+            Time: 976s ↓
+        </div>
+        <div class="smiles">OCc1cc(C(O)CNC(O)(CO)CCCCCc2ccccc2)ccc1O</div>
     </div>
+
 </div>
 
 <div class="page-footer-nav">
-    <a class="footer-nav-btn" href="index.html"><span style="font-size:1.1em">‹</span> 1 · 3D Brain MRI &amp; Lyra</a>
-    <a class="footer-nav-btn next" href="page3_crystals.html">3 · Crystals <span style="font-size:1.1em">›</span></a>
+    <a class="footer-nav-btn" href="index.html"><span style="font-size:1.12em">‹</span> 1 · 3D Brain MRI &amp; Lyra</a>
+    <a class="footer-nav-btn next" href="page3_crystals.html">3 · Crystals <span style="font-size:1.12em">›</span></a>
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/3Dmol/2.1.0/3Dmol-min.js"></script>
 <script>
-const SDF = `
- RDKit          3D
 
- 20 21  0  0  0  0  0  0  0  0999 V2000
-    3.7523   -0.2200    0.4463 O   0  0  0  0  0  0  0  0  0  0  0  0
-    2.9167    0.7056   -0.2955 C   0  0  0  0  0  0  0  0  0  0  0  0
-    1.5025    0.2218   -0.0983 C   0  0  0  0  0  0  0  0  0  0  0  0
-    1.4035   -1.2512   -0.4883 O   0  0  0  0  0  0  0  0  0  0  0  0
-    0.5787    1.0537   -0.9912 C   0  0  0  0  0  0  0  0  0  0  0  0
-    0.6319    2.5239   -0.6147 S   0  0  0  0  0  0  0  0  0  0  0  0
-   -0.8541    0.6218   -0.8076 C   0  0  0  0  0  0  0  0  0  0  0  0
-   -1.8215    1.5989   -0.6011 C   0  0  0  0  0  0  0  0  0  0  0  0
-   -3.1289    1.2104   -0.3871 C   0  0  0  0  0  0  0  0  0  0  0  0
-   -3.4937   -0.1129   -0.3660 C   0  0  0  0  0  0  0  0  0  0  0  0
-   -4.7991   -0.5099   -0.1397 O   0  0  0  0  0  0  0  0  0  0  0  0
-   -2.5451   -1.0939   -0.5730 C   0  0  0  0  0  0  0  0  0  0  0  0
-   -1.2346   -0.6963   -0.8001 C   0  0  0  0  0  0  0  0  0  0  0  0
-    3.6803    0.7588   -1.2753 H   0  0  0  0  0  0  0  0  0  0  0  0
-    3.0583    1.7377    0.0388 H   0  0  0  0  0  0  0  0  0  0  0  0
-    4.6575   -0.0047    0.2296 H   0  0  0  0  0  0  0  0  0  0  0  0
-    1.2544    0.2897    1.0001 H   0  0  0  0  0  0  0  0  0  0  0  0
-    0.5162   -1.4983   -0.3258 H   0  0  0  0  0  0  0  0  0  0  0  0
-    0.8614    0.8829   -2.0477 H   0  0  0  0  0  0  0  0  0  0  0  0
-   -0.2375    2.9481   -0.4985 H   0  0  0  0  0  0  0  0  0  0  0  0
-   -1.5413    2.6449   -0.5941 H   0  0  0  0  0  0  0  0  0  0  0  0
-   -3.8761    1.9840   -0.2337 H   0  0  0  0  0  0  0  0  0  0  0  0
-   -5.3968    0.2393   -0.0777 H   0  0  0  0  0  0  0  0  0  0  0  0
-   -2.8174   -2.1396   -0.5614 H   0  0  0  0  0  0  0  0  0  0  0  0
-   -0.4876   -1.4737   -0.9662 H   0  0  0  0  0  0  0  0  0  0  0  0
+const SDF_ALBUTEROL = `
+     RDKit          3D
+
+ 38 38  0  0  0  0  0  0  0  0999 V2000
+   -4.5748    0.7908    0.9213 C   0  0  0  0  0  0  0  0  0  0  0  0
+   -3.4254    0.3089    0.0148 C   0  0  0  0  0  0  0  0  0  0  0  0
+   -3.2471    1.3303   -1.1195 C   0  0  0  0  0  0  0  0  0  0  0  0
+   -3.8045   -1.0641   -0.5635 C   0  0  0  0  0  0  0  0  0  0  0  0
+   -2.2285    0.2323    0.8779 N   0  0  0  0  0  0  0  0  0  0  0  0
+   -0.9837   -0.1951    0.2063 C   0  0  0  0  0  0  0  0  0  0  0  0
+    0.1865   -0.1718    1.2223 C   0  0  0  0  0  0  0  0  0  0  0  0
+    0.2385    1.1228    1.8350 O   0  0  0  0  0  0  0  0  0  0  0  0
+    1.5082   -0.5127    0.5680 C   0  0  0  0  0  0  0  0  0  0  0  0
+    1.8525   -1.8561    0.3561 C   0  0  0  0  0  0  0  0  0  0  0  0
+    3.0514   -2.1898   -0.2729 C   0  0  0  0  0  0  0  0  0  0  0  0
+    3.9197   -1.1851   -0.6873 C   0  0  0  0  0  0  0  0  0  0  0  0
+    5.0812   -1.5846   -1.2888 O   0  0  0  0  0  0  0  0  0  0  0  0
+    3.6143    0.1661   -0.4895 C   0  0  0  0  0  0  0  0  0  0  0  0
+    4.5041    1.2748   -0.9770 C   0  0  0  0  0  0  0  0  0  0  0  0
+    5.8737    0.9054   -0.8180 O   0  0  0  0  0  0  0  0  0  0  0  0
+    2.3940    0.4867    0.1293 C   0  0  0  0  0  0  0  0  0  0  0  0
+   -5.5161    0.8618    0.3635 H   0  0  0  0  0  0  0  0  0  0  0  0
+   -4.7416    0.1047    1.7601 H   0  0  0  0  0  0  0  0  0  0  0  0
+   -4.3647    1.7831    1.3383 H   0  0  0  0  0  0  0  0  0  0  0  0
+   -4.1924    1.4999   -1.6476 H   0  0  0  0  0  0  0  0  0  0  0  0
+   -2.9111    2.2980   -0.7303 H   0  0  0  0  0  0  0  0  0  0  0  0
+   -2.5197    0.9945   -1.8658 H   0  0  0  0  0  0  0  0  0  0  0  0
+   -3.9015   -1.8164    0.2290 H   0  0  0  0  0  0  0  0  0  0  0  0
+   -4.7645   -1.0157   -1.0901 H   0  0  0  0  0  0  0  0  0  0  0  0
+   -3.0617   -1.4255   -1.2830 H   0  0  0  0  0  0  0  0  0  0  0  0
+   -2.4200   -0.4086    1.6514 H   0  0  0  0  0  0  0  0  0  0  0  0
+   -1.0828   -1.1995   -0.2165 H   0  0  0  0  0  0  0  0  0  0  0  0
+   -0.7477    0.5026   -0.6040 H   0  0  0  0  0  0  0  0  0  0  0  0
+   -0.0058   -0.8860    2.0321 H   0  0  0  0  0  0  0  0  0  0  0  0
+   -0.6973    1.4090    1.8696 H   0  0  0  0  0  0  0  0  0  0  0  0
+    1.1882   -2.6545    0.6785 H   0  0  0  0  0  0  0  0  0  0  0  0
+    3.3126   -3.2320   -0.4373 H   0  0  0  0  0  0  0  0  0  0  0  0
+    5.6486   -0.7907   -1.3868 H   0  0  0  0  0  0  0  0  0  0  0  0
+    4.3162    1.4558   -2.0395 H   0  0  0  0  0  0  0  0  0  0  0  0
+    4.3367    2.2066   -0.4270 H   0  0  0  0  0  0  0  0  0  0  0  0
+    6.0401    0.9218    0.1440 H   0  0  0  0  0  0  0  0  0  0  0  0
+    2.1246    1.5320    0.2779 H   0  0  0  0  0  0  0  0  0  0  0  0
   1  2  1  0
   2  3  1  0
-  3  4  1  0
-  3  5  1  0
+  2  4  1  0
+  2  5  1  0
   5  6  1  0
-  5  7  1  0
-  7  8  2  0
-  8  9  1  0
-  9 10  2  0
- 10 11  1  0
- 10 12  1  0
- 12 13  2  0
- 13  7  1  0
-  2 14  1  0
-  2 15  1  0
-  1 16  1  0
-  3 17  1  0
-  4 18  1  0
-  5 19  1  0
-  6 20  1  0
-  8 21  1  0
-  9 22  1  0
- 11 23  1  0
- 12 24  1  0
- 13 25  1  0
+  6  7  1  0
+  7  8  1  0
+  7  9  1  0
+  9 10  1  0
+ 10 11  2  0
+ 11 12  1  0
+ 12 13  1  0
+ 12 14  2  0
+ 14 15  1  0
+ 15 16  1  0
+ 14 17  1  0
+ 17  9  2  0
+  1 18  1  0
+  1 19  1  0
+  1 20  1  0
+  3 21  1  0
+  3 22  1  0
+  3 23  1  0
+  4 24  1  0
+  4 25  1  0
+  4 26  1  0
+  5 27  1  0
+  6 28  1  0
+  6 29  1  0
+  7 30  1  0
+  8 31  1  0
+ 10 32  1  0
+ 11 33  1  0
+ 13 34  1  0
+ 15 35  1  0
+ 15 36  1  0
+ 16 37  1  0
+ 17 38  1  0
 M  END
 $$$$`;
 
-function wait3Dmol(cb,n=0){if(typeof $3Dmol!=='undefined')return cb();if(n>50)return;setTimeout(()=>wait3Dmol(cb,n+1),200);}
+const SDF_MANIFOLDCACHE = `
+     RDKit          3D
 
-function initMol(id){
-    wait3Dmol(()=>{
-        const el=document.getElementById(id);
-        const v=$3Dmol.createViewer(el,{backgroundColor:'#0a0a1a',antialias:true});
-        v.addModel(SDF,'sdf');
-        v.setStyle({},{stick:{radius:0.15,colorscheme:'Jmol'}});
-        v.zoomTo();v.spin('y',0.3);v.render();
+ 35 35  0  0  0  0  0  0  0  0999 V2000
+   -3.1664    1.3482   -0.4091 C   0  0  0  0  0  0  0  0  0  0  0  0
+   -3.0616    0.0408    0.3925 C   0  0  0  0  0  0  0  0  0  0  0  0
+   -4.3125   -0.8103    0.1024 C   0  0  0  0  0  0  0  0  0  0  0  0
+   -3.0234    0.3498    1.8988 C   0  0  0  0  0  0  0  0  0  0  0  0
+   -1.9099   -0.7763   -0.0233 N   0  0  0  0  0  0  0  0  0  0  0  0
+   -0.5963   -0.1116    0.0047 C   0  0  0  0  0  0  0  0  0  0  0  0
+    0.5340   -1.1451   -0.2248 C   0  0  0  0  0  0  0  0  0  0  0  0
+    0.4971   -2.1307    0.8186 O   0  0  0  0  0  0  0  0  0  0  0  0
+    1.9035   -0.4990   -0.2536 C   0  0  0  0  0  0  0  0  0  0  0  0
+    2.5131   -0.0348    0.9283 C   0  0  0  0  0  0  0  0  0  0  0  0
+    3.7735    0.5704    0.8989 C   0  0  0  0  0  0  0  0  0  0  0  0
+    4.4255    0.7139   -0.3185 C   0  0  0  0  0  0  0  0  0  0  0  0
+    5.6587    1.2967   -0.4148 O   0  0  0  0  0  0  0  0  0  0  0  0
+    3.8298    0.2613   -1.4923 C   0  0  0  0  0  0  0  0  0  0  0  0
+    4.4776    0.4077   -2.6855 O   0  0  0  0  0  0  0  0  0  0  0  0
+    2.5787   -0.3403   -1.4728 C   0  0  0  0  0  0  0  0  0  0  0  0
+   -2.3445    2.0353   -0.1803 H   0  0  0  0  0  0  0  0  0  0  0  0
+   -4.0996    1.8752   -0.1781 H   0  0  0  0  0  0  0  0  0  0  0  0
+   -3.1566    1.1557   -1.4882 H   0  0  0  0  0  0  0  0  0  0  0  0
+   -4.2978   -1.7519    0.6645 H   0  0  0  0  0  0  0  0  0  0  0  0
+   -5.2279   -0.2760    0.3821 H   0  0  0  0  0  0  0  0  0  0  0  0
+   -4.3892   -1.0585   -0.9630 H   0  0  0  0  0  0  0  0  0  0  0  0
+   -2.9173   -0.5659    2.4919 H   0  0  0  0  0  0  0  0  0  0  0  0
+   -3.9488    0.8424    2.2198 H   0  0  0  0  0  0  0  0  0  0  0  0
+   -2.1966    1.0179    2.1613 H   0  0  0  0  0  0  0  0  0  0  0  0
+   -1.8404   -1.6083    0.5709 H   0  0  0  0  0  0  0  0  0  0  0  0
+   -0.4402    0.3686    0.9764 H   0  0  0  0  0  0  0  0  0  0  0  0
+   -0.5440    0.6566   -0.7746 H   0  0  0  0  0  0  0  0  0  0  0  0
+    0.3563   -1.6801   -1.1660 H   0  0  0  0  0  0  0  0  0  0  0  0
+    1.3118   -2.6543    0.7245 H   0  0  0  0  0  0  0  0  0  0  0  0
+    1.9998   -0.1480    1.8826 H   0  0  0  0  0  0  0  0  0  0  0  0
+    4.2190    0.9172    1.8255 H   0  0  0  0  0  0  0  0  0  0  0  0
+    5.9375    1.5625    0.4784 H   0  0  0  0  0  0  0  0  0  0  0  0
+    5.3187    0.8499   -2.4542 H   0  0  0  0  0  0  0  0  0  0  0  0
+    2.1384   -0.6790   -2.4071 H   0  0  0  0  0  0  0  0  0  0  0  0
+  1  2  1  0
+  2  3  1  0
+  2  4  1  0
+  2  5  1  0
+  5  6  1  0
+  6  7  1  0
+  7  8  1  0
+  7  9  1  0
+  9 10  1  0
+ 10 11  2  0
+ 11 12  1  0
+ 12 13  1  0
+ 12 14  2  0
+ 14 15  1  0
+ 14 16  1  0
+ 16  9  2  0
+  1 17  1  0
+  1 18  1  0
+  1 19  1  0
+  3 20  1  0
+  3 21  1  0
+  3 22  1  0
+  4 23  1  0
+  4 24  1  0
+  4 25  1  0
+  5 26  1  0
+  6 27  1  0
+  6 28  1  0
+  7 29  1  0
+  8 30  1  0
+ 10 31  1  0
+ 11 32  1  0
+ 13 33  1  0
+ 15 34  1  0
+ 16 35  1  0
+M  END
+$$$$`;
+
+const SDF_FORA = `
+     RDKit          3D
+
+ 46 46  0  0  0  0  0  0  0  0999 V2000
+    1.4619    4.7664   -0.9083 C   0  0  0  0  0  0  0  0  0  0  0  0
+    1.9555    3.3599   -0.6074 C   0  0  0  0  0  0  0  0  0  0  0  0
+    0.8508    2.3208   -0.8242 C   0  0  0  0  0  0  0  0  0  0  0  0
+    1.3279    0.8983   -0.4866 C   0  0  0  0  0  0  0  0  0  0  0  0
+    2.3795    0.5500   -1.3975 O   0  0  0  0  0  0  0  0  0  0  0  0
+    3.2490   -0.4777   -0.9135 C   0  0  0  0  0  0  0  0  0  0  0  0
+    4.3729    0.1162   -0.0536 C   0  0  0  0  0  0  0  0  0  0  0  0
+    5.2942   -0.9055    0.4389 N   0  0  0  0  0  0  0  0  0  0  0  0
+    0.1718   -0.0803   -0.6049 C   0  0  0  0  0  0  0  0  0  0  0  0
+   -0.2331   -0.5801   -1.8471 C   0  0  0  0  0  0  0  0  0  0  0  0
+   -1.3092   -1.4614   -1.9369 C   0  0  0  0  0  0  0  0  0  0  0  0
+   -1.9938   -1.8521   -0.7837 C   0  0  0  0  0  0  0  0  0  0  0  0
+   -3.0603   -2.6957   -0.9062 O   0  0  0  0  0  0  0  0  0  0  0  0
+   -1.6177   -1.3798    0.4793 C   0  0  0  0  0  0  0  0  0  0  0  0
+   -2.3131   -1.7442    1.7859 C   0  0  0  0  0  0  0  0  0  0  0  0
+   -2.7340   -3.2116    1.9283 C   0  0  0  0  0  0  0  0  0  0  0  0
+   -3.4473   -0.7608    2.1464 C   0  0  0  0  0  0  0  0  0  0  0  0
+   -4.6664   -0.7885    1.2346 C   0  0  0  0  0  0  0  0  0  0  0  0
+   -0.5320   -0.4806    0.5435 C   0  0  0  0  0  0  0  0  0  0  0  0
+    1.1310    4.8518   -1.9482 H   0  0  0  0  0  0  0  0  0  0  0  0
+    0.6241    5.0359   -0.2573 H   0  0  0  0  0  0  0  0  0  0  0  0
+    2.2648    5.4925   -0.7465 H   0  0  0  0  0  0  0  0  0  0  0  0
+    2.8150    3.1395   -1.2506 H   0  0  0  0  0  0  0  0  0  0  0  0
+    2.3068    3.3170    0.4301 H   0  0  0  0  0  0  0  0  0  0  0  0
+    0.5282    2.3691   -1.8726 H   0  0  0  0  0  0  0  0  0  0  0  0
+   -0.0178    2.5802   -0.2055 H   0  0  0  0  0  0  0  0  0  0  0  0
+    1.7141    0.8906    0.5402 H   0  0  0  0  0  0  0  0  0  0  0  0
+    3.6866   -0.9620   -1.7937 H   0  0  0  0  0  0  0  0  0  0  0  0
+    2.6867   -1.2440   -0.3670 H   0  0  0  0  0  0  0  0  0  0  0  0
+    4.9281    0.8522   -0.6462 H   0  0  0  0  0  0  0  0  0  0  0  0
+    3.9542    0.6644    0.7969 H   0  0  0  0  0  0  0  0  0  0  0  0
+    4.7983   -1.5513    1.0522 H   0  0  0  0  0  0  0  0  0  0  0  0
+    6.0129   -0.4628    1.0105 H   0  0  0  0  0  0  0  0  0  0  0  0
+    0.2924   -0.2809   -2.7521 H   0  0  0  0  0  0  0  0  0  0  0  0
+   -1.6019   -1.8285   -2.9159 H   0  0  0  0  0  0  0  0  0  0  0  0
+   -3.1828   -2.9154   -1.8436 H   0  0  0  0  0  0  0  0  0  0  0  0
+   -1.5535   -1.6150    2.5722 H   0  0  0  0  0  0  0  0  0  0  0  0
+   -1.9075   -3.8821    1.6681 H   0  0  0  0  0  0  0  0  0  0  0  0
+   -3.0179   -3.4224    2.9657 H   0  0  0  0  0  0  0  0  0  0  0  0
+   -3.5917   -3.4772    1.3059 H   0  0  0  0  0  0  0  0  0  0  0  0
+   -3.0518    0.2629    2.1615 H   0  0  0  0  0  0  0  0  0  0  0  0
+   -3.7824   -0.9742    3.1695 H   0  0  0  0  0  0  0  0  0  0  0  0
+   -5.4213   -0.0872    1.6059 H   0  0  0  0  0  0  0  0  0  0  0  0
+   -5.1268   -1.7795    1.2019 H   0  0  0  0  0  0  0  0  0  0  0  0
+   -4.4135   -0.4842    0.2152 H   0  0  0  0  0  0  0  0  0  0  0  0
+   -0.2311   -0.0828    1.5119 H   0  0  0  0  0  0  0  0  0  0  0  0
+  1  2  1  0
+  2  3  1  0
+  3  4  1  0
+  4  5  1  0
+  5  6  1  0
+  6  7  1  0
+  7  8  1  0
+  4  9  1  0
+  9 10  1  0
+ 10 11  2  0
+ 11 12  1  0
+ 12 13  1  0
+ 12 14  2  0
+ 14 15  1  0
+ 15 16  1  0
+ 15 17  1  0
+ 17 18  1  0
+ 14 19  1  0
+ 19  9  2  0
+  1 20  1  0
+  1 21  1  0
+  1 22  1  0
+  2 23  1  0
+  2 24  1  0
+  3 25  1  0
+  3 26  1  0
+  4 27  1  0
+  6 28  1  0
+  6 29  1  0
+  7 30  1  0
+  7 31  1  0
+  8 32  1  0
+  8 33  1  0
+ 10 34  1  0
+ 11 35  1  0
+ 13 36  1  0
+ 15 37  1  0
+ 16 38  1  0
+ 16 39  1  0
+ 16 40  1  0
+ 17 41  1  0
+ 17 42  1  0
+ 18 43  1  0
+ 18 44  1  0
+ 18 45  1  0
+ 19 46  1  0
+M  END
+$$$$`;
+
+const SDF_TOCA = `
+     RDKit          3D
+
+ 59 60  0  0  0  0  0  0  0  0999 V2000
+    9.0563    0.0282   -0.9679 O   0  0  0  0  0  0  0  0  0  0  0  0
+    7.8231   -0.6874   -0.9283 C   0  0  0  0  0  0  0  0  0  0  0  0
+    6.7190    0.2122   -0.4454 C   0  0  0  0  0  0  0  0  0  0  0  0
+    5.4234    0.0560   -0.9690 C   0  0  0  0  0  0  0  0  0  0  0  0
+    4.3519    0.8496   -0.5218 C   0  0  0  0  0  0  0  0  0  0  0  0
+    2.9652    0.6368   -1.0880 C   0  0  0  0  0  0  0  0  0  0  0  0
+    2.2615    1.8815   -1.1642 O   0  0  0  0  0  0  0  0  0  0  0  0
+    2.1409   -0.3560   -0.2320 C   0  0  0  0  0  0  0  0  0  0  0  0
+    0.7565   -0.4400   -0.7555 N   0  0  0  0  0  0  0  0  0  0  0  0
+   -0.0670   -1.4453   -0.0693 C   0  0  0  0  0  0  0  0  0  0  0  0
+    0.5507   -2.7138   -0.2562 O   0  0  0  0  0  0  0  0  0  0  0  0
+   -0.2257   -1.1650    1.4556 C   0  0  0  0  0  0  0  0  0  0  0  0
+   -0.5908    0.1836    1.7333 O   0  0  0  0  0  0  0  0  0  0  0  0
+   -1.4458   -1.5257   -0.7800 C   0  0  0  0  0  0  0  0  0  0  0  0
+   -2.2749   -0.2365   -0.7993 C   0  0  0  0  0  0  0  0  0  0  0  0
+   -3.5418   -0.3441   -1.6567 C   0  0  0  0  0  0  0  0  0  0  0  0
+   -4.5516   -1.4159   -1.2265 C   0  0  0  0  0  0  0  0  0  0  0  0
+   -5.0714   -1.2914    0.2112 C   0  0  0  0  0  0  0  0  0  0  0  0
+   -5.8391   -0.0207    0.4802 C   0  0  0  0  0  0  0  0  0  0  0  0
+   -7.0902    0.1960   -0.1140 C   0  0  0  0  0  0  0  0  0  0  0  0
+   -7.7984    1.3732    0.1332 C   0  0  0  0  0  0  0  0  0  0  0  0
+   -7.2650    2.3442    0.9782 C   0  0  0  0  0  0  0  0  0  0  0  0
+   -6.0245    2.1379    1.5780 C   0  0  0  0  0  0  0  0  0  0  0  0
+   -5.3153    0.9609    1.3321 C   0  0  0  0  0  0  0  0  0  0  0  0
+    4.5909    1.7989    0.4815 C   0  0  0  0  0  0  0  0  0  0  0  0
+    5.8666    1.9541    1.0224 C   0  0  0  0  0  0  0  0  0  0  0  0
+    6.9149    1.1653    0.5616 C   0  0  0  0  0  0  0  0  0  0  0  0
+    8.1392    1.3727    1.1351 O   0  0  0  0  0  0  0  0  0  0  0  0
+    8.9452    0.7158   -1.6518 H   0  0  0  0  0  0  0  0  0  0  0  0
+    7.9362   -1.5353   -0.2456 H   0  0  0  0  0  0  0  0  0  0  0  0
+    7.6240   -1.0708   -1.9345 H   0  0  0  0  0  0  0  0  0  0  0  0
+    5.2439   -0.6960   -1.7360 H   0  0  0  0  0  0  0  0  0  0  0  0
+    3.0444    0.2652   -2.1171 H   0  0  0  0  0  0  0  0  0  0  0  0
+    1.3209    1.6292   -1.2366 H   0  0  0  0  0  0  0  0  0  0  0  0
+    2.1141    0.0101    0.8003 H   0  0  0  0  0  0  0  0  0  0  0  0
+    2.6331   -1.3353   -0.2370 H   0  0  0  0  0  0  0  0  0  0  0  0
+    0.8187   -0.7590   -1.7249 H   0  0  0  0  0  0  0  0  0  0  0  0
+   -0.0029   -3.3767    0.1913 H   0  0  0  0  0  0  0  0  0  0  0  0
+   -0.9876   -1.8230    1.8883 H   0  0  0  0  0  0  0  0  0  0  0  0
+    0.7047   -1.3857    1.9909 H   0  0  0  0  0  0  0  0  0  0  0  0
+   -0.1069    0.7264    1.0809 H   0  0  0  0  0  0  0  0  0  0  0  0
+   -2.0281   -2.3271   -0.3067 H   0  0  0  0  0  0  0  0  0  0  0  0
+   -1.2913   -1.8666   -1.8138 H   0  0  0  0  0  0  0  0  0  0  0  0
+   -1.6720    0.5857   -1.2021 H   0  0  0  0  0  0  0  0  0  0  0  0
+   -2.5525    0.0500    0.2179 H   0  0  0  0  0  0  0  0  0  0  0  0
+   -4.0364    0.6348   -1.6693 H   0  0  0  0  0  0  0  0  0  0  0  0
+   -3.2486   -0.5460   -2.6948 H   0  0  0  0  0  0  0  0  0  0  0  0
+   -5.3967   -1.3867   -1.9260 H   0  0  0  0  0  0  0  0  0  0  0  0
+   -4.1003   -2.4078   -1.3485 H   0  0  0  0  0  0  0  0  0  0  0  0
+   -4.2432   -1.3940    0.9224 H   0  0  0  0  0  0  0  0  0  0  0  0
+   -5.7378   -2.1387    0.4206 H   0  0  0  0  0  0  0  0  0  0  0  0
+   -7.5220   -0.5537   -0.7730 H   0  0  0  0  0  0  0  0  0  0  0  0
+   -8.7670    1.5318   -0.3331 H   0  0  0  0  0  0  0  0  0  0  0  0
+   -7.8161    3.2606    1.1706 H   0  0  0  0  0  0  0  0  0  0  0  0
+   -5.6073    2.8932    2.2387 H   0  0  0  0  0  0  0  0  0  0  0  0
+   -4.3484    0.8185    1.8103 H   0  0  0  0  0  0  0  0  0  0  0  0
+    3.7801    2.4270    0.8453 H   0  0  0  0  0  0  0  0  0  0  0  0
+    6.0435    2.6919    1.8001 H   0  0  0  0  0  0  0  0  0  0  0  0
+    8.7976    0.8532    0.6281 H   0  0  0  0  0  0  0  0  0  0  0  0
+  1  2  1  0
+  2  3  1  0
+  3  4  1  0
+  4  5  2  0
+  5  6  1  0
+  6  7  1  0
+  6  8  1  0
+  8  9  1  0
+  9 10  1  0
+ 10 11  1  0
+ 10 12  1  0
+ 12 13  1  0
+ 10 14  1  0
+ 14 15  1  0
+ 15 16  1  0
+ 16 17  1  0
+ 17 18  1  0
+ 18 19  1  0
+ 19 20  2  0
+ 20 21  1  0
+ 21 22  2  0
+ 22 23  1  0
+ 23 24  2  0
+  5 25  1  0
+ 25 26  2  0
+ 26 27  1  0
+ 27 28  1  0
+ 27  3  2  0
+ 24 19  1  0
+  1 29  1  0
+  2 30  1  0
+  2 31  1  0
+  4 32  1  0
+  6 33  1  0
+  7 34  1  0
+  8 35  1  0
+  8 36  1  0
+  9 37  1  0
+ 11 38  1  0
+ 12 39  1  0
+ 12 40  1  0
+ 13 41  1  0
+ 14 42  1  0
+ 14 43  1  0
+ 15 44  1  0
+ 15 45  1  0
+ 16 46  1  0
+ 16 47  1  0
+ 17 48  1  0
+ 17 49  1  0
+ 18 50  1  0
+ 18 51  1  0
+ 20 52  1  0
+ 21 53  1  0
+ 22 54  1  0
+ 23 55  1  0
+ 24 56  1  0
+ 25 57  1  0
+ 26 58  1  0
+ 28 59  1  0
+M  END
+$$$$`;
+
+function wait3Dmol(cb, n=0) {
+    if (typeof $3Dmol !== 'undefined') return cb();
+    if (n > 50) return;
+    setTimeout(() => wait3Dmol(cb, n+1), 200);
+}
+
+function initMol(id, sdf, color, spinSpeed=0.3) {
+    wait3Dmol(() => {
+        const el = document.getElementById(id);
+        const v = $3Dmol.createViewer(el, {backgroundColor: '#0a0a1a', antialias: true});
+        v.addModel(sdf, 'sdf');
+        v.setStyle({}, {stick: {radius: 0.15, colorscheme: 'Jmol'}});
+        v.zoomTo();
+        v.spin('y', spinSpeed);
+        v.render();
     });
 }
 
-// Stagger init by 400 ms each to avoid simultaneous WebGL context creation
-setTimeout(()=>initMol('mol-1'),100);
-setTimeout(()=>initMol('mol-2'),500);
-setTimeout(()=>initMol('mol-3'),900);
+// Stagger init to avoid simultaneous WebGL context creation
+setTimeout(() => initMol('mol-albuterol',   SDF_ALBUTEROL,    '#f59e0b', 0.25), 100);
+setTimeout(() => initMol('mol-manifold',    SDF_MANIFOLDCACHE,'#38bdf8', 0.3),  500);
+setTimeout(() => initMol('mol-fora',        SDF_FORA,         '#94a3b8', 0.3),  900);
+setTimeout(() => initMol('mol-toca',        SDF_TOCA,         '#94a3b8', 0.3),  1300);
 </script>
-</body></html>
+</body>
+</html>
