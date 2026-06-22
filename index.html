@@ -48,7 +48,7 @@
 <p class="project-description">
   <strong>ManifoldCache</strong> delivers acceleration for scientific diffusion models through:
   <strong>(a)</strong> a unified CMDM abstraction covering several models across five domains, including brain MRI, molecules, proteins, crystals, and 4D scenes spanning radically different ambient spaces from 192³ voxel grids to motif token graphs to crystal lattices to 4D video latents under one closed-form schedule;
-  <strong>(b)</strong> true backbone-agnosticism across four fundamentally different families, including volumetric 3D ConvNets, SE(3)/E(3)-equivariant networks, graph diffusion transformers, and multi-view video DiTs including discrete diffusion;
+  <strong>(b)</strong> true backbone-agnosticism across fundamentally different families, including volumetric 3D ConvNets, SE(3)/E(3)-equivariant networks, graph diffusion transformers, and multi-view video DiTs including discrete diffusion;
   <strong>(c)</strong> systematic failure analysis showing quantization causes OOM, pruning breaks constraints, fast ODE solvers drift off the manifold, and standard caching induces mode confusion;
   <strong>(d)</strong> a provably sharp safe-caching threshold T* with both bounded-error and guaranteed-confusion regimes confirmed by ablations;
   <strong>(e)</strong> depth-adaptive caching from Jacobian decomposition, where deeper blocks get larger strides with bounded and competitive VRAM overhead; and
