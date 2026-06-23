@@ -27,11 +27,32 @@
         .footer-nav-btn.next{background:#1e3a5f;border-color:#38bdf8;color:#38bdf8;}
         .footer-nav-btn.next:hover{background:#1e4a80;}
         @media(max-width:900px){.demo-container{grid-template-columns:1fr;}}
+
+
+         .project-description {
+        font-size: 1.2rem;
+        line-height: 1.2;
+        max-width: 1200px;
+        margin: 0 auto 40px auto;
+        }
+        
     </style>
 </head>
 <body>
 <h1>ManifoldCache</h1>
 <div class="subtitle">Training-Free Diffusion Acceleration via Constraint Manifold Caching</div>
+
+
+<p class="project-description">
+  <strong>ManifoldCache</strong> delivers acceleration for scientific diffusion models through:
+  <strong>(a)</strong> a unified CMDM abstraction covering several models across five domains, including brain MRI, molecules, proteins, crystals, and 4D scenes spanning radically different ambient spaces from voxel grids to motif token graphs to crystal lattices to 4D video latents under one closed-form schedule;
+  <strong>(b)</strong> true backbone-agnosticism across fundamentally different families, including volumetric 3D ConvNets, SE(3)/E(3)-equivariant networks, graph diffusion transformers, and multi-view video DiTs including discrete diffusion;
+  <strong>(c)</strong> systematic failure analysis showing quantization causes OOM, pruning breaks constraints, fast ODE solvers drift off the manifold, and standard caching induces mode confusion;
+  <strong>(d)</strong> a provably sharp safe-caching threshold T* with both bounded-error and guaranteed-confusion regimes confirmed by ablations;
+  <strong>(e)</strong> depth-adaptive caching from Jacobian decomposition, where deeper blocks get larger strides with bounded and competitive VRAM overhead; and
+  <strong>(f)</strong> completely training-free and data-free with zero calibration, zero retraining, working out-of-the-box on existing pretrained checkpoints while delivering consistent joint dominance on both speed and quality across all models.
+</p>
+    
 <nav class="nav-bar">
     <a class="nav-btn" href="index.html">1 · 🧠 3D Brain MRI &amp; Lyra</a>
     <div class="nav-divider"></div>
