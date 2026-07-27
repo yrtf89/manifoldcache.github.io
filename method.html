@@ -107,11 +107,11 @@
         (filled markers) become sparser and cache reuse (open markers) becomes denser with depth.</p>
 
         <p>
-        The denoising score splits into two orthogonal forces: one pulls the sample back to validity (the normal component), the other navigates within valid structures (the tangential component). 
-        The pulling force is fast-changing and dominates when noise is high; the navigating force is slow-changing and dominates when signal is strong. The threshold $T^{*}$
+        The denoising score splits into two orthogonal forces: one pulls the sample back to the manifold (the normal component), the other navigates within valid structures (the tangential component). 
+        The pulling force dominates when noise is high; the navigating force dominates when signal is strong. The threshold $T^{*}$
         marks the signal-to-noise crossover where the navigating force takes over. Before $T^{*}$, caching any block causes mode confusion; i.e., reusing features risks landing on the wrong valid structure. After $T^{*}$, 
-        caching is safe. In this safe regime, shallow blocks are highly sensitive to pulling force (the normal component) and must recompute frequently, 
-        while deep blocks are more sensitive to the navigating force (the tangential component) and can be cached aggressively. The depth-adaptive stride schedule follows directly from this geometry.</p>
+        caching is safe. In the safe regime, as deeper blocks are highly sensitive to pulling force (the normal component), they can be cached aggressively, 
+        while shallower blocks, being more sensitive to the navigating force (the tangential component), must recompute frequently. The depth-adaptive stride schedule follows directly from this geometry.</p>
     </div>
 </div>
 
