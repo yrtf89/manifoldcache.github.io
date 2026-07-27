@@ -106,11 +106,12 @@
         stride 2), while deep, coarse blocks ($24^3, 12^3$) tolerate long strides (e.g. stride 4), so recomputes
         (filled markers) become sparser and cache reuse (open markers) becomes denser with depth.</p>
 
-
-        <p><span class="panel-tag"> The denoising score <span class="math">s<sub>t</sub></span> decomposes orthogonally into a normal component <span class="math">s<sub>t</sub><sup>&#x22A5;</sup></span> (enforcing the constraint <span class="math">g = 0</span>) and a tangential component <span class="math">s<sub>t</sub><sup>&#x2225;</sup></span> (navigating within <span class="math">&#x1D49C;<sub>c</sub></span> toward a valid mode).
-        This decomposition implies a sharp transition at the signal-noise crossover <span class="math">T<sup>*</sup> = max { t : &#772;&#945;<sub>t</sub> &#8805; 1/2 }</span>. For <span class="math">&tau; &gt; T<sup>*</sup></span>, caching is <strong>unsafe</strong> (mode confusion guaranteed). For <span class="math">&tau; &le; T<sup>*</sup></span>, caching is <strong>safe</strong> (bounded error).
-        In the safe phase, deeper blocks (larger <span class="math">&#8467;</span>, lower <span class="math">&#946;<sub>&#8467;</sub></span>) are less sensitive to the rapidly changing normal component and thus tolerate longer cache strides than shallow blocks, producing the depth-adaptive schedule <span class="math">S(&#8467;, t) = &lfloor; S<sub>sh</sub> + (S<sub>dp</sub> - S<sub>sh</sub>) &nu;<sub>&#8467;</sub> &rfloor;</span>.
-        </p>
+        <p>
+        The denoising score splits into two orthogonal forces: one pulls the sample back to validity (the normal component), the other navigates within valid structures (the tangential component). 
+        The pulling force is fast-changing and dominates when noise is high; the navigating force is slow-changing and dominates when signal is strong. The threshold $T^{*}$
+        marks the signal-to-noise crossover where the navigating force takes over. Before $T^{*}$, caching any block causes mode confusion; i.e., reusing features risks landing on the wrong valid structure. After $T^{*}$, 
+        caching is safe. In this safe regime, shallow blocks are highly sensitive to pulling force (the normal component) and must recompute frequently, 
+        while deep blocks are more sensitive to the navigating force (the tangential component) and can be cached aggressively. The depth-adaptive stride schedule follows directly from this geometry.</p>
     </div>
 </div>
 
