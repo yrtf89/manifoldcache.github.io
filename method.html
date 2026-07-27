@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ManifoldCache — 0: Method</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.css">
+    <script defer src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.js"></script>
+    <script defer src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/contrib/auto-render.min.js"
+        onload="renderMathInElement(document.body,{delimiters:[
+            {left:'$$',right:'$$',display:true},
+            {left:'$',right:'$',display:false}
+        ]});"></script>
+    <style>
+        canvas { will-change: transform; transform: translateZ(0); }
+        * { box-sizing: border-box; }
+        body { margin:0;padding:20px;background:#0f172a;color:#f8fafc;font-family:system-ui,-apple-system,sans-serif;display:flex;flex-direction:column;align-items:center;min-height:100vh; }
+        h1 { font-size:2.2rem;font-weight:700;margin:0 0 5px 0;text-align:center;background:linear-gradient(to right,#38bdf8,#818cf8);-webkit-background-clip:text;-webkit-text-fill-color:transparent; }
+        .subtitle { font-size:1.6rem;color:#94a3b8;margin-bottom:14px;text-align:center; }
+        .nav-bar { display:flex;gap:6px;margin-bottom:24px;align-items:center;flex-wrap:wrap;justify-content:center;background:#1e293b;border:1px solid #334155;padding:8px 14px;border-radius:10px;max-width:1400px;width:100%; }
+        .nav-btn { display:flex;align-items:center;gap:5px;background:transparent;border:1px solid transparent;color:#64748b;padding:5px 11px;border-radius:6px;font-size:0.98rem;cursor:pointer;text-decoration:none;transition:all .18s;white-space:nowrap; }
+        .nav-btn.active { background:#1e3a5f;color:#38bdf8;border-color:#38bdf8;cursor:default; }
+        .nav-btn:not(.active):hover { color:#38bdf8;border-color:#38bdf8;background:#162032; }
+        .nav-divider { width:1px;height:20px;background:#334155;flex-shrink:0; }
+        .section-title { font-size:1.15rem;font-weight:600;margin:20px 0 12px 0;color:#38bdf8;width:100%;max-width:1400px;border-bottom:1px solid #334155;padding-bottom:5px; }
+        .page-footer-nav { display:flex;justify-content:space-between;width:100%;max-width:1400px;margin:32px 0 12px 0; }
+        .footer-nav-btn { display:flex;align-items:center;gap:8px;background:#1e3a5f;border:1px solid #38bdf8;color:#38bdf8;padding:10px 20px;border-radius:8px;font-size:.98rem;font-weight:600;text-decoration:none;transition:background .18s; }
+        .footer-nav-btn:hover { background:#1e4a80; }
+        .project-description { font-size:1.2rem;line-height:1.2;max-width:1200px;margin:0 auto 40px auto; }
+
+        /* figure-specific */
+        .fig-card { width:100%;max-width:1400px;background:#1e293b;border:1px solid #334155;border-radius:12px;padding:20px 24px 26px;box-shadow:0 10px 15px -3px rgba(0,0,0,.3); }
+        .fig-card img { width:100%;height:auto;border-radius:8px;background:#fff;display:block; }
+        .fig-caption { margin-top:18px;font-size:1rem;line-height:1.65;color:#cbd5e1; }
+        .fig-caption b.fig-label { color:#38bdf8; }
+        .fig-caption p { margin:0 0 10px 0; }
+        .fig-caption p:last-child { margin-bottom:0; }
+        .fig-caption .panel-tag { color:#e2e8f0;font-weight:600; }
+        @media(max-width:900px){ .fig-card{padding:16px;} }
+    </style>
+</head>
+<body>
+<h1>ManifoldCache</h1>
+<div class="subtitle">Training-Free Diffusion Acceleration via Constraint Manifold Caching</div>
+
+<nav class="nav-bar">
+    <span class="nav-btn active">0 · 📐 Method</span>
+    <div class="nav-divider"></div>
+    <a class="nav-btn" href="index.html">1 · 🧠 3D Brain MRI &amp; Lyra</a>
+    <div class="nav-divider"></div>
+    <a class="nav-btn" href="page2_molecules.html">2 · ⚗️ Molecules</a>
+    <div class="nav-divider"></div>
+    <a class="nav-btn" href="page3_crystals.html">3 · 💎 Crystals</a>
+    <div class="nav-divider"></div>
+    <a class="nav-btn" href="page4_proteins.html">4 · 🧬 Proteins</a>
+    <div class="nav-divider"></div>
+    <a class="nav-btn" href="page5_unimomo.html">5 · 🔬 UniMoMo</a>
+    <div class="nav-divider"></div>
+    <a class="nav-btn" href="page6_ditmc.html">6 · ⚙️ DiT-MC</a>
+</nav>
+
+<p class="project-description">
+  ManifoldCache is built on a simple geometric fact: constrained diffusion denoising can always be split into a
+  step that pushes samples <i>onto</i> the constraint manifold and a step that moves them <i>within</i> it. The
+  three panels below show, in order, why that split exists, exactly when it becomes safe to stop recomputing
+  the network at every step, and how the resulting cache schedule should vary across a network's depth.
+</p>
+
+<div class="section-title">Figure 1 &nbsp;·&nbsp; Geometric basis for safe, depth-adaptive caching</div>
+
+<div class="fig-card">
+    <img src="./method_fig.jpg" alt="Three-panel figure: orthogonal score decomposition on the constraint manifold, the safe-caching threshold T*, and depth-adaptive cache strides">
+    <div class="fig-caption">
+        <p><b class="fig-label">Figure 1.</b> <b>Geometric basis for safe, depth-adaptive caching on the constraint manifold $\mathcal{M}_c$.</b></p>
+
+        <p><span class="panel-tag">(a) Orthogonal score decomposition on $\mathcal{M}_c$.</span>
+        For a noisy iterate $x_t$ with nearest projection $\Pi(x) \in \mathcal{M}_c$ (reach $\rho_c$), the
+        denoising score $s_t$ decomposes uniquely into a normal and a tangential part with respect to the
+        tangent space $T_{\Pi(x)}\mathcal{M}_c$ and normal space $N_{\Pi(x)}\mathcal{M}_c$ at the projection:
+        the <b>normal component</b> $s_t^{\perp} = P_x^{\perp} s_t$ drives the iterate back onto $\mathcal{M}_c$,
+        enforcing the constraint $g = 0$, while the <b>tangential component</b> $s_t^{\parallel} = P_x^{\parallel} s_t$
+        navigates <i>within</i> $\mathcal{M}_c$ toward one of the constraint-satisfying modes $\mu_1, \mu_2$,
+        which are separated by a mode gap $\delta_c$ within a local ball of radius $r_c$. Caching perturbs
+        $s_t^{\parallel}$, since off-manifold drift is corrected by $s_t^{\perp}$ regardless.</p>
+
+        <p><span class="panel-tag">(b) Safe-caching threshold $T^{*} = \max\{\,t : \bar\alpha_t \ge \tfrac12\,\}$.</span>
+        Let $\bar\alpha_t$ denote the cumulative signal-retention coefficient of the forward process and let
+        $\kappa_t$ measure the overlap between the score distributions induced by distinct constraint modes at
+        step $t$. For $t > T^{*}$ (high noise, left / red), $\bar\alpha_t < \tfrac12$: the modes overlap, mode
+        identity is not yet resolved, and caching risks a mode flip with probability
+        $\Pr[\text{flip}] \ge p_{\text{mix}} > 0$ &mdash; this region must be <b>recomputed at stride 1</b>. For
+        $t \le T^{*}$ (cleaner, right / green), $\bar\alpha_t \ge \tfrac12$: the modes are resolved
+        ($\kappa_t$ curves separate), caching is provably safe, and the resulting error is bounded by
+        $\mathcal{E}(\tau) \le \tfrac12\,\mathrm{tr}\,\Sigma_c$. $T^{*}$ is the sharp crossing point of this
+        transition, where $\bar\alpha_{T^{*}} = \tfrac12$.</p>
+
+        <p><span class="panel-tag">(c) Depth-adaptive strides in the safe phase ($t \le T^{*}$).</span>
+        Within the safe region, the cache stride assigned to a block of depth $\ell$ (out of $L$ total blocks,
+        normalized depth $\nu_\ell = \frac{\ell-1}{L-1}$) grows with depth according to
+        $$S(\ell,t) = \left\lfloor S_{\text{sh}} + \left(S_{\text{dp}} - S_{\text{sh}}\right)\nu_\ell \right\rfloor,$$
+        interpolating between a shallow-block stride $S_{\text{sh}}$ and a deep-block stride $S_{\text{dp}}$.
+        This schedule is valid whenever $\kappa_t < \kappa^{*}$, where
+        $$\kappa^{*} = \frac{(1-\beta_{\ell_1}) + (1-\beta_{\ell_2})}{\beta_{\ell_1} + \beta_{\ell_2}},$$
+        with $\beta_{\ell_1}, \beta_{\ell_2}$ the noise-sensitivity coefficients of the shallowest and deepest
+        blocks being compared. Shallow, high-resolution blocks ($192^3, 96^3, \dots$) use short strides (e.g.
+        stride 2), while deep, coarse blocks ($24^3, 12^3$) tolerate long strides (e.g. stride 4), so recomputes
+        (filled markers) become sparser and cache reuse (open markers) becomes denser with depth.</p>
+    </div>
+</div>
+
+<div class="page-footer-nav">
+    <span></span>
+    <a class="footer-nav-btn" href="index.html">1 · 3D Brain MRI &amp; Lyra <span style="font-size:1.12em">›</span></a>
+</div>
+
+</body>
+</html>
