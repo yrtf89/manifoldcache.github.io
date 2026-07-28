@@ -64,8 +64,9 @@
 <p class="project-description">
   ManifoldCache is built on a simple geometric fact: constrained diffusion denoising can be split into a
   step that pushes samples <i>onto</i> the constraint manifold and a step that moves them <i>within</i> it. The
-  three figures below show, in order, why that split exists, exactly when it becomes safe to stop recomputing
-  the network at every step, and how the resulting cache schedule should vary across a network's depth.
+    figures below show why this split exists, exactly when it becomes safe to stop recomputing
+  the network at every step, how the resulting cache schedule should vary across a network's depth, and the empirical
+    performance of ManifoldCache compared with various baselines.
 </p>
 
 <div class="section-title">Figure 1 &nbsp;·&nbsp; Geometric basis for safe, depth-adaptive caching</div>
